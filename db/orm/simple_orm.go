@@ -4,34 +4,34 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/newmin/gof/log"
+	"github.com/atnet/gof/log"
 	"reflect"
 	"strings"
 )
 
-var _ Orm = new(DBMap)
+var _ Orm = new(simpleOrm)
 
 //it's a IOrm Implements for mysql
-type DBMap struct {
+type simpleOrm struct {
 	tableMap map[string]*TableMapMeta
 	*sql.DB
 	useTrace bool
 }
 
-func NewDBMap(db *sql.DB) *DBMap {
-	return &DBMap{
+func NewOrm(db *sql.DB) Orm {
+	return &simpleOrm{
 		DB:       db,
 		tableMap: make(map[string]*TableMapMeta),
 	}
 }
 
-func (this *DBMap) err(err error) {
+func (this *simpleOrm) err(err error) {
 	if this.useTrace {
 		log.Println("[ORM][Error]:%s ", err.Error())
 	}
 }
 
-func (this *DBMap) getTableMapMeta(t reflect.Type) *TableMapMeta {
+func (this *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	m, exists := this.tableMap[t.String()]
 	if exists {
 		return m
@@ -47,7 +47,7 @@ func (this *DBMap) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	return m
 }
 
-func (this *DBMap) getTName(t reflect.Type) string {
+func (this *simpleOrm) getTName(t reflect.Type) string {
 	//todo: 用int做键
 	v, exists := this.tableMap[t.String()]
 	if exists {
@@ -57,7 +57,7 @@ func (this *DBMap) getTName(t reflect.Type) string {
 }
 
 //if not defined primary key.the first key will as primary key
-func (this *DBMap) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
+func (this *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 	v, exists := this.tableMap[t.String()]
 	if exists {
 		return v.PkFieldName, v.PkIsAuto
@@ -65,12 +65,12 @@ func (this *DBMap) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 	return GetPKName(t)
 }
 
-func (this *DBMap) SetTrace(b bool) {
+func (this *simpleOrm) SetTrace(b bool) {
 	this.useTrace = b
 }
 
 //create a fixed table map
-func (this *DBMap) CreateTableMap(v interface{}, tableName string) {
+func (this *simpleOrm) CreateTableMap(v interface{}, tableName string) {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -80,7 +80,7 @@ func (this *DBMap) CreateTableMap(v interface{}, tableName string) {
 	this.tableMap[t.String()] = meta
 }
 
-func (this *DBMap) Get(primaryVal interface{}, entity interface{}) error {
+func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	var sql string
 	var fieldLen int
 	t := reflect.TypeOf(entity)
@@ -138,7 +138,7 @@ func (this *DBMap) Get(primaryVal interface{}, entity interface{}) error {
 	return nil
 }
 
-func (this *DBMap) GetBy(entity interface{}, where string,
+func (this *simpleOrm) GetBy(entity interface{}, where string,
 	args ...interface{}) error {
 	var sql string
 	var fieldLen int
@@ -208,7 +208,7 @@ func (this *DBMap) GetBy(entity interface{}, where string,
 	return nil
 }
 
-func (this *DBMap) GetByQuery(entity interface{}, sql string,
+func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 	args ...interface{}) error {
 	var fieldLen int
 	t := reflect.TypeOf(entity)
@@ -271,16 +271,16 @@ func (this *DBMap) GetByQuery(entity interface{}, sql string,
 //@to : refrence to queryed entity list
 //@entity : query condition
 //@where : other condition
-func (this *DBMap) Select(to interface{}, where string, args ...interface{}) error {
+func (this *simpleOrm) Select(to interface{}, where string, args ...interface{}) error {
 	return this.selectBy(to, where, false, args...)
 }
 
-func (this *DBMap) SelectByQuery(to interface{}, sql string, args ...interface{}) error {
+func (this *simpleOrm) SelectByQuery(to interface{}, sql string, args ...interface{}) error {
 	return this.selectBy(to, sql, true, args...)
 }
 
 // query rows
-func (this *DBMap) selectBy(to interface{}, sql string, fullSql bool, args ...interface{}) error {
+func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args ...interface{}) error {
 	var fieldLen int
 	var eleIsPtr bool // 元素是否为指针
 
@@ -359,10 +359,10 @@ func (this *DBMap) selectBy(to interface{}, sql string, fullSql bool, args ...in
 	/* 用反射来对输出结果复制 */
 
 	toArr := toVal
-	var v reflect.Value
+
 	for rows.Next() {
 		e := reflect.New(baseTyp)
-		v = e.Elem()
+		v := e.Elem()
 
 		rows.Scan(scanVal...)
 		for i := 0; i < fieldLen; i++ {
@@ -375,10 +375,11 @@ func (this *DBMap) selectBy(to interface{}, sql string, fullSql bool, args ...in
 		}
 	}
 	toVal.Set(toArr)
+
 	return nil
 }
 
-func (this *DBMap) Delete(entity interface{}, where string,
+func (this *simpleOrm) Delete(entity interface{}, where string,
 	args ...interface{}) (effect int64, err error) {
 	var sql string
 
@@ -424,7 +425,7 @@ func (this *DBMap) Delete(entity interface{}, where string,
 	return rowNum, nil
 }
 
-func (this *DBMap) DeleteByPk(entity interface{}, primary interface{}) (err error) {
+func (this *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err error) {
 	var sql string
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
@@ -459,7 +460,7 @@ func (this *DBMap) DeleteByPk(entity interface{}, primary interface{}) (err erro
 	return nil
 }
 
-func (this *DBMap) Save(primaryKey interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
+func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
 	var sql string
 	//var condition string
 	//var fieldLen int

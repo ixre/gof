@@ -3,8 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"github.com/atnet/gof/db/orm"
 	"log"
-	"github.com/newmin/gof/db/orm"
 	"os"
 	"testing"
 )

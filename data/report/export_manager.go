@@ -1,16 +1,25 @@
-package transfer
+/**
+ * Copyright 2013 @ ops Inc.
+ * name :
+ * author : newmin
+ * date : 2013-02-04 20:13
+ * description :
+ * history :
+ */
+package report
 
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/newmin/gof/db"
-	"github.com/newmin/gof/log"
+	"github.com/atnet/gof/db"
 	"os"
 	"strconv"
 	"strings"
 )
 
 var baseExportPortal *DataExportPortal = &DataExportPortal{}
+
+var _ IDataExportPortal = new(ExportItem)
 
 // 导出项目
 type ExportItem struct {
@@ -31,9 +40,8 @@ func (portal *ExportItem) GetTotalView(ht map[string]string) (row map[string]int
 	return nil
 }
 
-func (portal *ExportItem) GetShemalAndData(ht map[string]string) (rows []map[string]interface{}, total int) {
+func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[string]interface{}, total int, err error) {
 	total = 0
-	var err error
 	var _rows *sql.Rows
 
 	if portal.sqlConfig == nil {
@@ -42,7 +50,7 @@ func (portal *ExportItem) GetShemalAndData(ht map[string]string) (rows []map[str
 			strings.Join([]string{dir, "/conf/query/", portal.PortalKey, ".xml"}, ""))
 		if err != nil {
 			portal.sqlConfig = nil
-			return db.RowsToMarshalMap(&sql.Rows{}), 0
+			return nil, 0, err
 		}
 	}
 
@@ -68,21 +76,21 @@ func (portal *ExportItem) GetShemalAndData(ht map[string]string) (rows []map[str
 	}
 	ht["page_end"] = strconv.Itoa(pageIndex * pageSize)
 	ht["page_size"] = strconv.Itoa(pageSize)
+
 	//统计总行数
 	if portal.sqlConfig.Total != "" {
 		sql := SqlFormat(portal.sqlConfig.Total, ht)
 		smt, err := _db.Prepare(sql)
 
 		if err != nil {
-			log.Println("Query Error：" + err.Error() + "\r\n[SQL]:" + sql)
-			panic(err)
+			return nil, 0, err
 		}
 
 		row := smt.QueryRow()
 		if row != nil {
 			err = row.Scan(&total)
 			if err != nil {
-				return nil, 0
+				return nil, total, err
 			}
 		}
 	}
@@ -94,17 +102,16 @@ func (portal *ExportItem) GetShemalAndData(ht map[string]string) (rows []map[str
 		smt, err := _db.Prepare(sql)
 
 		if err != nil {
-			log.Println("Query Error：" + err.Error() + "\r\n[SQL]:" + sql)
-			panic(err)
+			return nil, total, err
 		}
 		_rows, err = smt.Query()
-		defer _rows.Close()
 		if err != nil {
-			return nil, total
+			return nil, total, err
 		}
+		defer _rows.Close()
 	}
 
-	return db.RowsToMarshalMap(_rows), total
+	return db.RowsToMarshalMap(_rows), total, err
 }
 
 //获取要导出的数据Json格式

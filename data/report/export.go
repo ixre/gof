@@ -1,9 +1,16 @@
-package transfer
+/**
+ * Copyright 2013 @ ops Inc.
+ * name :
+ * author : newmin
+ * date : 2013-02-04 20:13
+ * description :
+ * history :
+ */
+package report
 
 import (
 	_ "database/sql"
 	"encoding/xml"
-	_ "fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -37,7 +44,7 @@ type IDataExportPortal interface {
 	//导出的列名(比如：数据表是因为列，这里我需要列出中文列)
 	//ColumnNames() (names []DataColumnMapping)
 	//获取要导出的数据及表结构
-	GetShemalAndData(ht map[string]string) (rows []map[string]interface{}, total int)
+	GetSchemaAndData(ht map[string]string) (rows []map[string]interface{}, total int, err error)
 	//获取要导出的数据Json格式
 	GetJsonData(ht map[string]string) string
 	//获取统计数据
@@ -80,12 +87,12 @@ func GetColumnMappings(columnMappingString string) (
 		return nil, err
 	}
 
-	var matchs [][]string = re.FindAllStringSubmatch(columnMappingString, 0)
-	if matchs == nil {
+	var matches [][]string = re.FindAllStringSubmatch(columnMappingString, 0)
+	if matches == nil {
 		return nil, nil
 	}
-	columnsMapping = make([]DataColumnMapping, 0, len(matchs))
-	for i, v := range matchs {
+	columnsMapping = make([]DataColumnMapping, 0, len(matches))
+	for i, v := range matches {
 		columnsMapping[i] = DataColumnMapping{Field: v[1], Name: v[2]}
 	}
 	return columnsMapping, nil
@@ -104,7 +111,7 @@ func LoadExportConfigFromXml(xmlFilePath string) (*ExportItemConfig, error) {
 
 func Export(portal IDataExportPortal, parameters ExportParams,
 	provider IDataExportProvider) []byte {
-	rows, _ := portal.GetShemalAndData(parameters.Parameters)
+	rows, _, _ := portal.GetSchemaAndData(parameters.Parameters)
 	return provider.Export(rows, portal.GetExportColumnIndexAndName(
 		parameters.ColumnNames))
 }
@@ -131,10 +138,10 @@ func GetExportParams(paramMappings string, columnNames []string) *ExportParams {
 }
 
 // 格式化sql语句
-func SqlFormat(sql string, ht map[string]string) (formated string) {
-	formated = sql
+func SqlFormat(sql string, ht map[string]string) (formatted string) {
+	formatted = sql
 	for k, v := range ht {
-		formated = strings.Replace(formated, "{"+k+"}", v, 20)
+		formatted = strings.Replace(formatted, "{"+k+"}", v, 20)
 	}
-	return formated
+	return formatted
 }

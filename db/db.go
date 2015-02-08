@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/atnet/gof/db/orm"
+	"github.com/atnet/gof/log"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/newmin/gof/db/orm"
-	"github.com/newmin/gof/log"
 )
 
 var _ Connector = new(CommonConnector)
@@ -43,7 +43,7 @@ func NewCommonConnector(driverName, driverSource string,
 
 	return &CommonConnector{
 		_db:          db,
-		_orm:         orm.NewDBMap(db),
+		_orm:         orm.NewOrm(db),
 		driverName:   driverName,
 		driverSource: driverName,
 		logger:       l,

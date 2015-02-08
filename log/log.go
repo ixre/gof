@@ -92,7 +92,7 @@ func (t *simpleLogger) formatHeader(b *[]byte) {
 	}
 }
 
-func (t *simpleLogger) appendSource(b *[]byte){
+func (t *simpleLogger) appendSource(b *[]byte) {
 	_, f, l, ok := runtime.Caller(t.callerDepth)
 	if ok {
 		*b = append(*b, (" (Source:" + f)...)
@@ -104,16 +104,16 @@ func (t *simpleLogger) appendSource(b *[]byte){
 	}
 }
 
-func (t *simpleLogger) output(err bool,b *[]byte, newLine bool) {
+func (t *simpleLogger) output(err bool, b *[]byte, newLine bool) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
-	if t.flag & LESource != 0 {
+	if t.flag&LESource != 0 {
 		// if not error,but only show error source
-		if err{
+		if err {
 			t.appendSource(b)
 		}
-	}else {
+	} else {
 		if t.flag&LSource != 0 {
 			t.appendSource(b)
 		}
@@ -142,7 +142,7 @@ func (t *simpleLogger) Println(v ...interface{}) {
 		t.buf = t.buf[:0]
 		t.formatHeader(&t.buf)
 		t.buf = append(t.buf, fmt.Sprint(v...)...)
-		t.output(false,&t.buf, true)
+		t.output(false, &t.buf, true)
 	}
 }
 
@@ -151,16 +151,16 @@ func (t *simpleLogger) Printf(s string, v ...interface{}) {
 		t.buf = t.buf[:0]
 		t.formatHeader(&t.buf)
 		t.buf = append(t.buf, fmt.Sprintf(s, v...)...)
-		t.output(false,&t.buf, false)
+		t.output(false, &t.buf, false)
 	}
 }
 
 func (t *simpleLogger) PrintErr(e error) {
-	if t.opened && e != nil{
+	if t.opened && e != nil {
 		t.buf = t.buf[:0]
 		t.formatHeader(&t.buf)
 		t.buf = append(t.buf, fmt.Sprintf("[ Error] - %s", e.Error())...)
-		t.output(false,&t.buf, true)
+		t.output(false, &t.buf, true)
 	}
 }
 
@@ -169,7 +169,7 @@ func (t *simpleLogger) Panicf(s string, v ...interface{}) {
 	str := fmt.Sprintf(s, v...)
 	t.formatHeader(&t.buf)
 	t.buf = append(t.buf, str...)
-	t.output(false,&t.buf, false)
+	t.output(false, &t.buf, false)
 	panic(str)
 }
 
@@ -178,7 +178,7 @@ func (t *simpleLogger) Panicln(v ...interface{}) {
 	str := fmt.Sprint(v...)
 	t.formatHeader(&t.buf)
 	t.buf = append(t.buf, str...)
-	t.output(false,&t.buf, true)
+	t.output(false, &t.buf, true)
 	panic(str)
 }
 
@@ -186,7 +186,7 @@ func (t *simpleLogger) Fatalf(s string, v ...interface{}) {
 	t.buf = t.buf[:0]
 	t.formatHeader(&t.buf)
 	t.buf = append(t.buf, fmt.Sprintf(s, v...)...)
-	t.output(false,&t.buf, false)
+	t.output(false, &t.buf, false)
 	os.Exit(1)
 }
 
@@ -194,7 +194,7 @@ func (t *simpleLogger) Fatalln(v ...interface{}) {
 	t.buf = t.buf[:0]
 	t.formatHeader(&t.buf)
 	t.buf = append(t.buf, fmt.Sprint(v...)...)
-	t.output(false,&t.buf, true)
+	t.output(false, &t.buf, true)
 	os.Exit(1)
 }
 

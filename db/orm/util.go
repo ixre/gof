@@ -76,7 +76,7 @@ func GetFields(t reflect.Type) (names []string, mapNames []string) {
 		f := t.Field(i)
 		if f.Tag != "" {
 			fmn = f.Tag.Get("db")
-			if fmn == "_" || len(fmn) == 0 {
+			if fmn == "-" || fmn == "_" || len(fmn) == 0 {
 				break
 			}
 		}
@@ -183,21 +183,21 @@ func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (pa
 			params = append(params, field.Float())
 			//}
 
-			//		case reflect.Bool:
-			//			strVal := field.String()
-			//			val := strings.ToLower(strVal) == "true" || strVal == "1"
-			//			field.Set(reflect.ValueOf(val))
-			//			break
+		case reflect.Bool:
+			strVal := field.String()
+			val := strings.ToLower(strVal) == "true" || strVal == "1"
+			field.Set(reflect.ValueOf(val))
+			break
 
-			//		case reflect.Struct:
-			//			v := field.Interface()
-			//			switch v.(type) {
-			//			case time.Time:
-			//				if v.(time.Time).Year() > 1 {
-			//					isSet = true
-			//					params = append(params, v.(time.Time))
-			//				}
-			//			}
+		case reflect.Struct:
+			v := field.Interface()
+			switch v.(type) {
+			case time.Time:
+				if v.(time.Time).Year() > 1 {
+					isSet = true
+					params = append(params, v.(time.Time))
+				}
+			}
 		}
 
 		if isSet {

@@ -29,6 +29,7 @@ func RowsToMarshalMap(rows *sql.Rows) (rowsMap []map[string]interface{}) {
 		for i, v := range columns {
 			rowsMap[tmpInt][v] = string(rawBytes[i])
 		}
+
 		tmpInt++
 	}
 	return rowsMap

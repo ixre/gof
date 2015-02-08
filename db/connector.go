@@ -11,7 +11,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/newmin/gof/db/orm"
+	"github.com/atnet/gof/db/orm"
 )
 
 type Connector interface {
