@@ -16,16 +16,24 @@ var (
 //				 注意，是区分大小写的,默认映射到index函数
 //				 如果是POST请求将映射到控制器“函数名+_post”的函数执行
 // @re_post : 是否为post请求额外加上_post来区分Post和Get请求
-func HandleRequest(controller interface{}, w http.ResponseWriter, r *http.Request, re_post bool, args ...interface{}) {
-	//	defer func(){
-	//		if err := recover(); err!= nil{
-	//			if _,ok := err.(error);ok{
+func Handle(controller interface{}, w http.ResponseWriter, r *http.Request, re_post bool, args ...interface{}) {
+	//	defer func() {
+	//		if err := recover(); err != nil {
+	//			if _, ok := err.(error); ok {
+	//
 	//				w.Write([]byte("Inject error, plese check parameter type or index!"))
 	//			}
 	//		}
 	//	}()
+
+	// 处理末尾的/
+	var path = r.URL.Path
+	if strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
+
 	var do string
-	groups := actionRegexp.FindAllStringSubmatch(r.URL.Path, 1)
+	groups := actionRegexp.FindAllStringSubmatch(path, 1)
 	if len(groups) == 0 || len(groups[0]) == 0 {
 		do = "Index"
 	} else {
