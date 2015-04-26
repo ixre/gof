@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/atnet/gof/app"
+	"github.com/atnet/gof"
 	"net"
 	"reflect"
 )
 
 var (
-	Context          app.Context
+	Context          gof.App
 	debugMode        bool //调试模式
 	defaultBytesSize int  = 64
 	CmdOperateBytes       = []byte(">>")
@@ -19,7 +19,7 @@ var (
 	AutoResetConn         = true
 )
 
-func Configure(c app.Context) {
+func Configure(c gof.App) {
 	Context = c
 	debugMode = c.Debug()
 }
