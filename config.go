@@ -18,13 +18,19 @@ var (
 	regex = regexp.MustCompile("^\\s*([^#\\s]+)\\s*=\\s*([^#\\s]*)\\s*$")
 )
 
-//配置
+// Config
 type Config struct {
 	configDict map[string]interface{}
 }
 
+func NewConfig()*Config{
+	return &Config{
+		configDict : make(map[string]interface{}),
+	}
+}
+
 // 从文件中加载配置
-func NewConfig(file string) (cfg *Config, err error) {
+func NewFileConfig(file string) (cfg *Config, err error) {
 	s := &Config{}
 	_err := s.load(file)
 	return s, _err

@@ -9,10 +9,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var _ Connector = new(CommonConnector)
+var _ Connector = new(BasicConnector)
 
 //数据库连接器
-type CommonConnector struct {
+type BasicConnector struct {
 	driverName   string  //驱动名称
 	driverSource string  //驱动连接地址
 	_db          *sql.DB //golang db只需要open一次即可
@@ -21,7 +21,7 @@ type CommonConnector struct {
 }
 
 //create a new connector
-func NewCommonConnector(driverName, driverSource string,
+func NewBasicConnector(driverName, driverSource string,
 	l log.ILogger, maxConn int) Connector {
 	db, err := sql.Open(driverName, driverSource)
 
@@ -41,7 +41,7 @@ func NewCommonConnector(driverName, driverSource string,
 		db.SetMaxOpenConns(maxConn)
 	}
 
-	return &CommonConnector{
+	return &BasicConnector{
 		_db:          db,
 		_orm:         orm.NewOrm(db),
 		driverName:   driverName,
@@ -50,21 +50,21 @@ func NewCommonConnector(driverName, driverSource string,
 	}
 }
 
-func (this *CommonConnector) println(v ...interface{}) {
+func (this *BasicConnector) println(v ...interface{}) {
 	if this.logger != nil {
 		this.logger.Println(v...)
 	}
 }
 
-func (this *CommonConnector) GetDb() *sql.DB {
+func (this *BasicConnector) GetDb() *sql.DB {
 	return this._db
 }
 
-func (this *CommonConnector) GetOrm() orm.Orm {
+func (this *BasicConnector) GetOrm() orm.Orm {
 	return this._orm
 }
 
-func (this *CommonConnector) Query(sql string, f func(*sql.Rows), arg ...interface{}) error {
+func (this *BasicConnector) Query(sql string, f func(*sql.Rows), arg ...interface{}) error {
 	stmt, err := this.GetDb().Prepare(sql)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", sql))
@@ -84,7 +84,7 @@ func (this *CommonConnector) Query(sql string, f func(*sql.Rows), arg ...interfa
 }
 
 //查询Rows
-func (this *CommonConnector) QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error {
+func (this *BasicConnector) QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error {
 	stmt, err := this.GetDb().Prepare(sql)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", sql))
@@ -100,7 +100,7 @@ func (this *CommonConnector) QueryRow(sql string, f func(*sql.Row), arg ...inter
 	return nil
 }
 
-func (this *CommonConnector) ExecScalar(s string, result interface{}, arg ...interface{}) (err error) {
+func (this *BasicConnector) ExecScalar(s string, result interface{}, arg ...interface{}) (err error) {
 	if result == nil {
 		return errors.New("Result is null")
 	}
@@ -119,7 +119,7 @@ func (this *CommonConnector) ExecScalar(s string, result interface{}, arg ...int
 }
 
 //执行
-func (this *CommonConnector) Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error) {
+func (this *BasicConnector) Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error) {
 	stmt, err := this.GetDb().Prepare(sql)
 	if err != nil {
 		return 0, -1, err
@@ -138,7 +138,7 @@ func (this *CommonConnector) Exec(sql string, args ...interface{}) (rows int, la
 	return int(affect), int(lastId), nil
 }
 
-func (this *CommonConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
+func (this *BasicConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
 	n, _, err := this.Exec(sql, args...)
 	return n, err
 }

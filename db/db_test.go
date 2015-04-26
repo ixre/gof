@@ -113,7 +113,7 @@ func Test_to(t *testing.T) {
 
 func init() {
 	log.SetOutput(os.Stdout)
-	_connector = NewCommonConnector("mysql",
+	_connector = NewBasicConnector("mysql",
 		"root:@tcp(localhost:3306)/mysql?charset=utf8", nil, -1)
 	_orm = _connector.GetOrm()
 	_orm.SetTrace(!true)
