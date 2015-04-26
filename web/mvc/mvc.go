@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+    "fmt"
 )
 
 var (
@@ -60,12 +61,21 @@ func Handle(controller interface{}, w http.ResponseWriter, r *http.Request, re_p
 	method := t.MethodByName(do)
 
 	if !method.IsValid() {
-		w.Write([]byte("No action named \"" + strings.Replace(do, "_post", "", 1) +
-			"\" in " + reflect.TypeOf(controller).String() + "."))
+        errMsg := "No action named \"" + strings.Replace(do, "_post", "", 1) +
+        "\" in " + reflect.TypeOf(controller).String() + "."
+        http.Error(w,errMsg,http.StatusInternalServerError)
+        return
 	} else {
 		//包含基础的ResponseWriter和http.Request 2个参数
 		argsLen := len(args)
 		numIn := method.Type().NumIn()
+
+        if numIn -2 > argsLen {
+            errMsg := fmt.Sprintf("Can't inject to method,it's possible missing parameter!\r\ncontroller:%s , method:%s",
+            reflect.TypeOf(controller).String(),do)
+            http.Error(w,errMsg,http.StatusInternalServerError)
+            return
+        }
 
 		if argsLen == 0 || numIn == 2 {
 			params := []reflect.Value{reflect.ValueOf(w), reflect.ValueOf(r)}

@@ -3,6 +3,7 @@ package web
 import (
 	"html/template"
 	"io"
+	"net/http"
 )
 
 type TemplateWrapper struct {
@@ -24,7 +25,6 @@ func (this *TemplateWrapper) Execute(w io.Writer, f TemplateMapFunc,
 
 	t, err := template.ParseFiles(tplPath...)
 	if err != nil {
-		//http.Error(weixin, err.Error(),500)
 		return err
 	}
 
@@ -37,4 +37,13 @@ func (this *TemplateWrapper) Execute(w io.Writer, f TemplateMapFunc,
 	}
 
 	return t.Execute(w, &data)
+}
+
+// execute template,when happend error return a http error.
+func (this *TemplateWrapper) ExecuteIncludeErr(w http.ResponseWriter, f TemplateMapFunc,
+tplPath ...string){
+	err := this.Execute(w,f,tplPath...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
