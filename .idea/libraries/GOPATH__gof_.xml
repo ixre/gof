@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;gof&gt;">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../go2o" />
+      <root url="file://$PROJECT_DIR$/../../../.idea" />
+      <root url="file://$PROJECT_DIR$/../../../.DS_Store" />
+      <root url="file://$PROJECT_DIR$/../.DS_Store" />
+      <root url="file://$PROJECT_DIR$/../../garyburd" />
+      <root url="file://$PROJECT_DIR$/../../.DS_Store" />
+      <root url="file://$PROJECT_DIR$/../../coopernurse" />
+      <root url="file://$PROJECT_DIR$/../../go-sql-driver" />
+      <root url="file://$PROJECT_DIR$/../../../code.google.com" />
+      <root url="file://$PROJECT_DIR$/../../../../../project/bxweb/src" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
