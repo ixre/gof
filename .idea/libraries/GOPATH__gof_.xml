@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="file://$PROJECT_DIR$/../../../go2o" />
       <root url="file://$PROJECT_DIR$/../../../.idea" />
+      <root url="file://$PROJECT_DIR$/../../../_go2o" />
       <root url="file://$PROJECT_DIR$/../../../.DS_Store" />
       <root url="file://$PROJECT_DIR$/../.DS_Store" />
       <root url="file://$PROJECT_DIR$/../../garyburd" />

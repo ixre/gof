@@ -11,7 +11,17 @@ package web
 import (
 	"net/http"
 	"regexp"
+	"fmt"
 )
+
+// Url Route
+type Route interface {
+	Add(urlPattern string, rf HttpContextFunc)
+	Handle(ctx *Context)
+}
+
+var _ Route = new(RouteMap)
+
 
 //路由映射
 type RouteMap struct {
@@ -31,7 +41,6 @@ func (this *RouteMap) Add(urlPattern string, rf HttpContextFunc) {
 		this.RouteCollection = make(map[string]HttpContextFunc)
 	}
 	_, exists := this.RouteCollection[urlPattern]
-
 	if !exists {
 		this.RouteCollection[urlPattern] = rf
 		this.UrlPatterns = append(this.UrlPatterns, urlPattern)
@@ -44,6 +53,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	if this.deferFunc != nil {
 		defer this.deferFunc(ctx)
 	}
+	var err error
 	r, w := ctx.Request, ctx.ResponseWriter
 	routes := this.RouteCollection
 	path := r.URL.Path
@@ -53,13 +63,18 @@ func (this *RouteMap) Handle(ctx *Context) {
 	for _, k := range this.UrlPatterns {
 		v, exist := routes[k]
 		if exist {
-			matched, err := regexp.Match(k, []byte(path))
-			//fmt.Println("\n",k,path)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+			var isMatch bool = k == "*" || k == path  //compare url
+			if !isMatch {
+				isMatch, err = regexp.MatchString(k,path)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			}
-			if matched && v != nil {
+
+			//fmt.Println("Verify:", k, path)
+			if isMatch && v != nil {
+				fmt.Println("Matched:", k, path)
 				isHandled = true
 				v(ctx)
 				break
