@@ -36,7 +36,7 @@ func NewRoute(source *web.RouteMap)*Route{
 
 //添加路由
 func (this *Route) Add(urlPattern string, rf web.HttpContextFunc) {
-    this._routeMap.Add(urlPattern,this.defaultRouteHandle)
+    this._routeMap.Add(urlPattern,rf)
 }
 
 // 处理请求
@@ -55,10 +55,9 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
     ci := strings.Index(path[1:], "/")
     if ci == -1 {
         ctlName = path[1:]
-        action = "Index"
     }else {
-        ctlName = path[1:ci]
-        path = path[ci+1:]
+        ctlName = path[1:ci+1]
+        path = path[ci+2:]
         ai := strings.Index(path, "/")
         if ai == -1 {
             action = path
@@ -66,10 +65,20 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
             action= path[:ai]
         }
     }
+    if len(action) == 0{
+        action = "Index"
+    }else{
+        //将第一个字符转为大写,这样才可以
+        upperFirstLetter := strings.ToUpper(action[0:1])
+        if upperFirstLetter != action[0:1] {
+            action = upperFirstLetter + action[1:]
+        }
+    }
+
 
     if this._ctlMap != nil {
         if v := this._ctlMap[ctlName]; v != nil {
-            CustomHandle(v, ctx, strings.ToTitle(action), nil)
+            CustomHandle(v, ctx,action, nil)
             return
         }
     }
