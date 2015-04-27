@@ -9,5 +9,4 @@
 package web
 
 type server struct {
-
 }

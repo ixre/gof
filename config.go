@@ -23,9 +23,9 @@ type Config struct {
 	configDict map[string]interface{}
 }
 
-func NewConfig()*Config{
+func NewConfig() *Config {
 	return &Config{
-		configDict : make(map[string]interface{}),
+		configDict: make(map[string]interface{}),
 	}
 }
 

@@ -9,26 +9,26 @@
 package gof
 
 import (
-    "github.com/atnet/gof/db"
-    "github.com/atnet/gof/log"
+	"github.com/atnet/gof/db"
+	"github.com/atnet/gof/log"
 )
 
 type App interface {
-    // Provided db access
-    Db() db.Connector
+	// Provided db access
+	Db() db.Connector
 
-    // Return a Wrapper for golang template.
-    Template() *Template
+	// Return a Wrapper for golang template.
+	Template() *Template
 
-    // Return application configs.
-    Config() *Config
+	// Return application configs.
+	Config() *Config
 
-    // Return a logger
-    Log() log.ILogger
+	// Return a logger
+	Log() log.ILogger
 
-    // Get a reference of AppContext
-    Source() interface{}
+	// Get a reference of AppContext
+	Source() interface{}
 
-    // Application is running debug mode
-    Debug() bool
+	// Application is running debug mode
+	Debug() bool
 }

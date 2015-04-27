@@ -26,7 +26,7 @@ type RouteMap struct {
 type httpFuncMap map[string]HttpContextFunc
 
 //添加路由
-func (this *RouteMap) Add(urlPattern string,rf HttpContextFunc) {
+func (this *RouteMap) Add(urlPattern string, rf HttpContextFunc) {
 	if this.RouteCollection == nil {
 		this.RouteCollection = make(map[string]HttpContextFunc)
 	}
@@ -44,7 +44,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	if this.deferFunc != nil {
 		defer this.deferFunc(ctx)
 	}
-	r,w := ctx.Request,ctx.ResponseWriter
+	r, w := ctx.Request, ctx.ResponseWriter
 	routes := this.RouteCollection
 	path := r.URL.Path
 	var isHandled bool = false
@@ -56,7 +56,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 			matched, err := regexp.Match(k, []byte(path))
 			//fmt.Println("\n",k,path)
 			if err != nil {
-				http.Error(w,err.Error(),http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			if matched && v != nil {
@@ -68,7 +68,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	}
 
 	if !isHandled {
-		http.Error(w,"404 Not found!",http.StatusNotFound)
+		http.Error(w, "404 Not found!", http.StatusNotFound)
 	}
 }
 
