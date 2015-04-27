@@ -11,7 +11,6 @@ package web
 import (
 	"net/http"
 	"regexp"
-	"fmt"
 )
 
 // Url Route
@@ -74,7 +73,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 
 			//fmt.Println("Verify:", k, path)
 			if isMatch && v != nil {
-				fmt.Println("Matched:", k, path)
+				//fmt.Println("Matched:", k, path)
 				isHandled = true
 				v(ctx)
 				break

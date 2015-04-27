@@ -31,7 +31,6 @@ func CustomHandle(controller interface{}, ctx *web.Context,action string,args ..
 	//			}
 	//		}
 	//	}()
-fmt.Println(action,"--------------")
 	w := ctx.ResponseWriter
 
 	t := reflect.ValueOf(controller)
