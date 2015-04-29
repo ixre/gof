@@ -68,7 +68,6 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 				params[i] = reflect.ValueOf(args[i-1])
 			}
 
-			fmt.Println(len(args),numIn,args[0],"--------------")
 			method.Call(params)
 		}
 	}
