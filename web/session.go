@@ -15,10 +15,10 @@ import (
     "net/http"
 )
 
-const defaultSessionTime int32 = 7200
+const defaultSessionTime int = 7200
 const  sessionCookieName string = "_gofs"
 
-func getSessionKey(key string){
+func getSessionKey(key string)string{
     return "gof:web:session:"+key
 }
 
@@ -33,7 +33,7 @@ type Session struct {
     _rsp    http.ResponseWriter
     _data map[string]interface{}
     _storage gof.Storage
-    _exipresSeconds int32
+    _exipresSeconds int
 }
 
 func LoadSession(w http.ResponseWriter,storage gof.Storage,key string)*Session {
@@ -58,7 +58,7 @@ func NewSession(w http.ResponseWriter,storage gof.Storage)*Session{
 }
 
 func (this *Session) chkInit(){
-    if this._data = nil{
+    if this._data == nil{
         this._data = make(map[string]interface{})
     }
 }
@@ -90,17 +90,18 @@ func (this *Session) Save()error {
 }
 
 // 设置过期秒数
-func (this *Session) SetExpires(seconds int32){
+func (this *Session) SetExpires(seconds int){
     this._exipresSeconds = seconds
 }
 
 //存储到客户端
 func (this *Session) flushToClient(){
-    ck := http.Cookie{
+    d := time.Duration(this._exipresSeconds)
+    ck := &http.Cookie{
         Name: sessionCookieName,
         Value : this._key,
         Path:"/",
-        Expires: time.Now().Add(time.Second*this._exipresSeconds),
+        Expires: time.Now().Add(d),
     }
     http.SetCookie(this._rsp,ck)
 }
