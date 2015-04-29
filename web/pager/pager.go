@@ -1,7 +1,7 @@
 /**
  * Copyright 2014 @ Ops.
  * name :
- * author : newmin
+ * author : jarryliu
  * date : 2013-11-17 07:49
  * description :
  * history :

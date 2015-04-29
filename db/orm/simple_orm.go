@@ -479,7 +479,7 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 	//insert
 	if primaryKey == nil {
 		var pArr = make([]string, len(fieldArr))
-		for i, _ := range pArr {
+		for i := range pArr {
 			pArr[i] = "?"
 		}
 

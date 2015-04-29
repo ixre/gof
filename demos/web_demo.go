@@ -1,7 +1,7 @@
 /**
  * Copyright 2015 @ S1N1 Team.
  * name :
- * author : newmin
+ * author : jarryliu
  * date : 2015-04-27 00:53
  * description :
  * history :
@@ -14,9 +14,9 @@ import (
 	"github.com/atnet/gof/db"
 	"github.com/atnet/gof/log"
 	"github.com/atnet/gof/web"
+	"github.com/atnet/gof/web/mvc"
 	"net/http"
 	"strings"
-	"github.com/atnet/gof/web/mvc"
 )
 
 // Implement gof.App
@@ -114,26 +114,26 @@ func getHttpExecFunc(routes web.Route) web.HttpContextFunc {
 }
 
 // Test Controller
-type testController struct{
+type testController struct {
 }
 
-func (this *testController) Requesting(ctx *web.Context)bool{
+func (this *testController) Requesting(ctx *web.Context) bool {
 	ctx.ResponseWriter.Write([]byte("\r\nit's pass by filter...."))
 	return !false
 }
 
-func (this *testController) RequestEnd(ctx *web.Context){
+func (this *testController) RequestEnd(ctx *web.Context) {
 	ctx.ResponseWriter.Write([]byte("\r\nRequest End."))
 }
 
-func (this *testController) Index(ctx *web.Context){
+func (this *testController) Index(ctx *web.Context) {
 	ctx.ResponseWriter.Write([]byte("\r\nRequesting....."))
 }
 
 func main() {
 	app := &HttpApp{}
 	routes := mvc.NewRoute(nil)
-	routes.RegisterController("test",&testController{})
+	routes.RegisterController("test", &testController{})
 
 	routes.Add("/[0-9]$", func(ctx *web.Context) {
 		ctx.ResponseWriter.Write([]byte("数字路径"))

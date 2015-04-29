@@ -1,7 +1,5 @@
 package tree
 
-import ()
-
 type TreeNode struct {
 	//子节点编号
 	Id int `json:"id"`

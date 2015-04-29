@@ -1,7 +1,7 @@
 /**
  * Copyright 2015 @ S1N1 Team.
  * name : proxy.go
- * author : newmin
+ * author : jarryliu
  * date : -- :
  * description :
  * history :
@@ -21,7 +21,7 @@ func (this *ResponseProxyWriter) Header() http.Header {
 	return this.writer.Header()
 }
 func (this *ResponseProxyWriter) Write(bytes []byte) (int, error) {
-	this.Output = append(this.Output, bytes[0:len(bytes)]...)
+	this.Output = append(this.Output, bytes[0:]...)
 	return this.writer.Write(bytes)
 }
 func (this *ResponseProxyWriter) WriteHeader(i int) {

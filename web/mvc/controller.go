@@ -9,4 +9,3 @@
 package mvc
 
 type Controller interface{}
-

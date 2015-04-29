@@ -1,7 +1,7 @@
 /**
  * Copyright 2014 @ S1N1 Team.
  * name :
- * author : newmin
+ * author : jarryliu
  * date : 2014-02-05 21:53
  * description :
  * history :
@@ -20,6 +20,7 @@ type Route interface {
 }
 
 var _ Route = new(RouteMap)
+
 //路由映射
 type RouteMap struct {
 	deferFunc HttpContextFunc
@@ -60,9 +61,9 @@ func (this *RouteMap) Handle(ctx *Context) {
 	for _, k := range this.UrlPatterns {
 		v, exist := routes[k]
 		if exist {
-			var isMatch bool = k == "*" || k == path  //compare url
+			var isMatch bool = k == "*" || k == path //compare url
 			if !isMatch {
-				isMatch, err = regexp.MatchString(k,path)
+				isMatch, err = regexp.MatchString(k, path)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return

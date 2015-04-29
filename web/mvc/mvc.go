@@ -1,7 +1,7 @@
 /**
  * Copyright 2014 @ S1N1 Team.
  * name :
- * author : newmin
+ * author : jarryliu
  * date : 2014-02-05 21:53
  * description :
  * history :
@@ -21,8 +21,7 @@ var (
 	actionRegexp = regexp.MustCompile("/([^/]+)$")
 )
 
-
-func CustomHandle(controller Controller, ctx *web.Context,action string,args ...interface{}) {
+func CustomHandle(controller Controller, ctx *web.Context, action string, args ...interface{}) {
 	//	defer func() {
 	//		if err := recover(); err != nil {
 	//			if _, ok := err.(error); ok {
@@ -35,9 +34,9 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 	w := ctx.ResponseWriter
 
 	// 拦截器
-	filter,isFilter := controller.(Filter)
-	if isFilter{
-		if !filter.Requesting(ctx){				//如果返回false，终止执行
+	filter, isFilter := controller.(Filter)
+	if isFilter {
+		if !filter.Requesting(ctx) { //如果返回false，终止执行
 			return
 		}
 	}
@@ -64,7 +63,7 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 		} else {
 			params := make([]reflect.Value, numIn)
 			params[0] = reflect.ValueOf(ctx)
-			for i := 1; i < numIn ; i++ {
+			for i := 1; i < numIn; i++ {
 				params[i] = reflect.ValueOf(args[i-1])
 			}
 
@@ -72,7 +71,7 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 		}
 	}
 
-	if isFilter{
+	if isFilter {
 		filter.RequestEnd(ctx)
 	}
 }
@@ -82,7 +81,7 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 //				 注意，是区分大小写的,默认映射到index函数
 //				 如果是POST请求将映射到控制器“函数名+_post”的函数执行
 // @re_post : 是否为post请求额外加上_post来区分Post和Get请求
-func Handle(controller Controller,ctx *web.Context,rePost bool,args ...interface{}){
+func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interface{}) {
 	r := ctx.Request
 	// 处理末尾的/
 	var path = r.URL.Path
@@ -114,5 +113,5 @@ func Handle(controller Controller,ctx *web.Context,rePost bool,args ...interface
 		action += "_post"
 	}
 
-	CustomHandle(controller,ctx, action,args...)
+	CustomHandle(controller, ctx, action, args...)
 }

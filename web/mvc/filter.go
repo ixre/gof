@@ -9,13 +9,13 @@
 package mvc
 
 import (
-    "github.com/atnet/gof/web"
+	"github.com/atnet/gof/web"
 )
 
 // controller fiter
 type Filter interface {
-    //call it before execute your some business.
-    Requesting(*web.Context)bool
-    //call it after execute your some business.
-    RequestEnd(*web.Context)
+	//call it before execute your some business.
+	Requesting(*web.Context) bool
+	//call it after execute your some business.
+	RequestEnd(*web.Context)
 }
