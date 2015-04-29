@@ -18,6 +18,7 @@ import (
 
 type redisStorage struct {
 	_pool *redis.Pool
+	_buf bytes.Buffer
 }
 
 func NewRedisStorage(pool *redis.Pool) gof.Storage {
@@ -27,24 +28,35 @@ func NewRedisStorage(pool *redis.Pool) gof.Storage {
 }
 
 func (this *redisStorage) Get(key string, dst interface{}) error {
-	src, err := redis.Values(this._pool.Get().Do("Get", key))
-	fmt.Println("--------",src)
-	if _, err = redis.Scan(src, &dst); err != nil {
-		return err
+	src, err := redis.Bytes(this._pool.Get().Do("Get", key))
+	if err == nil{
+		buf :=
+		dec := gob.Decoder(buf)
+		buf.Reset()
 	}
-	return nil
+	return err
 }
-func (this *redisStorage) Set(key string, v interface{})error {
+
+func getByte(v interface{})([]byte,error){
 	buf := new(bytes.Buffer)
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(v)
-	if err != nil {
-		return err
+	if err == nil {
+		return nil,err
 	}
-	b := buf.Bytes()
-	_,err = this._pool.Get().Do("SET", key,b)
+	return buf.Bytes(),err
+}
+func (this *redisStorage) Set(key string, v interface{})error {
+	b,err := getByte(v)
+	if err == nil {
+		_, err = this._pool.Get().Do("SET", key, b)
+	}
 	return err
 }
-func (this *redisStorage) DSet(key string, v interface{}, seconds int32) {
-	this._pool.Get().Do("SETEX", key, v, seconds)
+func (this *redisStorage) SetExpire(key string, v interface{}, seconds int32)error {
+	b,err := getByte(v)
+	if err == nil {
+		_, err = this._pool.Get().Do("SETEX", key, b,seconds)
+	}
+	return err
 }
