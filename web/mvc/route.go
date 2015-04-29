@@ -84,7 +84,7 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 
     if this._ctlMap != nil {
         if v := this._ctlMap[ctlName]; v != nil {
-            CustomHandle(v, ctx,action, nil)
+            CustomHandle(v, ctx,action)
             return
         }
     }

@@ -57,7 +57,7 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 
 		if argsLen < numIn-1 {
 			errMsg := fmt.Sprintf("Can't inject to method,it's possible missing parameter!"+
-				"\r\ncontroller:%s , method:%s",
+				"\r\ncontroller: %s , action: %s",
 				reflect.TypeOf(controller).String(), action)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
@@ -67,6 +67,8 @@ func CustomHandle(controller Controller, ctx *web.Context,action string,args ...
 			for i := 1; i < numIn ; i++ {
 				params[i] = reflect.ValueOf(args[i-1])
 			}
+
+			fmt.Println(len(args),numIn,args[0],"--------------")
 			method.Call(params)
 		}
 	}
