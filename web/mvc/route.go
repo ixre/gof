@@ -12,14 +12,15 @@ import (
     "github.com/atnet/gof/web"
     "strings"
     "net/http"
+    "log"
 )
 
 var _ web.Route = new(Route)
 
 type Route struct{
-    _lazyRegisted bool
+    _lazyRegister bool
     _routeMap *web.RouteMap
-    _ctlMap map[string]interface{}
+    _ctlMap map[string]Controller
 }
 
 func NewRoute(source *web.RouteMap)*Route{
@@ -28,7 +29,7 @@ func NewRoute(source *web.RouteMap)*Route{
     }
 
     r := &Route{
-        _ctlMap : make(map[string]interface{}),
+        _ctlMap : make(map[string]Controller),
         _routeMap : source,
     }
     return r
@@ -36,15 +37,20 @@ func NewRoute(source *web.RouteMap)*Route{
 
 //添加路由
 func (this *Route) Add(urlPattern string, rf web.HttpContextFunc) {
+    if urlPattern == "" || urlPattern == "/" || urlPattern =="^/"{
+        log.Fatalln("[ Panic] - Dangerous!The url parttern \""+ urlPattern+
+            "\" will override default route,"+
+            "please instead of \"^/$\"")
+    }
     this._routeMap.Add(urlPattern,rf)
 }
 
 // 处理请求
 func (this *Route) Handle(ctx *web.Context) {
-    if !this._lazyRegisted {
+    if !this._lazyRegister {
         // 添加默认的路由
         this.Add("*",this.defaultRouteHandle)
-        this._lazyRegisted = true
+        this._lazyRegister = true
     }
     this._routeMap.Handle(ctx)
 }
@@ -87,10 +93,20 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
     http.StatusNotFound)
 }
 
-// 注册控制器
-func (this *Route) RegisterController(name string,ctl interface{}){
+// Register Controller into routes table.
+func (this *Route) RegisterController(name string,ctl Controller){
     if this._ctlMap == nil{
-        this._ctlMap = make(map[string]interface{})
+        this._ctlMap = make(map[string]Controller)
     }
     this._ctlMap[name] = ctl
+}
+
+// Get Controller
+func (this *Route) GetController(name string)Controller{
+    if this._ctlMap != nil{
+        if v,ok := this._ctlMap[name];ok{
+            return v
+        }
+    }
+    return nil
 }

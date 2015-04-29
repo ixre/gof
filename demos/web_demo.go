@@ -16,6 +16,7 @@ import (
 	"github.com/atnet/gof/web"
 	"net/http"
 	"strings"
+	"github.com/atnet/gof/web/mvc"
 )
 
 // Implement gof.App
@@ -89,7 +90,7 @@ func (this *HttpApp) Log() log.ILogger {
 }
 
 //获取Http请求代理处理程序
-func getInterceptor(a gof.App, routes *web.RouteMap) *web.Interceptor {
+func getInterceptor(a gof.App, routes web.Route) *web.Interceptor {
 	var in = web.NewInterceptor(a, getHttpExecFunc(routes))
 	in.Except = web.HandleDefaultHttpExcept
 	in.Before = nil
@@ -98,7 +99,7 @@ func getInterceptor(a gof.App, routes *web.RouteMap) *web.Interceptor {
 }
 
 // 获取执行方法
-func getHttpExecFunc(routes *web.RouteMap) web.HttpContextFunc {
+func getHttpExecFunc(routes web.Route) web.HttpContextFunc {
 	return func(ctx *web.Context) {
 		r, w := ctx.Request, ctx.ResponseWriter
 		switch host, f := r.Host, strings.HasPrefix; {
@@ -112,11 +113,29 @@ func getHttpExecFunc(routes *web.RouteMap) web.HttpContextFunc {
 	}
 }
 
+// Test Controller
+type testController struct{
+}
+
+func (this *testController) Requesting(ctx *web.Context)bool{
+	ctx.ResponseWriter.Write([]byte("\r\nit's pass by filter...."))
+	return !false
+}
+
+func (this *testController) RequestEnd(ctx *web.Context){
+	ctx.ResponseWriter.Write([]byte("\r\nRequest End."))
+}
+
+func (this *testController) Index(ctx *web.Context){
+	ctx.ResponseWriter.Write([]byte("\r\nRequesting....."))
+}
+
 func main() {
 	app := &HttpApp{}
-	routes := &web.RouteMap{}
+	routes := mvc.NewRoute(nil)
+	routes.RegisterController("test",&testController{})
 
-	routes.Add("/[0-9]/*", func(ctx *web.Context) {
+	routes.Add("/[0-9]$", func(ctx *web.Context) {
 		ctx.ResponseWriter.Write([]byte("数字路径"))
 	})
 
@@ -124,7 +143,7 @@ func main() {
 		ctx.ResponseWriter.Write([]byte("字母路径"))
 	})
 
-	routes.Add("/", func(ctx *web.Context) {
+	routes.Add("^/$", func(ctx *web.Context) {
 		sysName := ctx.App.Config().GetString("SYS_NAME")
 		ctx.ResponseWriter.Write([]byte("Hello,Gof with " + sysName + "."))
 		ctx.ResponseWriter.Header().Set("Content-Type", "text/html")

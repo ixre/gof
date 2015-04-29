@@ -20,8 +20,6 @@ type Route interface {
 }
 
 var _ Route = new(RouteMap)
-
-
 //路由映射
 type RouteMap struct {
 	deferFunc HttpContextFunc
