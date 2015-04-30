@@ -87,7 +87,7 @@ func (this *redisStorage) SetExpire(key string, v interface{}, seconds int64)err
 	b,err := this.getByte(v)
 	if err == nil {
         conn := this._pool.Get()
-        _, err = this._pool.Get().Do("SETEX", key, b,seconds)
+        _, err = this._pool.Get().Do("SETEX", key,seconds,b)
         conn.Close()
 	}
 	return err
