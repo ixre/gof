@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"encoding/gob"
     "sync"
+    "strings"
 )
 
 type redisStorage struct {
@@ -29,47 +30,65 @@ func NewRedisStorage(pool *redis.Pool) gof.Storage {
 	}
 }
 
-func (this *redisStorage) Get(key string, dst interface{}) error {
-	src, err := redis.Bytes(this._pool.Get().Do("Get", key))
-	if err == nil{
-        err = this.decodeBytes(src,dst)
-	}
-	return err
-}
-
-func (this *redisStorage) getByte(v interface{})([]byte,error){
+func (this *redisStorage) getByte(v interface{})([]byte,error) {
     this.Mutex.Lock()
     defer this.Mutex.Unlock()
-	enc := gob.NewEncoder(this._buf)
-	err := enc.Encode(v)
-	if err == nil {
-		return nil,err
-	}
-    b := this._buf.Bytes()
-    this._buf.Reset()
-	return b,err
+    enc := gob.NewEncoder(this._buf)
+    err := enc.Encode(v)
+    if err == nil {
+        b := this._buf.Bytes()
+        this._buf.Reset()
+        return b, nil
+    }
+    if strings.Index(err.Error(), "type not registered") != -1 {
+        panic(err)
+    }
+    return nil, err
 }
 
 func (this *redisStorage) decodeBytes(b []byte,dst interface{})error {
     this.Mutex.Lock()
     defer this.Mutex.Unlock()
+    this._buf.Write(b)
     dec := gob.NewDecoder(this._buf)
     err := dec.Decode(dst)
     this._buf.Reset()
     return err
 }
 
+
+func (this *redisStorage) Get(key string, dst interface{}) error {
+    conn := this._pool.Get()
+    src, err := redis.Bytes(conn.Do("GET", key))
+    conn.Close()
+    if err == nil{
+        err = this.decodeBytes(src,dst)
+    }
+    return err
+}
+
+
 func (this *redisStorage) Set(key string, v interface{})error {
 	b,err := this.getByte(v)
 	if err == nil {
-		_, err = this._pool.Get().Do("SET", key, b)
+        conn := this._pool.Get()
+		_, err = conn.Do("SET", key, b)
+        conn.Close()
 	}
 	return err
 }
+
+func (this *redisStorage) Del(key string){
+    conn := this._pool.Get()
+    conn.Do("DEL",key)
+}
+
 func (this *redisStorage) SetExpire(key string, v interface{}, seconds int32)error {
 	b,err := this.getByte(v)
 	if err == nil {
-		_, err = this._pool.Get().Do("SETEX", key, b,seconds)
+        conn := this._pool.Get()
+        _, err = this._pool.Get().Do("SETEX", key, b,seconds)
+        conn.Close()
 	}
 	return err
 }

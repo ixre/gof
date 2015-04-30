@@ -46,13 +46,13 @@ func (this *Context) getSessionStorage()gof.Storage{
 }
 
 func (this *Context) Session()*Session{
-	if this._session == nil{
-		ck,err := this.Request.Cookie(sessionCookieName)
+	if this._session == nil {
+		ck, err := this.Request.Cookie(sessionCookieName)
 		ss := this.getSessionStorage()
-		if err == nil{
-			this._session = LoadSession(this.ResponseWriter,ss,ck.Value)
-		}else{
-			this._session = NewSession(this.ResponseWriter,ss)
+		if err == nil {
+			this._session = LoadSession(this.ResponseWriter, ss, ck.Value)
+		}else {
+			this._session = NewSession(this.ResponseWriter, ss)
 			this._session.Save()
 		}
 	}
