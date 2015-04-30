@@ -8,7 +8,6 @@
  */
 package web
 
-
 // Http Context Session
 //
 //    func (this *mainC) Index(ctx *web.Context) {

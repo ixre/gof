@@ -14,9 +14,9 @@ type Storage interface {
 	// Get Value
 	Get(key string, dst interface{}) error
 	// Set Value
-	Set(key string, v interface{})error
+	Set(key string, v interface{}) error
 	// Delete Storage
 	Del(key string)
 	// Auto Delete Set
-	SetExpire(key string, v interface{}, seconds int64)error
+	SetExpire(key string, v interface{}, seconds int64) error
 }

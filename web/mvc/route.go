@@ -81,8 +81,8 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 		}
 	}
 
-	if ctx.Request.Method == "POST"{
-		action = action+"_post"
+	if ctx.Request.Method == "POST" {
+		action = action + "_post"
 	}
 
 	if this._ctlMap != nil {

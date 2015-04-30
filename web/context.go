@@ -19,7 +19,7 @@ type HttpContextFunc func(*Context)
 var sessionStorage gof.Storage
 
 // 设置全局的会话存储
-func SetSessionStorage(s gof.Storage){
+func SetSessionStorage(s gof.Storage) {
 	sessionStorage = s
 }
 
@@ -27,7 +27,7 @@ type Context struct {
 	App            gof.App
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
-	_session	   *Session
+	_session       *Session
 }
 
 func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Context {
@@ -38,20 +38,20 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 	}
 }
 
-func (this *Context) getSessionStorage()gof.Storage{
-	if sessionStorage == nil{
+func (this *Context) getSessionStorage() gof.Storage {
+	if sessionStorage == nil {
 		return this.App.Storage()
 	}
 	return sessionStorage
 }
 
-func (this *Context) Session()*Session{
+func (this *Context) Session() *Session {
 	if this._session == nil {
 		ck, err := this.Request.Cookie(sessionCookieName)
 		ss := this.getSessionStorage()
 		if err == nil {
 			this._session = LoadSession(this.ResponseWriter, ss, ck.Value)
-		}else {
+		} else {
 			this._session = NewSession(this.ResponseWriter, ss)
 			this._session.Save()
 		}
