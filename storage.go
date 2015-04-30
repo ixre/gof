@@ -17,5 +17,5 @@ type Storage interface {
 	// Delete Storage
 	Del(key string)
 	// Auto Delete Set
-	SetExpire(key string, v interface{}, seconds int32)error
+	SetExpire(key string, v interface{}, seconds int64)error
 }

@@ -83,7 +83,7 @@ func (this *redisStorage) Del(key string){
     conn.Do("DEL",key)
 }
 
-func (this *redisStorage) SetExpire(key string, v interface{}, seconds int32)error {
+func (this *redisStorage) SetExpire(key string, v interface{}, seconds int64)error {
 	b,err := this.getByte(v)
 	if err == nil {
         conn := this._pool.Get()
