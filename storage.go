@@ -9,6 +9,7 @@
 
 package gof
 
+// Storage
 type Storage interface {
 	// Get Value
 	Get(key string, dst interface{}) error
