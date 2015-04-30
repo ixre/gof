@@ -95,7 +95,7 @@ func (this *Session) Save()error {
     if this._data == nil {
         return nil
     }
-    err := this._storage.Set(getSessionKey(this._key),&this._data)
+    err := this._storage.SetExpire(getSessionKey(this._key),&this._data,this._maxAge)
     if err == nil{
         this.flushToClient()
     }
@@ -110,13 +110,13 @@ func (this *Session)SetMaxAge(seconds int64){
 //存储到客户端
 func (this *Session) flushToClient(){
     d := time.Duration(this._maxAge*1e9)
-    exipres := time.Now().Local().Add(d)
+    expires := time.Now().Local().Add(d)
     ck := &http.Cookie{
         Name: sessionCookieName,
         Value : this._key,
         Path:"/",
         HttpOnly:true,
-        Expires: exipres,
+        Expires: expires,
     }
     http.SetCookie(this._rsp,ck)
 }
