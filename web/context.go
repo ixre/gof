@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-type HttpContextFunc func(*Context)
+type ContextFunc func(*Context)
 
 var sessionStorage gof.Storage
 

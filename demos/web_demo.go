@@ -99,7 +99,7 @@ func getInterceptor(a gof.App, routes web.Route) *web.Interceptor {
 }
 
 // 获取执行方法
-func getHttpExecFunc(routes web.Route) web.HttpContextFunc {
+func getHttpExecFunc(routes web.Route) web.ContextFunc {
 	return func(ctx *web.Context) {
 		r, w := ctx.Request, ctx.ResponseWriter
 		switch host, f := r.Host, strings.HasPrefix; {
