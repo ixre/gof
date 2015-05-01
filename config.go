@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 )
 
 const lineEnd byte = '\n'
@@ -68,6 +69,11 @@ func (this *Config) GetInt(key string) int {
 		if ok {
 			return v
 		}
+		if sv, ok := k.(string); ok {
+			if iv,err :=  strconv.Atoi(sv);err == nil{
+				return iv
+			}
+		}
 	}
 	return 0
 }
@@ -78,6 +84,11 @@ func (this *Config) GetFloat(key string) float64 {
 		v, ok := k.(float64)
 		if ok {
 			return v
+		}
+		if sv, ok := k.(string); ok {
+			if iv,err :=  strconv.ParseFloat(sv,64);err == nil{
+				return iv
+			}
 		}
 	}
 	return 0
