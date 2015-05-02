@@ -24,8 +24,6 @@ type App interface {
 	Storage() Storage
 	// Return a logger
 	Log() log.ILogger
-	// Get a reference of AppContext
-	Source() interface{}
 	// Application is running debug mode
 	Debug() bool
 }

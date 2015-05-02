@@ -25,6 +25,10 @@ func NewOrm(db *sql.DB) Orm {
 	}
 }
 
+func (this *simpleOrm) Version()string{
+	return "1.0.1"
+}
+
 func (this *simpleOrm) err(err error) {
 	if this.useTrace {
 		log.Println("[ORM][Error]:%s ", err.Error())
