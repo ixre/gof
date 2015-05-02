@@ -70,7 +70,7 @@ func (this *Config) GetInt(key string) int {
 			return v
 		}
 		if sv, ok := k.(string); ok {
-			if iv,err :=  strconv.Atoi(sv);err == nil{
+			if iv, err := strconv.Atoi(sv); err == nil {
 				return iv
 			}
 		}
@@ -86,7 +86,7 @@ func (this *Config) GetFloat(key string) float64 {
 			return v
 		}
 		if sv, ok := k.(string); ok {
-			if iv,err :=  strconv.ParseFloat(sv,64);err == nil{
+			if iv, err := strconv.ParseFloat(sv, 64); err == nil {
 				return iv
 			}
 		}

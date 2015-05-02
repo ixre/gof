@@ -55,12 +55,10 @@ func (this *Route) Handle(ctx *web.Context) {
 	this._routeMap.Handle(ctx)
 }
 
-
 // 延迟执行的操作，发生在请求完成后
 func (this *Route) DeferFunc(f web.ContextFunc) {
 	this._routeMap.DeferFunc(f)
 }
-
 
 func (this *Route) defaultRouteHandle(ctx *web.Context) {
 	path := ctx.Request.URL.Path
