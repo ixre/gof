@@ -24,40 +24,40 @@ func init() {
 	// register session type for gob.
 	gob.Register(make(map[string]interface{}))
 }
-func getSessionKey(key string) string {
-	return "gof:web:session:" + key
+func getSessionId(id string) string {
+	return "gof:web:session:" + id
 }
 
-func newSessionKey() string {
+func newSessionId() string {
 	dt := time.Now()
 	randStr := util.RandString(4)
 	return fmt.Sprintf("%s%d%d", randStr, dt.Second(), dt.Nanosecond())
 }
 
 type Session struct {
-	_key     string
+	_sessionId     string
 	_rsp     http.ResponseWriter
 	_data    map[string]interface{}
 	_storage gof.Storage
 	_maxAge  int64
 }
 
-func LoadSession(w http.ResponseWriter, storage gof.Storage, key string) *Session {
+func LoadSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *Session {
 	s := &Session{
-		_key:     key,
+		_sessionId:     sessionId,
 		_rsp:     w,
 		_data:    make(map[string]interface{}),
 		_storage: storage,
 		_maxAge:  defaultSessionMaxAge,
 	}
-	s._storage.Get(getSessionKey(s._key), &s._data)
+	s._storage.Get(getSessionId(s._sessionId), &s._data)
 	return s
 }
 
 func NewSession(w http.ResponseWriter, storage gof.Storage) *Session {
-	key := newSessionKey()
+	id := newSessionId()
 	return &Session{
-		_key:     key,
+		_sessionId:     id,
 		_rsp:     w,
 		_storage: storage,
 		_maxAge:  defaultSessionMaxAge,
@@ -68,6 +68,11 @@ func (this *Session) chkInit() {
 	if this._data == nil {
 		this._data = make(map[string]interface{})
 	}
+}
+
+// 获取会话编号
+func (this *Session) GetSessionId()string{
+	return this._sessionId
 }
 
 func (this *Session) Get(key string) interface{} {
@@ -84,9 +89,16 @@ func (this *Session) Set(key string, v interface{}) {
 	this._data[key] = v
 }
 
+// 使用指定的会话代替当前会话
+func (this *Session) UseInstead(sessionId string) {
+	this._sessionId = sessionId
+	this._storage.Get(getSessionId(this._sessionId), &this._data)
+	this.flushToClient()
+}
+
 // 销毁会话
 func (this *Session) Destroy() {
-	this._storage.Del(getSessionKey(this._key))
+	this._storage.Del(getSessionId(this._sessionId))
 	this.SetMaxAge(-this._maxAge)
 	this.flushToClient()
 }
@@ -96,7 +108,7 @@ func (this *Session) Save() error {
 	if this._data == nil {
 		return nil
 	}
-	err := this._storage.SetExpire(getSessionKey(this._key), &this._data, this._maxAge)
+	err := this._storage.SetExpire(getSessionId(this._sessionId), &this._data, this._maxAge)
 	if err == nil {
 		this.flushToClient()
 	}
@@ -114,7 +126,7 @@ func (this *Session) flushToClient() {
 	expires := time.Now().Local().Add(d)
 	ck := &http.Cookie{
 		Name:     sessionCookieName,
-		Value:    this._key,
+		Value:    this._sessionId,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  expires,
