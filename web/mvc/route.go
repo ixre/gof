@@ -21,6 +21,7 @@ type Route struct {
 	_lazyRegister bool
 	_routeMap     *web.RouteMap
 	_ctlMap       map[string]Controller
+	_urlSuffix string  	// 默认后缀
 }
 
 func NewRoute(source *web.RouteMap) *Route {
@@ -31,16 +32,26 @@ func NewRoute(source *web.RouteMap) *Route {
 	r := &Route{
 		_ctlMap:   make(map[string]Controller),
 		_routeMap: source,
+		_urlSuffix : ".htm",
 	}
 	return r
 }
 
+func (this *Route) SetSuffix(suffix string){
+	if suffix != "" {
+		if suffix[0:1] != "." {
+			suffix = "." + suffix
+		}
+		this._urlSuffix = suffix
+	}
+}
+
 //添加路由
 func (this *Route) Add(urlPattern string, rf web.ContextFunc) {
-	if urlPattern == "" || urlPattern == "/" || urlPattern == "^/" {
+	if urlPattern == "" || urlPattern == "*" {
 		log.Fatalln("[ Panic] - Dangerous!The url parttern \"" + urlPattern +
 			"\" will override default route," +
-			"please instead of \"^/$\"")
+			"please instead of \"/\"")
 	}
 	this._routeMap.Add(urlPattern, rf)
 }
@@ -49,7 +60,7 @@ func (this *Route) Add(urlPattern string, rf web.ContextFunc) {
 func (this *Route) Handle(ctx *web.Context) {
 	if !this._lazyRegister {
 		// 添加默认的路由
-		this.Add("*", this.defaultRouteHandle)
+		this._routeMap.Add("*", this.defaultRouteHandle)
 		this._lazyRegister = true
 	}
 	this._routeMap.Handle(ctx)
@@ -79,6 +90,14 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 	if len(action) == 0 {
 		action = "Index"
 	} else {
+		// 判断后缀是否相同
+		if di := strings.Index(action,"."); di != -1 {
+			if len(this._urlSuffix) == 0 || action[di:] != this._urlSuffix {
+				goto notFound
+			}else {
+				action = action[:di]
+			}
+		}
 		//将第一个字符转为大写,这样才可以
 		upperFirstLetter := strings.ToUpper(action[0:1])
 		if upperFirstLetter != action[0:1] {
@@ -97,6 +116,7 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 		}
 	}
 
+	notFound:
 	http.Error(ctx.ResponseWriter, "404 page not found",
 		http.StatusNotFound)
 }

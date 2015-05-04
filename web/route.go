@@ -61,8 +61,13 @@ func (this *RouteMap) Handle(ctx *Context) {
 	for _, k := range this.UrlPatterns {
 		v, exist := routes[k]
 		if exist {
-			var isMatch bool = k == "*" || k == path //compare url
-			if !isMatch {
+			var isMatch bool
+
+			// 是否为通配的路由(*)，或与路由规则一致
+			isMatch = k == "*" || k == path
+
+			// 如果路由不符，且规则为正则，前尝试匹配
+			if !isMatch && k[0:1]=="^" {
 				isMatch, err = regexp.MatchString(k, path)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)

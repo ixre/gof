@@ -181,7 +181,7 @@ func main() {
 	})
 
 	// 默认页路由
-	routes.Add("^/$", func(ctx *web.Context) {
+	routes.Add("/", func(ctx *web.Context) {
 		sysName := ctx.App.Config().GetString("SYS_NAME")
 		ctx.ResponseWriter.Write([]byte("Hello," + sysName+"!"))
 	})

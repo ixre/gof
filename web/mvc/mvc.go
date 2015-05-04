@@ -13,12 +13,7 @@ import (
 	"github.com/atnet/gof/web"
 	"net/http"
 	"reflect"
-	"regexp"
 	"strings"
-)
-
-var (
-	actionRegexp = regexp.MustCompile("/([^/]+)$")
 )
 
 func CustomHandle(controller Controller, ctx *web.Context, action string, args ...interface{}) {
@@ -85,33 +80,42 @@ func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interf
 	r := ctx.Request
 	// 处理末尾的/
 	var path = r.URL.Path
-	if strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
-	}
-
-	var action string
-	groups := actionRegexp.FindAllStringSubmatch(path, 1)
-	if len(groups) == 0 || len(groups[0]) == 0 {
-		action = "Index"
-	} else {
-		action = groups[0][1]
-
-		//去扩展名
-		extIndex := strings.Index(action, ".")
-		if extIndex != -1 {
-			action = action[0:extIndex]
-		}
-
-		//将第一个字符转为大写,这样才可以
-		upperFirstLetter := strings.ToUpper(action[0:1])
-		if upperFirstLetter != action[0:1] {
-			action = upperFirstLetter + action[1:]
-		}
-	}
-
+	var action string = getAction(path)
 	if rePost && r.Method == "POST" {
 		action += "_post"
 	}
 
 	CustomHandle(controller, ctx, action, args...)
+}
+
+func getAction(path string)string {
+	var action string
+	if strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
+
+	// 返回默认Action
+	if len(path) == 0 {
+		return "Index"
+	}
+
+	//
+	if lsi := strings.LastIndex(path, "/"); lsi == -1 {
+		action = path
+	}else {
+		action = path[lsi+1:]
+	}
+
+	//去扩展名
+	extIndex := strings.Index(action, ".")
+	if extIndex != -1 {
+		action = action[0:extIndex]
+	}
+
+	//将第一个字符转为大写,这样才可以
+	upperFirstLetter := strings.ToUpper(action[0:1])
+	if upperFirstLetter != action[0:1] {
+		action = upperFirstLetter + action[1:]
+	}
+	return action
 }
