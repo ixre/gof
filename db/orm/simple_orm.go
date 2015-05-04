@@ -25,7 +25,7 @@ func NewOrm(db *sql.DB) Orm {
 	}
 }
 
-func (this *simpleOrm) Version()string{
+func (this *simpleOrm) Version() string {
 	return "1.0.1"
 }
 

@@ -13,11 +13,11 @@ import (
 	"github.com/atnet/gof"
 	"github.com/atnet/gof/db"
 	"github.com/atnet/gof/log"
+	"github.com/atnet/gof/storage"
 	"github.com/atnet/gof/web"
 	"github.com/atnet/gof/web/mvc"
 	"net/http"
 	"strings"
-	"github.com/atnet/gof/storage"
 )
 
 // 实现gof.App接口，以支持配置(config)、DB、ORM、日志(logger)、
@@ -79,7 +79,7 @@ func (this *HttpApp) Debug() bool {
 }
 
 // 存储,通常用来存储全局的变量。或缓存一些共享的数据。
-func (this *HttpApp) Storage()gof.Storage{
+func (this *HttpApp) Storage() gof.Storage {
 	// 使用一个Redis存储数据
 	return storage.NewRedisStorage(nil)
 }
@@ -165,13 +165,13 @@ func main() {
 
 		// 使用模板
 		ctx.App.Template().ExecuteIncludeErr(ctx.ResponseWriter,
-		func(v *map[string]interface{}) {
-			(*v)["变量名"] = "变量值"
-		}, "views/index.html")
+			func(v *map[string]interface{}) {
+				(*v)["变量名"] = "变量值"
+			}, "views/index.html")
 		return
 
 		// 使用会话
-		ctx.Session().Set("user","jarrysix")
+		ctx.Session().Set("user", "jarrysix")
 		ctx.Session().Save()
 
 		// 使用DB和ORM
@@ -183,7 +183,7 @@ func main() {
 	// 默认页路由
 	routes.Add("/", func(ctx *web.Context) {
 		sysName := ctx.App.Config().GetString("SYS_NAME")
-		ctx.ResponseWriter.Write([]byte("Hello," + sysName+"!"))
+		ctx.ResponseWriter.Write([]byte("Hello," + sysName + "!"))
 	})
 
 	// 使用一个拦截器，来拦截请求。

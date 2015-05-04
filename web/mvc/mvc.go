@@ -88,7 +88,7 @@ func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interf
 	CustomHandle(controller, ctx, action, args...)
 }
 
-func getAction(path string)string {
+func getAction(path string) string {
 	var action string
 	if strings.HasSuffix(path, "/") {
 		path = path[:len(path)-1]
@@ -102,7 +102,7 @@ func getAction(path string)string {
 	//
 	if lsi := strings.LastIndex(path, "/"); lsi == -1 {
 		action = path
-	}else {
+	} else {
 		action = path[lsi+1:]
 	}
 

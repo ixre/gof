@@ -2,7 +2,7 @@ package orm
 
 type Orm interface {
 	// version of orm
-	Version()string
+	Version() string
 
 	//Set orm output information
 	SetTrace(b bool)

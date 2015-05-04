@@ -67,7 +67,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 			isMatch = k == "*" || k == path
 
 			// 如果路由不符，且规则为正则，前尝试匹配
-			if !isMatch && k[0:1]=="^" {
+			if !isMatch && k[0:1] == "^" {
 				isMatch, err = regexp.MatchString(k, path)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)

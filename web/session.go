@@ -35,20 +35,20 @@ func newSessionId() string {
 }
 
 type Session struct {
-	_sessionId     string
-	_rsp     http.ResponseWriter
-	_data    map[string]interface{}
-	_storage gof.Storage
-	_maxAge  int64
+	_sessionId string
+	_rsp       http.ResponseWriter
+	_data      map[string]interface{}
+	_storage   gof.Storage
+	_maxAge    int64
 }
 
 func LoadSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *Session {
 	s := &Session{
-		_sessionId:     sessionId,
-		_rsp:     w,
-		_data:    make(map[string]interface{}),
-		_storage: storage,
-		_maxAge:  defaultSessionMaxAge,
+		_sessionId: sessionId,
+		_rsp:       w,
+		_data:      make(map[string]interface{}),
+		_storage:   storage,
+		_maxAge:    defaultSessionMaxAge,
 	}
 	s._storage.Get(getSessionId(s._sessionId), &s._data)
 	return s
@@ -57,10 +57,10 @@ func LoadSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *
 func NewSession(w http.ResponseWriter, storage gof.Storage) *Session {
 	id := newSessionId()
 	return &Session{
-		_sessionId:     id,
-		_rsp:     w,
-		_storage: storage,
-		_maxAge:  defaultSessionMaxAge,
+		_sessionId: id,
+		_rsp:       w,
+		_storage:   storage,
+		_maxAge:    defaultSessionMaxAge,
 	}
 }
 
@@ -71,7 +71,7 @@ func (this *Session) chkInit() {
 }
 
 // 获取会话编号
-func (this *Session) GetSessionId()string{
+func (this *Session) GetSessionId() string {
 	return this._sessionId
 }
 

@@ -21,7 +21,7 @@ type Route struct {
 	_lazyRegister bool
 	_routeMap     *web.RouteMap
 	_ctlMap       map[string]Controller
-	_urlSuffix string  	// 默认后缀
+	_urlSuffix    string // 默认后缀
 }
 
 func NewRoute(source *web.RouteMap) *Route {
@@ -30,14 +30,14 @@ func NewRoute(source *web.RouteMap) *Route {
 	}
 
 	r := &Route{
-		_ctlMap:   make(map[string]Controller),
-		_routeMap: source,
-		_urlSuffix : ".htm",
+		_ctlMap:    make(map[string]Controller),
+		_routeMap:  source,
+		_urlSuffix: ".htm",
 	}
 	return r
 }
 
-func (this *Route) SetSuffix(suffix string){
+func (this *Route) SetSuffix(suffix string) {
 	if suffix != "" {
 		if suffix[0:1] != "." {
 			suffix = "." + suffix
@@ -91,10 +91,10 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 		action = "Index"
 	} else {
 		// 判断后缀是否相同
-		if di := strings.Index(action,"."); di != -1 {
+		if di := strings.Index(action, "."); di != -1 {
 			if len(this._urlSuffix) == 0 || action[di:] != this._urlSuffix {
 				goto notFound
-			}else {
+			} else {
 				action = action[:di]
 			}
 		}
@@ -116,7 +116,7 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 		}
 	}
 
-	notFound:
+notFound:
 	http.Error(ctx.ResponseWriter, "404 page not found",
 		http.StatusNotFound)
 }
