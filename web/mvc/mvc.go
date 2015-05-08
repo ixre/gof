@@ -29,7 +29,6 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 	t := reflect.ValueOf(c)
 	method := t.MethodByName(action)
 
-
 	if !method.IsValid() {
 		errMsg := "No action named \"" + strings.Replace(action, "_post", "", 1) +
 			"\" in " + reflect.TypeOf(c).String() + "."
@@ -40,7 +39,7 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 		argsLen := len(args)
 		numIn := method.Type().NumIn()
 
-		if argsLen < numIn - 1 {
+		if argsLen < numIn-1 {
 			errMsg := fmt.Sprintf("Can't inject to method,it's possible missing parameter!"+
 				"\r\ncontroller: %s , action: %s",
 				reflect.TypeOf(c).String(), action)

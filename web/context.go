@@ -14,7 +14,6 @@ import (
 	"net/http"
 )
 
-
 var globalSessionStorage gof.Storage
 
 // 设置全局的会话存储
@@ -22,12 +21,13 @@ func SetSessionStorage(s gof.Storage) {
 	globalSessionStorage = s
 }
 
-
 type Context struct {
 	App            gof.App
-	ResponseWriter http.ResponseWriter
 	Request        *http.Request
-	_session       *Session
+	ResponseWriter http.ResponseWriter
+	// 用于上下文数据交换
+	Items    map[string]interface{}
+	_session *Session
 }
 
 func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Context {
@@ -35,6 +35,7 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 		App:            app,
 		ResponseWriter: rsp,
 		Request:        req,
+		Items:          make(map[string]interface{}),
 	}
 }
 
@@ -57,4 +58,12 @@ func (this *Context) Session() *Session {
 		}
 	}
 	return this._session
+}
+
+// 获取数据项
+func (this *Context) GetItem(key string) interface{} {
+	if v, e := this.Items[key]; e {
+		return v
+	}
+	return nil
 }

@@ -133,9 +133,9 @@ func (this *Route) Register(name string, cg ControllerGenerate) {
 
 // 将一个控制器单例注册到路由表中，所有控制器的请求
 // 都共享这个控制器.
-func (this *Route) SingletonRegister(name string,c Controller){
-	var cg ControllerGenerate= func()Controller{return c}
-	this.Register(name,cg)
+func (this *Route) SingletonRegister(name string, c Controller) {
+	var cg ControllerGenerate = func() Controller { return c }
+	this.Register(name, cg)
 }
 
 // Get Controller
