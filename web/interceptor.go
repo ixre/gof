@@ -24,21 +24,21 @@ var (
 type Interceptor struct {
 	_app gof.App
 	//执行请求
-	_execute ContextFunc
+	_execute RequestHandler
 	//请求之前发生;返回false,则终止运行
 	Before func(*Context) bool
 	After  func(*Context)
 	Except func(*Context, error)
 }
 
-func NewInterceptor(app gof.App, f ContextFunc) *Interceptor {
+func NewInterceptor(app gof.App, f RequestHandler) *Interceptor {
 	return &Interceptor{
 		_app:     app,
 		_execute: f,
 	}
 }
 
-func (this *Interceptor) handle(app gof.App, w http.ResponseWriter, r *http.Request, handler ContextFunc) {
+func (this *Interceptor) handle(app gof.App, w http.ResponseWriter, r *http.Request, handler RequestHandler) {
 	// proxy response writer
 	//w := NewRespProxyWriter(w)
 	ctx := NewContext(app, w, r)
@@ -74,7 +74,7 @@ func (this *Interceptor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	this.handle(this._app, w, r, this._execute)
 }
 
-func (this *Interceptor) For(handle ContextFunc) http.Handler {
+func (this *Interceptor) For(handle RequestHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		this.handle(this._app, w, r, handle)
 	})

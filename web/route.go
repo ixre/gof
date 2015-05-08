@@ -15,7 +15,7 @@ import (
 
 // Url Route
 type Route interface {
-	Add(urlPattern string, rf ContextFunc)
+	Add(urlPattern string, rf RequestHandler)
 	Handle(ctx *Context)
 }
 
@@ -23,20 +23,20 @@ var _ Route = new(RouteMap)
 
 //路由映射
 type RouteMap struct {
-	deferFunc ContextFunc
+	deferFunc RequestHandler
 	//地址模式
 	UrlPatterns []string
 	//路由集合
-	RouteCollection map[string]ContextFunc
+	RouteCollection map[string]RequestHandler
 }
 
 // HTTP处理词典
-type httpFuncMap map[string]ContextFunc
+type httpFuncMap map[string]RequestHandler
 
 //添加路由
-func (this *RouteMap) Add(urlPattern string, rf ContextFunc) {
+func (this *RouteMap) Add(urlPattern string, rf RequestHandler) {
 	if this.RouteCollection == nil {
-		this.RouteCollection = make(map[string]ContextFunc)
+		this.RouteCollection = make(map[string]RequestHandler)
 	}
 	_, exists := this.RouteCollection[urlPattern]
 	if !exists {
@@ -91,6 +91,6 @@ func (this *RouteMap) Handle(ctx *Context) {
 }
 
 // 延迟执行的操作，发生在请求完成后
-func (this *RouteMap) DeferFunc(f ContextFunc) {
+func (this *RouteMap) DeferFunc(f RequestHandler) {
 	this.deferFunc = f
 }

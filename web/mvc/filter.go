@@ -12,7 +12,7 @@ import (
 	"github.com/atnet/gof/web"
 )
 
-// controller fiter
+// controller filter
 type Filter interface {
 	//call it before execute your some business.
 	Requesting(*web.Context) bool

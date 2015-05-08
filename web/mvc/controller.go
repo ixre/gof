@@ -9,3 +9,6 @@
 package mvc
 
 type Controller interface{}
+
+// Generate controller instance
+type ControllerGenerate func()Controller

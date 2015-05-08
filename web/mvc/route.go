@@ -20,7 +20,7 @@ var _ web.Route = new(Route)
 type Route struct {
 	_lazyRegister bool
 	_routeMap     *web.RouteMap
-	_ctlMap       map[string]Controller
+	_ctlMap       map[string]ControllerGenerate
 	_urlSuffix    string // 默认后缀
 }
 
@@ -30,7 +30,7 @@ func NewRoute(source *web.RouteMap) *Route {
 	}
 
 	r := &Route{
-		_ctlMap:    make(map[string]Controller),
+		_ctlMap:    make(map[string]ControllerGenerate),
 		_routeMap:  source,
 		_urlSuffix: ".htm",
 	}
@@ -47,7 +47,7 @@ func (this *Route) SetSuffix(suffix string) {
 }
 
 //添加路由
-func (this *Route) Add(urlPattern string, rf web.ContextFunc) {
+func (this *Route) Add(urlPattern string, rf web.RequestHandler) {
 	if urlPattern == "" || urlPattern == "*" {
 		log.Fatalln("[ Panic] - Dangerous!The url parttern \"" + urlPattern +
 			"\" will override default route," +
@@ -67,7 +67,7 @@ func (this *Route) Handle(ctx *web.Context) {
 }
 
 // 延迟执行的操作，发生在请求完成后
-func (this *Route) DeferFunc(f web.ContextFunc) {
+func (this *Route) DeferFunc(f web.RequestHandler) {
 	this._routeMap.DeferFunc(f)
 }
 
@@ -111,7 +111,7 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 
 	if this._ctlMap != nil {
 		if v := this._ctlMap[ctlName]; v != nil {
-			CustomHandle(v, ctx, action)
+			CustomHandle(v(), ctx, action)
 			return
 		}
 	}
@@ -122,18 +122,27 @@ notFound:
 }
 
 // Register Controller into routes table.
-func (this *Route) RegisterController(name string, ctl Controller) {
+// 使用路由生成器，注册一个控制器；
+// 当发生请求时，生成器会生成一个新的控制器实例。
+func (this *Route) Register(name string, cg ControllerGenerate) {
 	if this._ctlMap == nil {
-		this._ctlMap = make(map[string]Controller)
+		this._ctlMap = make(map[string]ControllerGenerate)
 	}
-	this._ctlMap[name] = ctl
+	this._ctlMap[name] = cg
+}
+
+// 将一个控制器单例注册到路由表中，所有控制器的请求
+// 都共享这个控制器.
+func (this *Route) SingletonRegister(name string,c Controller){
+	var cg ControllerGenerate= func()Controller{return c}
+	this.Register(name,cg)
 }
 
 // Get Controller
 func (this *Route) GetController(name string) Controller {
 	if this._ctlMap != nil {
 		if v, ok := this._ctlMap[name]; ok {
-			return v
+			return v()
 		}
 	}
 	return nil

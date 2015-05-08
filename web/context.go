@@ -14,14 +14,14 @@ import (
 	"net/http"
 )
 
-type ContextFunc func(*Context)
 
-var sessionStorage gof.Storage
+var globalSessionStorage gof.Storage
 
 // 设置全局的会话存储
 func SetSessionStorage(s gof.Storage) {
-	sessionStorage = s
+	globalSessionStorage = s
 }
+
 
 type Context struct {
 	App            gof.App
@@ -39,10 +39,10 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 }
 
 func (this *Context) getSessionStorage() gof.Storage {
-	if sessionStorage == nil {
+	if globalSessionStorage == nil {
 		return this.App.Storage()
 	}
-	return sessionStorage
+	return globalSessionStorage
 }
 
 func (this *Context) Session() *Session {

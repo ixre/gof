@@ -108,7 +108,7 @@ func getInterceptor(a gof.App, routes web.Route) *web.Interceptor {
 }
 
 // 获取执行方法
-func getHttpExecFunc(routes web.Route) web.ContextFunc {
+func getHttpExecFunc(routes web.Route) web.RequestHandler {
 	return func(ctx *web.Context) {
 		r, w := ctx.Request, ctx.ResponseWriter
 		switch host, f := r.Host, strings.HasPrefix; {
@@ -127,6 +127,11 @@ type testController struct {
 
 // 控制器可以实现mvc.Filter接口
 var _ mvc.Filter = new(testController)
+
+// 控制器生成器
+func testControllerGenerator()mvc.Controller{
+	return &testController{}
+}
 
 // 请求时执行函数，返回true继续执行，返回false即中止。
 // 可以做验证如：判断用户登陆这类的逻辑。
@@ -154,7 +159,10 @@ func main() {
 	routes := mvc.NewRoute(nil)
 
 	// 注册控制器,test与/test/index中的test对应
-	routes.RegisterController("test", &testController{})
+	routes.Register("test", testControllerGenerator)
+
+	// 注册单例控制器
+	routes.SingletonRegister("test_all",&testController{})
 
 	// 除了控制器，可以添加自定义的路由规则（正则表达式)
 	routes.Add("/[0-9]$", func(ctx *web.Context) {

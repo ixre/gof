@@ -16,32 +16,23 @@ import (
 	"strings"
 )
 
-func CustomHandle(controller Controller, ctx *web.Context, action string, args ...interface{}) {
-	//	defer func() {
-	//		if err := recover(); err != nil {
-	//			if _, ok := err.(error); ok {
-	//
-	//				w.Write([]byte("Inject error, plese check parameter type or index!"))
-	//			}
-	//		}
-	//	}()
-
+func CustomHandle(c Controller, ctx *web.Context, action string, args ...interface{}) {
 	w := ctx.ResponseWriter
-
 	// 拦截器
-	filter, isFilter := controller.(Filter)
+	filter, isFilter := c.(Filter)
 	if isFilter {
 		if !filter.Requesting(ctx) { //如果返回false，终止执行
 			return
 		}
 	}
 
-	t := reflect.ValueOf(controller)
+	t := reflect.ValueOf(c)
 	method := t.MethodByName(action)
+
 
 	if !method.IsValid() {
 		errMsg := "No action named \"" + strings.Replace(action, "_post", "", 1) +
-			"\" in " + reflect.TypeOf(controller).String() + "."
+			"\" in " + reflect.TypeOf(c).String() + "."
 		http.Error(w, errMsg, http.StatusInternalServerError)
 		return
 	} else {
@@ -49,10 +40,10 @@ func CustomHandle(controller Controller, ctx *web.Context, action string, args .
 		argsLen := len(args)
 		numIn := method.Type().NumIn()
 
-		if argsLen < numIn-1 {
+		if argsLen < numIn - 1 {
 			errMsg := fmt.Sprintf("Can't inject to method,it's possible missing parameter!"+
 				"\r\ncontroller: %s , action: %s",
-				reflect.TypeOf(controller).String(), action)
+				reflect.TypeOf(c).String(), action)
 			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		} else {
@@ -99,7 +90,7 @@ func getAction(path string) string {
 		return "Index"
 	}
 
-	//
+	// 获取Action
 	if lsi := strings.LastIndex(path, "/"); lsi == -1 {
 		action = path
 	} else {
@@ -112,7 +103,7 @@ func getAction(path string) string {
 		action = action[0:extIndex]
 	}
 
-	//将第一个字符转为大写,这样才可以
+	//将第一个字符转为大写,这样才可以匹配导出的函数
 	upperFirstLetter := strings.ToUpper(action[0:1])
 	if upperFirstLetter != action[0:1] {
 		action = upperFirstLetter + action[1:]
