@@ -15,6 +15,8 @@ import (
     "errors"
 )
 
+var DriveHashStorage string = "hash-storage"
+
 // 哈希表存储
 type hashStorage struct {
     _map map[string]interface{}
@@ -27,15 +29,24 @@ func NewHashStorage() gof.Storage {
     }
 }
 
+func (this *hashStorage) Driver()string{
+    return DriveHashStorage
+}
+
 func (this *hashStorage) Get(key string, dst interface{}) error {
-    if k, ok := this._map[key]; ok {
-        dst = k
-    }
-    return nil
+   panic(errors.New("HashStorage not support method \"Get\"!"))
 }
 
 func (this *hashStorage) Set(key string, v interface{}) error {
     this._map[key] = v
+    return nil
+}
+
+//Get raw value
+func (this *hashStorage) GetRaw(key string)interface{}{
+    if k, ok := this._map[key]; ok {
+        return k
+    }
     return nil
 }
 
@@ -44,5 +55,5 @@ func (this *hashStorage) Del(key string) {
 }
 
 func (this *hashStorage) SetExpire(key string, v interface{}, seconds int64) error {
-    return errors.New("HashStorage not support method \"SetExpire\"!")
+    panic(errors.New("HashStorage not support method \"SetExpire\"!"))
 }

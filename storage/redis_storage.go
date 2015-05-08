@@ -15,7 +15,10 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"strings"
 	"sync"
+	"errors"
 )
+
+var DriveRedisStorage string = "redis-storage"
 
 type redisStorage struct {
 	_pool *redis.Pool
@@ -56,6 +59,10 @@ func (this *redisStorage) decodeBytes(b []byte, dst interface{}) error {
 	return err
 }
 
+func (this *redisStorage) Driver()string{
+	return DriveRedisStorage
+}
+
 func (this *redisStorage) Get(key string, dst interface{}) error {
 	conn := this._pool.Get()
 	src, err := redis.Bytes(conn.Do("GET", key))
@@ -64,6 +71,11 @@ func (this *redisStorage) Get(key string, dst interface{}) error {
 		err = this.decodeBytes(src, dst)
 	}
 	return err
+}
+
+//Get raw value
+func (this *redisStorage) GetRaw(key string)interface{}{
+	panic(errors.New("HashStorage not support method \"GetRaw\""))
 }
 
 func (this *redisStorage) Set(key string, v interface{}) error {
