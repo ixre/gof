@@ -159,10 +159,10 @@ func main() {
 	routes := mvc.NewRoute(nil)
 
 	// 注册控制器,test与/test/index中的test对应
-	routes.Register("test", testControllerGenerator)
+	routes.NormalRegister("test", testControllerGenerator)
 
 	// 注册单例控制器
-	routes.SingletonRegister("test_all", &testController{})
+	routes.Register("test_all", &testController{})
 
 	// 除了控制器，可以添加自定义的路由规则（正则表达式)
 	routes.Add("/[0-9]$", func(ctx *web.Context) {

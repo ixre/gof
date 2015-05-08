@@ -121,21 +121,18 @@ notFound:
 		http.StatusNotFound)
 }
 
-// Register Controller into routes table.
-// 使用路由生成器，注册一个控制器；
-// 当发生请求时，生成器会生成一个新的控制器实例。
-func (this *Route) Register(name string, cg ControllerGenerate) {
+// 用普通方式注册控制器，由生成器为每个请求生成一个控制器实例。
+func (this *Route) NormalRegister(name string, cg ControllerGenerate) {
 	if this._ctlMap == nil {
 		this._ctlMap = make(map[string]ControllerGenerate)
 	}
 	this._ctlMap[name] = cg
 }
 
-// 将一个控制器单例注册到路由表中，所有控制器的请求
-// 都共享这个控制器.
-func (this *Route) SingletonRegister(name string, c Controller) {
+// 用单例方式注册控制器，所有的请求都共享一个控制器.
+func (this *Route) Register(name string, c Controller) {
 	var cg ControllerGenerate = func() Controller { return c }
-	this.Register(name, cg)
+	this.NormalRegister(name, cg)
 }
 
 // Get Controller
