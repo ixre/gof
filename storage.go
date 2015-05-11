@@ -18,7 +18,7 @@ type Storage interface {
 	Get(key string, dst interface{}) error
 
 	//Get raw value
-	GetRaw(key string)interface{}
+	GetRaw(key string) interface{}
 
 	// Set Value
 	Set(key string, v interface{}) error
