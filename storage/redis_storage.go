@@ -67,7 +67,7 @@ func (this *redisStorage) Get(key string, dst interface{}) error {
 	conn := this._pool.Get()
 	src, err := redis.Bytes(conn.Do("GET", key))
 	conn.Close()
-	if err == nil {
+	if err == nil{
 		err = this.decodeBytes(src, dst)
 	}
 	return err
@@ -79,13 +79,17 @@ func (this *redisStorage) GetRaw(key string) interface{} {
 }
 
 func (this *redisStorage) Set(key string, v interface{}) error {
-	b, err := this.getByte(v)
-	if err == nil {
-		conn := this._pool.Get()
-		_, err = conn.Do("SET", key, b)
-		conn.Close()
+	if v != nil {
+		b, err := this.getByte(v)
+
+		if err == nil {
+			conn := this._pool.Get()
+			_, err = conn.Do("SET", key, b)
+			conn.Close()
+		}
+		return err
 	}
-	return err
+	return errors.New("value can't be nil.")
 }
 
 func (this *redisStorage) Del(key string) {
