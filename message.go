@@ -5,7 +5,7 @@ import (
 )
 
 //操作Json结果
-type JsonResult struct {
+type Message struct {
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
@@ -13,7 +13,7 @@ type JsonResult struct {
 }
 
 //序列化
-func (r JsonResult) Marshal() []byte {
+func (r Message) Marshal() []byte {
 	json, _ := json.Marshal(r)
 	return json
 }
