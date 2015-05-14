@@ -51,7 +51,6 @@ func LoadSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *
 		_maxAge:    defaultSessionMaxAge,
 	}
 	s._storage.Get(getSessionId(s._sessionId), &s._data)
-	fmt.Printf("%#v\n\n",s._data)
 	return s
 }
 
