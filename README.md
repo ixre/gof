@@ -22,7 +22,7 @@ example:
         		ctx.ResponseWriter.Write([]byte("Hello,Gof with "+ sysName+"."))
         		ctx.ResponseWriter.Header().Set("Content-Type","text/html")
         		return
-        		ctx.App.Template().ExecuteIncludeErr(ctx.ResponseWriter,
+        		ctx.App.Template().Execute(ctx.ResponseWriter,
         		func(v *map[string]interface{}){
         			(*v)["变量名"] = "变量值"
         		},"views/index.html")

@@ -22,7 +22,7 @@ package web
 //            t = v.(int64)
 //        }
 //
-//        ctx.App.Template().ExecuteIncludeErr(ctx.ResponseWriter, func(m *map[string]interface{}) {
+//        ctx.App.Template().Execute(ctx.ResponseWriter, func(m *map[string]interface{}) {
 //            (*m)["unix"] = t
 //        },
 //        "views/main/index.html",

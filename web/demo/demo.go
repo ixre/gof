@@ -65,7 +65,7 @@ func (this *HttpApp) Db() db.Connector {
 func (this *HttpApp) Template() *gof.Template {
 	if this.template == nil {
 		this.template = &gof.Template{
-			Init: func(v *map[string]interface{}) {
+			Init: func(v *gof.TemplateDataMap) {
 				(*v)["SYS_NAME"] = this.Config().GetString("SYS_NAME")
 			},
 		}
@@ -165,17 +165,23 @@ func main() {
 	routes.Register("test_all", &testController{})
 
 	// 除了控制器，可以添加自定义的路由规则（正则表达式)
-	routes.Add("/[0-9]$", func(ctx *web.Context) {
-
+	routes.Add("^/[0-9]$", func(ctx *web.Context) {
 		// 直接输出内容
 		ctx.ResponseWriter.Write([]byte("数字路径"))
 		return
+	})
+
+	// 默认页路由
+	routes.Add("/", func(ctx *web.Context) {
+//		sysName := ctx.App.Config().GetString("SYS_NAME")
+//		ctx.ResponseWriter.Write([]byte("Hello," + sysName + "!"))
+//		return
 
 		// 使用模板
-		ctx.App.Template().ExecuteIncludeErr(ctx.ResponseWriter,
-			func(v *map[string]interface{}) {
-				(*v)["变量名"] = "变量值"
-			}, "views/index.html")
+		data := gof.TemplateDataMap{
+			"变量名":"变量值",
+		}
+		ctx.App.Template().Execute(ctx.ResponseWriter,data, "template.html")
 		return
 
 		// 使用会话
@@ -188,11 +194,6 @@ func main() {
 		_ = orm.Version()
 	})
 
-	// 默认页路由
-	routes.Add("/", func(ctx *web.Context) {
-		sysName := ctx.App.Config().GetString("SYS_NAME")
-		ctx.ResponseWriter.Write([]byte("Hello," + sysName + "!"))
-	})
 
 	// 使用一个拦截器，来拦截请求。
 	// 拦截器里可以决定，访问对应的路由表。

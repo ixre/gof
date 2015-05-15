@@ -11,47 +11,53 @@ package gof
 
 import (
 	"html/template"
-	"io"
 	"net/http"
+	"io"
 )
 
+// Template
 type Template struct {
-	Init func(m *map[string]interface{})
+	Init func(*TemplateDataMap)
 }
 
 // the data map for template
-type TemplateMapFunc func(m *map[string]interface{})
+type TemplateDataMap map[string]interface{}
+func (this TemplateDataMap) Add(key string ,v interface{}) {
+	this[key] = v
+}
+
+func (this TemplateDataMap) Del(key string) {
+	delete(this, key)
+}
 
 // execute single template file
-func (this *Template) Render(w io.Writer, tplPath string, f TemplateMapFunc,
+func (this *Template) Render(w io.Writer, tplPath string, f TemplateDataMap,
 ) error {
 	return this.Execute(w, f, tplPath)
 }
 
 // execute template
-func (this *Template) Execute(w io.Writer, f TemplateMapFunc,
+func (this *Template) Execute(w io.Writer, f TemplateDataMap,
 	tplPath ...string) error {
 
 	t, err := template.ParseFiles(tplPath...)
 	if err != nil {
-		return err
+		return this.handleError(w,err)
 	}
 
-	data := make(map[string]interface{})
 	if this.Init != nil {
-		this.Init(&data)
+		this.Init(&f)
 	}
-	if f != nil {
-		f(&data)
-	}
+	err = t.Execute(w, f)
 
-	return t.Execute(w, &data)
+	return this.handleError(w,err)
 }
 
-// execute template,when happen error return a http error.
-func (this *Template) ExecuteIncludeErr(w http.ResponseWriter, f TemplateMapFunc, tplPath ...string) {
-	err := this.Execute(w, f, tplPath...)
+func (this *Template) handleError(w io.Writer,err error)error {
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if rsp, ok := w.(http.ResponseWriter); ok {
+			http.Error(rsp, err.Error(), http.StatusInternalServerError)
+		}
 	}
+	return err
 }
