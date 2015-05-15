@@ -1,8 +1,9 @@
 # Gof   
-Golang micro common framework
+The development framework with golang.
+**Gof lets you write web/server apps in Golang.**
 
 ## Web Framework ##
-Include routes,server,mvc,paging,interceptor
+Include routes,server,mvc,paging,interceptor,template..
 
 example:
 
@@ -19,12 +20,10 @@ example:
 
         	routes.Add("/",func(ctx *web.Context){
         		sysName := ctx.App.Config().GetString("SYS_NAME")
-        		ctx.ResponseWriter.Write([]byte("Hello,Gof with "+ sysName+"."))
-        		ctx.ResponseWriter.Header().Set("Content-Type","text/html")
-        		return
         		ctx.App.Template().Execute(ctx.ResponseWriter,
         		gof.TemplateDataMap{
         			"变量名": "变量值",
+        			"SysName":sysName,
         		},"views/index.html")
         	})
 
@@ -35,6 +34,6 @@ example:
         	var ch = make(chan int,1)
         	<- ch
 
-Details in https://github.com/atnet/gof/blob/master/web/demo/web_demo.go .
+Details in https://github.com/atnet/gof/blob/master/web/demo/demo.go .
 
 

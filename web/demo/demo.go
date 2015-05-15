@@ -55,7 +55,7 @@ func (this *HttpApp) Db() db.Connector {
 			this.Config().GetInt("MYSQL_PORT"),
 			this.Config().GetString("MYSQL_DBNAME"),
 		)
-		this.dbConnector = db.NewBasicConnector("mysql", source, this.Log(),
+		this.dbConnector = db.NewSimpleConnector("mysql", source, this.Log(),
 			this.Config().GetInt("MYSQL_MAXCONN"))
 	}
 	return this.dbConnector
