@@ -11,12 +11,12 @@ package storage
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"github.com/atnet/gof"
 	"github.com/garyburd/redigo/redis"
+	"reflect"
 	"strings"
 	"sync"
-	"reflect"
-	"errors"
 )
 
 var DriveRedisStorage string = "redis-storage"
@@ -60,9 +60,7 @@ func (this *redisStorage) decodeBytes(b []byte, dst interface{}) error {
 	return err
 }
 
-
-
-func isBaseOfStruct(v interface{})bool {
+func isBaseOfStruct(v interface{}) bool {
 	valueType := reflect.TypeOf(v)
 	kind := valueType.Kind()
 	if kind == reflect.Ptr {
@@ -71,11 +69,11 @@ func isBaseOfStruct(v interface{})bool {
 	return kind == reflect.Struct || kind == reflect.Map || kind == reflect.Array
 }
 
-func (this *redisStorage) getRedisBytes(key string)([]byte,error){
+func (this *redisStorage) getRedisBytes(key string) ([]byte, error) {
 	conn := this._pool.Get()
 	src, err := redis.Bytes(conn.Do("GET", key))
 	conn.Close()
-	return src,err
+	return src, err
 }
 
 func (this *redisStorage) Driver() string {
@@ -84,7 +82,7 @@ func (this *redisStorage) Driver() string {
 
 func (this *redisStorage) Get(key string, dst interface{}) error {
 	if isBaseOfStruct(dst) {
-		src,err := this.getRedisBytes(key)
+		src, err := this.getRedisBytes(key)
 		if err == nil {
 			err = this.decodeBytes(src, dst)
 		}
@@ -93,58 +91,56 @@ func (this *redisStorage) Get(key string, dst interface{}) error {
 	return errors.New("dst must be struct")
 }
 
-func (this *redisStorage) GetBool(key string)(bool,error){
+func (this *redisStorage) GetBool(key string) (bool, error) {
 	conn := this._pool.Get()
 	src, err := redis.Bool(conn.Do("GET", key))
 	conn.Close()
-	return src,err
+	return src, err
 }
 
-func (this *redisStorage) GetInt(key string)(int,error){
+func (this *redisStorage) GetInt(key string) (int, error) {
 	conn := this._pool.Get()
 	src, err := redis.Int(conn.Do("GET", key))
 	conn.Close()
-	return src,err
+	return src, err
 }
 
-func (this *redisStorage) GetInt64(key string)(int64,error){
+func (this *redisStorage) GetInt64(key string) (int64, error) {
 	conn := this._pool.Get()
 	src, err := redis.Int64(conn.Do("GET", key))
 	conn.Close()
-	return src,err
+	return src, err
 }
 
-func (this *redisStorage) GetString(key string)(string,error){
-	d,err := this.getRedisBytes(key)
-	if err != nil{
-		return "",err
+func (this *redisStorage) GetString(key string) (string, error) {
+	d, err := this.getRedisBytes(key)
+	if err != nil {
+		return "", err
 	}
-	return string(d),err
+	return string(d), err
 }
 
-func (this *redisStorage) GetFloat64(key string)(float64,error){
+func (this *redisStorage) GetFloat64(key string) (float64, error) {
 	conn := this._pool.Get()
 	src, err := redis.Float64(conn.Do("GET", key))
 	conn.Close()
-	return src,err
+	return src, err
 }
 
-
-
 //Get raw value
-func (this *redisStorage) GetRaw(key string)(interface{},error) {
+func (this *redisStorage) GetRaw(key string) (interface{}, error) {
 	conn := this._pool.Get()
 	replay, err := conn.Do("GET", key)
 	conn.Close()
-	return replay,err
+	return replay, err
 }
 
 func (this *redisStorage) Set(key string, v interface{}) error {
 	var err error
 	var redisValue interface{} = v
 
-	if isBaseOfStruct(v){
-		redisValue,err = this.getByte(v)
+	if isBaseOfStruct(v) {
+		redisValue, err = this.getByte(v)
 	}
 
 	conn := this._pool.Get()
@@ -161,12 +157,12 @@ func (this *redisStorage) SetExpire(key string, v interface{}, seconds int64) er
 	var err error
 	var redisValue interface{} = v
 
-	if isBaseOfStruct(v){
-		redisValue,err = this.getByte(v)
+	if isBaseOfStruct(v) {
+		redisValue, err = this.getByte(v)
 	}
 
 	conn := this._pool.Get()
-	_, err = conn.Do("SETEX", key,seconds,redisValue)
+	_, err = conn.Do("SETEX", key, seconds, redisValue)
 	conn.Close()
 	return err
 }

@@ -18,20 +18,20 @@ type Storage interface {
 	Get(key string, dst interface{}) error
 
 	//Get raw value
-	GetRaw(key string)(interface{},error)
+	GetRaw(key string) (interface{}, error)
 
 	// Set Value
 	Set(key string, v interface{}) error
 
-	GetBool(key string)(bool,error)
+	GetBool(key string) (bool, error)
 
-	GetInt(key string)(int,error)
+	GetInt(key string) (int, error)
 
-	GetInt64(key string)(int64,error)
+	GetInt64(key string) (int64, error)
 
-	GetString(key string)(string,error)
+	GetString(key string) (string, error)
 
-	GetFloat64(key string)(float64,error)
+	GetFloat64(key string) (float64, error)
 
 	// Delete Storage
 	Del(key string)

@@ -173,15 +173,15 @@ func main() {
 
 	// 默认页路由
 	routes.Add("/", func(ctx *web.Context) {
-//		sysName := ctx.App.Config().GetString("SYS_NAME")
-//		ctx.ResponseWriter.Write([]byte("Hello," + sysName + "!"))
-//		return
+		//		sysName := ctx.App.Config().GetString("SYS_NAME")
+		//		ctx.ResponseWriter.Write([]byte("Hello," + sysName + "!"))
+		//		return
 
 		// 使用模板
 		data := gof.TemplateDataMap{
-			"变量名":"变量值",
+			"变量名": "变量值",
 		}
-		ctx.App.Template().Execute(ctx.ResponseWriter,data, "template.html")
+		ctx.App.Template().Execute(ctx.ResponseWriter, data, "template.html")
 		return
 
 		// 使用会话
@@ -193,7 +193,6 @@ func main() {
 		orm := db.GetOrm()
 		_ = orm.Version()
 	})
-
 
 	// 使用一个拦截器，来拦截请求。
 	// 拦截器里可以决定，访问对应的路由表。

@@ -11,8 +11,8 @@ package gof
 
 import (
 	"html/template"
-	"net/http"
 	"io"
+	"net/http"
 )
 
 // Template
@@ -22,7 +22,8 @@ type Template struct {
 
 // the data map for template
 type TemplateDataMap map[string]interface{}
-func (this TemplateDataMap) Add(key string ,v interface{}) {
+
+func (this TemplateDataMap) Add(key string, v interface{}) {
 	this[key] = v
 }
 
@@ -36,7 +37,7 @@ func (this *Template) Execute(w io.Writer, f TemplateDataMap,
 
 	t, err := template.ParseFiles(tplPath...)
 	if err != nil {
-		return this.handleError(w,err)
+		return this.handleError(w, err)
 	}
 
 	if this.Init != nil {
@@ -47,10 +48,10 @@ func (this *Template) Execute(w io.Writer, f TemplateDataMap,
 	}
 	err = t.Execute(w, f)
 
-	return this.handleError(w,err)
+	return this.handleError(w, err)
 }
 
-func (this *Template) handleError(w io.Writer,err error)error {
+func (this *Template) handleError(w io.Writer, err error) error {
 	if err != nil {
 		if rsp, ok := w.(http.ResponseWriter); ok {
 			http.Error(rsp, err.Error(), http.StatusInternalServerError)
