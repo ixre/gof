@@ -45,7 +45,7 @@ func (this *Template) Execute(w io.Writer, f TemplateDataMap,
 		return this.handleError(w,err)
 	}
 
-	if this.Init != nil {
+	if this.Init != nil && f != nil {
 		this.Init(&f)
 	}
 	err = t.Execute(w, f)

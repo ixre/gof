@@ -22,8 +22,8 @@ package web
 //            t = v.(int64)
 //        }
 //
-//        ctx.App.Template().Execute(ctx.ResponseWriter, func(m *map[string]interface{}) {
-//            (*m)["unix"] = t
+//        ctx.App.Template().Execute(ctx.ResponseWriter, gof.TemplateDataMap{
+//            "unix":t,
 //        },
 //        "views/main/index.html",
 //        "views/main/inc/header.html",

@@ -23,8 +23,8 @@ example:
         		ctx.ResponseWriter.Header().Set("Content-Type","text/html")
         		return
         		ctx.App.Template().Execute(ctx.ResponseWriter,
-        		func(v *map[string]interface{}){
-        			(*v)["变量名"] = "变量值"
+        		gof.TemplateDataMap{
+        			"变量名": "变量值",
         		},"views/index.html")
         	})
 
