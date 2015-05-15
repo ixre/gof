@@ -30,12 +30,6 @@ func (this TemplateDataMap) Del(key string) {
 	delete(this, key)
 }
 
-// execute single template file
-func (this *Template) Render(w io.Writer, tplPath string, f TemplateDataMap,
-) error {
-	return this.Execute(w, f, tplPath)
-}
-
 // execute template
 func (this *Template) Execute(w io.Writer, f TemplateDataMap,
 	tplPath ...string) error {
