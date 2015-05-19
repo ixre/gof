@@ -163,7 +163,7 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 	val = val.Elem()
 
 	if !val.IsValid() {
-		return errors.New("not validate")
+		return errors.New("not validate or not initialize.")
 	}
 
 	/* build sql */
