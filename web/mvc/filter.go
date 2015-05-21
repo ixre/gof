@@ -19,4 +19,3 @@ type Filter interface {
 	//call it after execute your some business.
 	RequestEnd(*web.Context)
 }
-cd ..
