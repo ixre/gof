@@ -18,7 +18,7 @@ import (
 )
 
 const defaultSessionMaxAge int64 = 3600 * 12
-const sessionCookieName string = "_gofs"
+const sessionCookieName string = "gof_SessionId"
 
 func init() {
 	// register session type for gob.
