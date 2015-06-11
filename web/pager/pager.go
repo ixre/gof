@@ -34,8 +34,8 @@ const (
 )
 
 var (
-	DefaultPagerGetter    PagerGetter = new(defaultPagerGetter)
-	JavaScriptPagerGetter PagerGetter = new(jsPagerGetter)
+	GetterDefaultPager PagerGetter = new(defaultPagerGetter)
+	GetterJavaScriptPager PagerGetter = new(jsPagerGetter)
 )
 
 // 分页产生器
@@ -228,7 +228,7 @@ func NewUrlPager(totalPage, page int, pg PagerGetter) *UrlPager {
 	p.LinkCount = PagerLinkCount
 
 	if pg == nil {
-		p.getter = DefaultPagerGetter
+		p.getter = GetterDefaultPager
 	} else {
 		p.getter = pg
 	}
