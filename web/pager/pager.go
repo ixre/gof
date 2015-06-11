@@ -174,7 +174,7 @@ func (this *UrlPager) Pager() []byte {
 			}
 
 			//如果为页码为当前页
-			bys.WriteString(fmt.Sprintf(`<span class=\"current\">%d</span>`, j))
+			bys.WriteString(fmt.Sprintf(`<span class="current">%d</span>`, j))
 
 			//下一栏分页
 			if !_gotoPrevious && j%c == 0 && j != this.pageCount {
