@@ -34,7 +34,7 @@ const (
 )
 
 var (
-	GetterDefaultPager PagerGetter = new(defaultPagerGetter)
+	GetterDefaultPager    PagerGetter = new(defaultPagerGetter)
 	GetterJavaScriptPager PagerGetter = new(jsPagerGetter)
 )
 
