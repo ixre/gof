@@ -21,7 +21,7 @@ func Dial(n, addr string) (*TCPConn, error) {
 func (this *TCPConn) dial() (net.Conn, error) {
 	conn, err := net.Dial(this.net, this.addr)
 	if err != nil {
-		Printf("[Conn][Error]: %+v\n", err)
+		Printf("[Conn][ ERROR]: %+v\n", err)
 		return nil, err
 	}
 	return conn, nil

@@ -100,7 +100,7 @@ func (this *Server) handle(s, m, arg []byte) ([]byte, error) {
 
 			err = JsonCodec.Unmarshal(arg, aIn.Interface())
 			if err != nil {
-				Println("[Unmarshal][Error]:%s ; source %s ;type %#v", err, string(arg), aIn.Interface())
+				Println("[Unmarshal][ ERROR]:%s ; source %s ;type %#v", err, string(arg), aIn.Interface())
 				return nil, err
 			}
 
@@ -126,7 +126,7 @@ func (this *Server) handle(s, m, arg []byte) ([]byte, error) {
 			return JsonCodec.Marshal(aOut.Interface())
 		}
 	}
-	//Printf("[Server][ERROR]:%s.%s not registed.", string(s), string(m))
+	//Printf("[Server][ ERROR]:%s.%s not registed.", string(s), string(m))
 	return invalidBytes, nil
 }
 
@@ -153,7 +153,7 @@ func (this *Server) HandleRequest(conn net.Conn, d []byte) {
 			d[di+len(cmdDot):], d[:i])
 
 		if err != nil {
-			Println("[Server][Error]: " + err.Error())
+			Println("[Server][ ERROR]: " + err.Error())
 			conn.Write([]byte(err.Error()))
 		} else {
 			Println(fmt.Sprintf("[Server][Output]:%s", string(rd)))

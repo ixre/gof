@@ -67,7 +67,7 @@ func (this *SimpleDbConnector) GetOrm() orm.Orm {
 func (this *SimpleDbConnector) Query(sql string, f func(*sql.Rows), arg ...interface{}) error {
 	stmt, err := this.GetDb().Prepare(sql)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", sql))
+		err = errors.New(fmt.Sprintf("[ SQL][ ERROR]:", err.Error(), " [ SQL]:", sql))
 		this.println(err.Error())
 		return err
 	}
@@ -87,7 +87,7 @@ func (this *SimpleDbConnector) Query(sql string, f func(*sql.Rows), arg ...inter
 func (this *SimpleDbConnector) QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error {
 	stmt, err := this.GetDb().Prepare(sql)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", sql))
+		err = errors.New(fmt.Sprintf("[ SQL][ ERROR]:", err.Error(), " [ SQL]:", sql))
 		this.println(err.Error())
 		return err
 	} else {
@@ -110,7 +110,7 @@ func (this *SimpleDbConnector) ExecScalar(s string, result interface{}, arg ...i
 	}, arg...)
 
 	if err != nil {
-		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", s))
+		err = errors.New(fmt.Sprintf("[ SQL][ ERROR]:", err.Error(), " [ SQL]:", s))
 		this.println(err.Error())
 		return err
 	}
@@ -126,7 +126,7 @@ func (this *SimpleDbConnector) Exec(sql string, args ...interface{}) (rows int, 
 	}
 	result, err := stmt.Exec(args...)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("[SQL][Error]:", err.Error(), " [SQL]:", sql))
+		err = errors.New(fmt.Sprintf("[ SQL][ ERROR]:", err.Error(), " [ SQL]:", sql))
 		this.println(err.Error())
 		return 0, -1, err
 	}

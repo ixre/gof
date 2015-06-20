@@ -69,10 +69,10 @@ func GetFields(t reflect.Type) (names []string, mapNames []string) {
 	names = []string{}
 	mapNames = []string{}
 
-	fnum := t.NumField()
+	fNum := t.NumField()
 	var fmn string
 
-	for i := 0; i < fnum; i++ {
+	for i := 0; i < fNum; i++ {
 		f := t.Field(i)
 		if f.Tag != "" {
 			fmn = f.Tag.Get("db")

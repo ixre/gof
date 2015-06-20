@@ -130,7 +130,7 @@ func Brun(command string) (err error) {
 		fmt.Print(fmt.Sprintf("[COMMAND]:\n%s\n%s",
 			command, strings.Repeat("-", len(command))))
 		if err != nil {
-			fmt.Print("[Error]:", err.Error())
+			fmt.Print("[ ERROR]:", err.Error())
 		}
 		fmt.Print("\n")
 	}

@@ -73,7 +73,7 @@ func Unmarshal(b []byte, e interface{}) error {
 	if e != nil {
 		err := json.Unmarshal(b, e)
 		if debugMode && err != nil {
-			Println("[Codec][Error]:", err, string(b))
+			Println("[Codec][ ERROR]:", err, string(b))
 		}
 		return err
 	}

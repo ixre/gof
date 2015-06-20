@@ -87,7 +87,7 @@ func init() {
 		var header http.Header = w.Header()
 		header.Add("Content-Type", "text/html")
 		w.WriteHeader(500)
-		stack := strings.Replace(string(debug.Stack()), "\n", "<br />", -1)
+		stack := strings.Replace(string(debug.Stack()), "\n", "\r\n", -1)
 		w.Write([]byte(fmt.Sprintf(`<h1 style="color:red;font-size:20px">ERROR :%s</h1>
 				Source:%s line:%d<br />
 				</strong><br /><br /><b>Statck:</b><br />%s`,

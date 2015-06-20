@@ -66,7 +66,7 @@ connect:
 			conn.Write(buffer[:n-1]) //not contain "\n"
 			n, err = conn.Read(readerBuffer)
 			if err != nil {
-				fmt.Println("[Error]:", err)
+				fmt.Println("[ ERROR]:", err)
 			} else {
 				fmt.Println("[Return]:", string(readerBuffer[:n]))
 			}
@@ -82,7 +82,7 @@ connect:
 //	conn.Write([]byte(line + "\n"))
 //	n, err := conn.Read(readerBuffer)
 //	if err != nil {
-//		fmt.Println("[Error]:", err)
+//		fmt.Println("[ ERROR]:", err)
 //	} else {
 //		fmt.Println("[Return]:", string(readerBuffer[:n]))
 //	}

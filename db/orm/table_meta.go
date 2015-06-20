@@ -10,6 +10,7 @@
 package orm
 
 type TableMapMeta struct {
+	// 表前缀，如果手工添加
 	TableName     string
 	PkFieldName   string
 	PkIsAuto      bool
