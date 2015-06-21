@@ -14,6 +14,7 @@ type TableMapMeta struct {
 	TableName     string
 	PkFieldName   string
 	PkIsAuto      bool
-	FieldNames    []string //预留，可能会用到
+	//字段的索引
+	FieldsIndex    []int
 	FieldMapNames []string
 }

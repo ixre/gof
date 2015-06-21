@@ -108,7 +108,7 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 
 	/* build sql */
 	meta := this.getTableMapMeta(t)
-	fieldLen = len(meta.FieldNames)
+	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
@@ -175,7 +175,7 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 
 	/* build sql */
 	meta := this.getTableMapMeta(t)
-	fieldLen = len(meta.FieldNames)
+	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
@@ -236,7 +236,7 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 
 	/* build sql */
 	meta := this.getTableMapMeta(t)
-	fieldLen = len(meta.FieldNames)
+	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
@@ -312,7 +312,8 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 
 	/* build sql */
 	meta := this.getTableMapMeta(baseType)
-	fieldLen = len(meta.FieldNames)
+	fieldLen = len(meta.FieldMapNames)
+
 
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
@@ -373,9 +374,10 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 			break
 		}
 
-		for i := 0; i < fieldLen; i++ {
-			SetField(v.Field(i), rawBytes[i])
+		for i,fi := range meta.FieldsIndex {
+			SetField(v.Field(fi), rawBytes[i])
 		}
+
 
 		if eleIsPtr {
 			toArr = reflect.Append(toArr, e)

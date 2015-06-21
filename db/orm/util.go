@@ -18,13 +18,13 @@ import (
 
 // 获取表元数据
 func GetTableMapMeta(t reflect.Type) *TableMapMeta {
-	names, maps := GetFields(t)
+	ixs, maps := GetFields(t)
 	pkName, pkIsAuto := GetPKName(t)
 	m := &TableMapMeta{
 		TableName:     t.Name(),
 		PkFieldName:   pkName,
 		PkIsAuto:      pkIsAuto,
-		FieldNames:    names,
+		FieldsIndex:    ixs,
 		FieldMapNames: maps,
 	}
 	return m
@@ -36,17 +36,17 @@ func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 
 	ffc := func(f reflect.StructField) (string, bool) {
 		if f.Tag != "" {
-			var iauto bool
-			var fname string
+			var isAuto bool
+			var fieldName string
 
 			if ia := f.Tag.Get("auto"); ia == "yes" || ia == "1" {
-				iauto = true
+				isAuto = true
 			}
 
-			if fname = f.Tag.Get("db"); fname != "" {
-				return fname, iauto
+			if fieldName = f.Tag.Get("db"); fieldName != "" {
+				return fieldName, isAuto
 			}
-			return f.Name, iauto
+			return f.Name, isAuto
 		}
 		return f.Name, false
 	}
@@ -65,8 +65,8 @@ func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 }
 
 // 获取实体的字段
-func GetFields(t reflect.Type) (names []string, mapNames []string) {
-	names = []string{}
+func GetFields(t reflect.Type) (ixs []int, mapNames []string) {
+	ixs = []int{}
 	mapNames = []string{}
 
 	fNum := t.NumField()
@@ -77,18 +77,18 @@ func GetFields(t reflect.Type) (names []string, mapNames []string) {
 		if f.Tag != "" {
 			fmn = f.Tag.Get("db")
 			if fmn == "-" || fmn == "_" || len(fmn) == 0 {
-				break
+				continue
 			}
 		}
 		if fmn == "" {
 			fmn = f.Name
 		}
 		mapNames = append(mapNames, fmn)
-		names = append(names, f.Name)
+		ixs = append(ixs, i)
 		fmn = ""
 	}
 
-	return names, mapNames
+	return ixs, mapNames
 }
 
 func SetField(field reflect.Value, d []byte) {
