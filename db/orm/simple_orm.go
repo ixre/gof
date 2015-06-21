@@ -314,7 +314,6 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 	meta := this.getTableMapMeta(baseType)
 	fieldLen = len(meta.FieldMapNames)
 
-
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
@@ -374,10 +373,9 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 			break
 		}
 
-		for i,fi := range meta.FieldsIndex {
+		for i, fi := range meta.FieldsIndex {
 			SetField(v.Field(fi), rawBytes[i])
 		}
-
 
 		if eleIsPtr {
 			toArr = reflect.Append(toArr, e)

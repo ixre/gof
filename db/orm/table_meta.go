@@ -11,10 +11,10 @@ package orm
 
 type TableMapMeta struct {
 	// 表前缀，如果手工添加
-	TableName     string
-	PkFieldName   string
-	PkIsAuto      bool
+	TableName   string
+	PkFieldName string
+	PkIsAuto    bool
 	//字段的索引
-	FieldsIndex    []int
+	FieldsIndex   []int
 	FieldMapNames []string
 }

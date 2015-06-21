@@ -24,7 +24,7 @@ func GetTableMapMeta(t reflect.Type) *TableMapMeta {
 		TableName:     t.Name(),
 		PkFieldName:   pkName,
 		PkIsAuto:      pkIsAuto,
-		FieldsIndex:    ixs,
+		FieldsIndex:   ixs,
 		FieldMapNames: maps,
 	}
 	return m
