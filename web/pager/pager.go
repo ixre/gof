@@ -24,7 +24,6 @@ const (
 	NextPageText         = "下一页"
 	PreviousPageText     = "上一页"
 	CollagePagerLinkText = "..."
-
 	gpFormat = "javascript:gp(%d)"
 )
 const (
@@ -129,6 +128,9 @@ type UrlPager struct {
 
 	//分页详细记录,如果为空字符则用默认,为空则不显示
 	PagerTotal string
+
+	// 当总页数为1时，是否显示分页
+	PagingOnZero bool
 }
 
 func (this *UrlPager) Pager() []byte {
@@ -211,6 +213,9 @@ func (this *UrlPager) Pager() []byte {
 }
 
 func (this *UrlPager) PagerString() string {
+	if !this.PagingOnZero && this.pageCount == 1{
+		return ""
+	}
 	return string(this.Pager())
 }
 
