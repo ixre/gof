@@ -24,7 +24,7 @@ const (
 	NextPageText         = "下一页"
 	PreviousPageText     = "上一页"
 	CollagePagerLinkText = "..."
-	gpFormat = "javascript:gp(%d)"
+	gpFormat             = "javascript:gp(%d)"
 )
 const (
 	CONTROL = 1 << iota
@@ -213,7 +213,7 @@ func (this *UrlPager) Pager() []byte {
 }
 
 func (this *UrlPager) PagerString() string {
-	if !this.PagingOnZero && this.pageCount == 1{
+	if !this.PagingOnZero && this.pageCount == 1 {
 		return ""
 	}
 	return string(this.Pager())
