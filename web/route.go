@@ -11,6 +11,8 @@ package web
 import (
 	"net/http"
 	"regexp"
+	"strings"
+	"errors"
 )
 
 // Url Route
@@ -58,28 +60,13 @@ func (this *RouteMap) Handle(ctx *Context) {
 	var isHandled bool = false
 
 	//range 顺序是随机的，参见：http://golanghome.com/post/155
-	for _, k := range this.UrlPatterns {
-		v, exist := routes[k]
-		if exist {
-			var isMatch bool
-
-			// 是否为通配的路由(*)，或与路由规则一致
-			isMatch = k == "*" || k == path
-
-			// 如果路由不符，且规则为正则，前尝试匹配
-			if !isMatch && k[0:1] == "^" {
-				isMatch, err = regexp.MatchString(k, path)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
+	for _, routeKey := range this.UrlPatterns {
+		if routeHandler, exist := routes[routeKey]; exist {
+			if isHandled, err = this.chkInvoke(path, routeKey, routeHandler,ctx); isHandled {
+				break
 			}
-
-			//fmt.Println("Verify:", k, path)
-			if isMatch && v != nil {
-				//fmt.Println("Matched:", k, path)
-				isHandled = true
-				v(ctx)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				break
 			}
 		}
@@ -88,6 +75,45 @@ func (this *RouteMap) Handle(ctx *Context) {
 	if !isHandled {
 		http.Error(w, "404 Not found!", http.StatusNotFound)
 	}
+}
+
+func (this *RouteMap) chkInvoke(requestPath,routeKey string,routeHandler RequestHandler,ctx *Context)(bool,error) {
+	if routeHandler == nil {
+		panic(errors.New("handler can't nil!"))
+	}
+
+	// 是否为通配的路由(*)，或与路由规则一致
+	if match := routeKey == "*" || routeKey == requestPath; match {
+		return true, this.callHandler(routeHandler, ctx)
+	}
+
+	// 如果路由不符，且规则为正则，前尝试匹配
+	if routeKey[0:1] == "^" {
+		if match, err := regexp.MatchString(routeKey, requestPath); match {
+			return true, this.callHandler(routeHandler, ctx)
+		}else {
+			return false, err
+		}
+	}
+
+	// 如果结尾为“*”，标题匹配以前的URL
+	var j int = len(routeKey)-1
+	if routeKey[j:] == "*" {
+		if strings.HasPrefix(requestPath, routeKey[:j]) {
+			return true, this.callHandler(routeHandler, ctx)
+		}
+	}
+
+
+	return false, nil
+}
+
+func (this *RouteMap) callHandler(handler RequestHandler,ctx *Context)error{
+	if handler == nil{
+		return errors.New("No handler process your request!")
+	}
+	handler(ctx)
+	return nil
 }
 
 // 延迟执行的操作，发生在请求完成后
