@@ -60,7 +60,7 @@ func (this *Route) Add(urlPattern string, rf web.RequestHandler) {
 func (this *Route) Handle(ctx *web.Context) {
 	if !this._lazyRegister {
 		// 添加默认的路由
-		this._routeMap.Add("*", this.defaultRouteHandle)
+		this._routeMap.Add("*", this.handleAction)
 		this._lazyRegister = true
 	}
 	this._routeMap.Handle(ctx)
@@ -71,7 +71,7 @@ func (this *Route) DeferFunc(f web.RequestHandler) {
 	this._routeMap.DeferFunc(f)
 }
 
-func (this *Route) defaultRouteHandle(ctx *web.Context) {
+func (this *Route) handleAction(ctx *web.Context) {
 	path := ctx.Request.URL.Path
 	var ctlName, action string
 	ci := strings.Index(path[1:], "/")
@@ -79,44 +79,24 @@ func (this *Route) defaultRouteHandle(ctx *web.Context) {
 		ctlName = path[1:]
 	} else {
 		ctlName = path[1 : ci+1]
-		path = path[ci+2:]
-		ai := strings.Index(path, "/")
-		if ai == -1 {
-			action = path
-		} else {
-			action = path[:ai]
-		}
 	}
-	if len(action) == 0 {
-		action = "Index"
-	} else {
-		// 判断后缀是否相同
-		if di := strings.Index(action, "."); di != -1 {
-			if len(this._urlSuffix) == 0 || action[di:] != this._urlSuffix {
-				goto notFound
-			} else {
-				action = action[:di]
+
+	action = GetAction(path, this._urlSuffix)
+
+	if len(action) != 0 {
+		if ctx.Request.Method == "POST" {
+			action += "_post"
+		}
+
+		if this._ctlMap != nil {
+			if v := this._ctlMap[ctlName]; v != nil {
+				CustomHandle(v(), ctx, action)
+				return
 			}
 		}
-		//将第一个字符转为大写,这样才可以
-		upperFirstLetter := strings.ToUpper(action[0:1])
-		if upperFirstLetter != action[0:1] {
-			action = upperFirstLetter + action[1:]
-		}
+		return
 	}
 
-	if ctx.Request.Method == "POST" {
-		action = action + "_post"
-	}
-
-	if this._ctlMap != nil {
-		if v := this._ctlMap[ctlName]; v != nil {
-			CustomHandle(v(), ctx, action)
-			return
-		}
-	}
-
-notFound:
 	http.Error(ctx.ResponseWriter, "404 page not found",
 		http.StatusNotFound)
 }

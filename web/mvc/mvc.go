@@ -70,7 +70,7 @@ func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interf
 	r := ctx.Request
 	// 处理末尾的/
 	var path = r.URL.Path
-	var action string = getAction(path)
+	var action string = GetAction(path, "")
 	if rePost && r.Method == "POST" {
 		action += "_post"
 	}
@@ -78,7 +78,7 @@ func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interf
 	CustomHandle(controller, ctx, action, args...)
 }
 
-func getAction(path string) string {
+func GetAction(path string, suffix string) string {
 	var action string
 	if strings.HasSuffix(path, "/") {
 		path = path[:len(path)-1]
@@ -96,11 +96,21 @@ func getAction(path string) string {
 		action = path[lsi+1:]
 	}
 
-	//去扩展名
-	extIndex := strings.Index(action, ".")
-	if extIndex != -1 {
-		action = action[0:extIndex]
+	// 去扩展名
+	if di := strings.Index(action, "."); di != -1 {
+		// 判断后缀是否相同
+		if len(suffix) == 0 || action[di:] != suffix {
+			return ""
+		} else {
+			action = action[:di]
+		}
 	}
+
+	//	//去扩展名
+	//	extIndex := strings.Index(action, ".")
+	//	if extIndex != -1 {
+	//		action = action[0:extIndex]
+	//	}
 
 	//将第一个字符转为大写,这样才可以匹配导出的函数
 	upperFirstLetter := strings.ToUpper(action[0:1])

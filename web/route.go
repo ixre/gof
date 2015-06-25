@@ -9,10 +9,10 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 	"strings"
-	"errors"
 )
 
 // Url Route
@@ -62,7 +62,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	//range 顺序是随机的，参见：http://golanghome.com/post/155
 	for _, routeKey := range this.UrlPatterns {
 		if routeHandler, exist := routes[routeKey]; exist {
-			if isHandled, err = this.chkInvoke(path, routeKey, routeHandler,ctx); isHandled {
+			if isHandled, err = this.chkInvoke(path, routeKey, routeHandler, ctx); isHandled {
 				break
 			}
 			if err != nil {
@@ -77,7 +77,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	}
 }
 
-func (this *RouteMap) chkInvoke(requestPath,routeKey string,routeHandler RequestHandler,ctx *Context)(bool,error) {
+func (this *RouteMap) chkInvoke(requestPath, routeKey string, routeHandler RequestHandler, ctx *Context) (bool, error) {
 	if routeHandler == nil {
 		panic(errors.New("handler can't nil!"))
 	}
@@ -91,25 +91,24 @@ func (this *RouteMap) chkInvoke(requestPath,routeKey string,routeHandler Request
 	if routeKey[0:1] == "^" {
 		if match, err := regexp.MatchString(routeKey, requestPath); match {
 			return true, this.callHandler(routeHandler, ctx)
-		}else {
+		} else {
 			return false, err
 		}
 	}
 
 	// 如果结尾为“*”，标题匹配以前的URL
-	var j int = len(routeKey)-1
+	var j int = len(routeKey) - 1
 	if routeKey[j:] == "*" {
 		if strings.HasPrefix(requestPath, routeKey[:j]) {
 			return true, this.callHandler(routeHandler, ctx)
 		}
 	}
 
-
 	return false, nil
 }
 
-func (this *RouteMap) callHandler(handler RequestHandler,ctx *Context)error{
-	if handler == nil{
+func (this *RouteMap) callHandler(handler RequestHandler, ctx *Context) error {
+	if handler == nil {
 		return errors.New("No handler process your request!")
 	}
 	handler(ctx)
