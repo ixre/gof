@@ -99,7 +99,7 @@ func GetAction(path string, suffix string) string {
 	// 去扩展名
 	if di := strings.Index(action, "."); di != -1 {
 		// 判断后缀是否相同
-		if len(suffix) == 0 || action[di:] != suffix {
+		if len(suffix) != 0 && action[di:] != suffix {
 			return ""
 		} else {
 			action = action[:di]

@@ -84,6 +84,9 @@ func (this *Route) handleAction(ctx *web.Context) {
 	action = GetAction(path, this._urlSuffix)
 
 	if len(action) != 0 {
+		if action == ctlName {
+			action = "Index"
+		}
 		if ctx.Request.Method == "POST" {
 			action += "_post"
 		}
