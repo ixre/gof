@@ -23,6 +23,8 @@ type Template struct {
 // the data map for template
 type TemplateDataMap map[string]interface{}
 
+//type FuncMap template.FuncMap
+
 func (this TemplateDataMap) Add(key string, v interface{}) {
 	this[key] = v
 }
@@ -32,21 +34,46 @@ func (this TemplateDataMap) Del(key string) {
 }
 
 // execute template
-func (this *Template) Execute(w io.Writer, f TemplateDataMap,
+func (this *Template) ExecuteWithFunc(w io.Writer, funcMap template.FuncMap, dataMap TemplateDataMap,
 	tplPath ...string) error {
 
+	t := template.New("-")
+
+	if funcMap != nil {
+		t = t.Funcs(funcMap)
+	}
+
+	t, err := t.ParseFiles(tplPath...)
+	if err != nil {
+		return this.handleError(w, err)
+	}
+
+	if this.Init != nil {
+		if dataMap == nil {
+			dataMap = TemplateDataMap{}
+		}
+		this.Init(&dataMap)
+	}
+
+	err = t.Execute(w, dataMap)
+
+	return this.handleError(w, err)
+}
+
+func (this *Template) Execute(w io.Writer, dataMap TemplateDataMap, tplPath ...string) error {
 	t, err := template.ParseFiles(tplPath...)
 	if err != nil {
 		return this.handleError(w, err)
 	}
 
 	if this.Init != nil {
-		if f == nil {
-			f = TemplateDataMap{}
+		if dataMap == nil {
+			dataMap = TemplateDataMap{}
 		}
-		this.Init(&f)
+		this.Init(&dataMap)
 	}
-	err = t.Execute(w, f)
+
+	err = t.Execute(w, dataMap)
 
 	return this.handleError(w, err)
 }

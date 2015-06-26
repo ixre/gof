@@ -72,6 +72,7 @@ func (this *Route) DeferFunc(f web.RequestHandler) {
 }
 
 func (this *Route) handleAction(ctx *web.Context) {
+
 	path := ctx.Request.URL.Path
 	var ctlName, action string
 	ci := strings.Index(path[1:], "/")
@@ -97,7 +98,6 @@ func (this *Route) handleAction(ctx *web.Context) {
 				return
 			}
 		}
-		return
 	}
 
 	http.Error(ctx.ResponseWriter, "404 page not found",

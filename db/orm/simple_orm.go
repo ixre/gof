@@ -125,7 +125,7 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	)
 
 	if this.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, primaryVal))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primaryVal))
 	}
 
 	/* query */
@@ -493,7 +493,7 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 		)
 
 		if this.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, params))
+			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
 
 		/* query */
@@ -540,7 +540,7 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 		params = append(params, primaryKey)
 
 		if this.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, params))
+			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
 
 		result, err := stmt.Exec(params...)
