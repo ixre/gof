@@ -192,7 +192,7 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 	)
 
 	if this.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sql, where,args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sql, where, args))
 	}
 
 	/* query */
@@ -343,7 +343,7 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 	}
 
 	if this.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s [ Params] - %+v", sql,args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s [ Params] - %+v", sql, args))
 	}
 
 	/* query */

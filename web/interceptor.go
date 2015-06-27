@@ -87,7 +87,7 @@ func init() {
 		header.Add("Content-Type", "text/html")
 		w.WriteHeader(500)
 
-		var part1 string =`<html><head><title>Exception - GOF</title>
+		var part1 string = `<html><head><title>Exception - GOF</title>
 				<style>
 				body{background:#FFF;font-size:100%;color:#333;margin:0 2%;}
         h1{color:red;font-size:28px;border-bottom:solid 1px #ddd;line-height:80px;}
@@ -122,9 +122,9 @@ func init() {
 				</div>
 		</body>
 		</html>
-		`,err.Error(), f, line, debug.Stack())
+		`, err.Error(), f, line, debug.Stack())
 
-		w.Write([]byte(part1+html))
+		w.Write([]byte(part1 + html))
 	}
 
 	HandleHttpBeforePrint = func(ctx *Context) bool {
