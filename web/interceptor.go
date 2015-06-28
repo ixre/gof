@@ -88,6 +88,7 @@ func init() {
 		w.WriteHeader(500)
 
 		var part1 string = `<html><head><title>Exception - GOF</title>
+				<meta charset="utf-8"/>
 				<style>
 				body{background:#FFF;font-size:100%;color:#333;margin:0 2%;}
         h1{color:red;font-size:28px;border-bottom:solid 1px #ddd;line-height:80px;}
