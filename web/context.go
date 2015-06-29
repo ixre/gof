@@ -22,20 +22,23 @@ func SetSessionStorage(s gof.Storage) {
 }
 
 type Context struct {
-	App            gof.App
-	Request        *http.Request
-	ResponseWriter http.ResponseWriter
+	App      gof.App
+	Request  *http.Request
+	Response *response
 	// 用于上下文数据交换
 	Items    map[string]interface{}
 	_session *Session
 }
 
 func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Context {
-	return &Context{
-		App:            app,
+	newRsp := &response{
 		ResponseWriter: rsp,
-		Request:        req,
-		Items:          make(map[string]interface{}),
+	}
+	return &Context{
+		App:      app,
+		Response: newRsp,
+		Request:  req,
+		Items:    make(map[string]interface{}),
 	}
 }
 
@@ -51,9 +54,9 @@ func (this *Context) Session() *Session {
 		ck, err := this.Request.Cookie(sessionCookieName)
 		ss := this.getSessionStorage()
 		if err == nil {
-			this._session = LoadSession(this.ResponseWriter, ss, ck.Value)
+			this._session = LoadSession(this.Response, ss, ck.Value)
 		} else {
-			this._session = NewSession(this.ResponseWriter, ss)
+			this._session = NewSession(this.Response, ss)
 			this._session.Save()
 		}
 	}

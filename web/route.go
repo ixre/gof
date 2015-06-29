@@ -54,7 +54,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 		defer this.deferFunc(ctx)
 	}
 	var err error
-	r, w := ctx.Request, ctx.ResponseWriter
+	r, w := ctx.Request, ctx.Response
 	routes := this.RouteCollection
 	path := r.URL.Path
 	var isHandled bool = false

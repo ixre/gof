@@ -100,7 +100,7 @@ func (this *Route) handleAction(ctx *web.Context) {
 		}
 	}
 
-	http.Error(ctx.ResponseWriter, "404 page not found",
+	http.Error(ctx.Response, "404 page not found",
 		http.StatusNotFound)
 }
 

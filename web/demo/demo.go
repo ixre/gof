@@ -110,7 +110,7 @@ func getInterceptor(a gof.App, routes web.Route) *web.Interceptor {
 // 获取执行方法
 func getHttpExecFunc(routes web.Route) web.RequestHandler {
 	return func(ctx *web.Context) {
-		r, w := ctx.Request, ctx.ResponseWriter
+		r, w := ctx.Request, ctx.Response
 		switch host, f := r.Host, strings.HasPrefix; {
 		//静态文件，处理http://static.domain.com的请求。
 		case f(host, "static."):
@@ -142,14 +142,14 @@ func (this *testController) Requesting(ctx *web.Context) bool {
 // 请求结束时执行。
 // 可以做统一设置Header,gzip压缩，页面执行时间此类逻辑
 func (this *testController) RequestEnd(ctx *web.Context) {
-	ctx.ResponseWriter.Write([]byte("\r\nRequest End."))
+	ctx.Response.Write([]byte("\r\nRequest End."))
 }
 
 // Index动作，GET请求。来源URL:/test/index
 // Index为默认的动作，即也可以通过/test访问呢。
 // 如果为POST请求，约定在动作名称后添加"_post",即"Index_post"
 func (this *testController) Index(ctx *web.Context) {
-	ctx.ResponseWriter.Write([]byte("\r\nRequesting....."))
+	ctx.Response.Write([]byte("\r\nRequesting....."))
 }
 
 func main() {
@@ -167,7 +167,7 @@ func main() {
 	// 除了控制器，可以添加自定义的路由规则（正则表达式)
 	routes.Add("^/[0-9]$", func(ctx *web.Context) {
 		// 直接输出内容
-		ctx.ResponseWriter.Write([]byte("数字路径"))
+		ctx.Response.Write([]byte("数字路径"))
 		return
 	})
 
@@ -181,7 +181,7 @@ func main() {
 		data := gof.TemplateDataMap{
 			"变量名": "变量值",
 		}
-		ctx.App.Template().Execute(ctx.ResponseWriter, data, "template.html")
+		ctx.App.Template().Execute(ctx.Response, data, "template.html")
 		return
 
 		// 使用会话

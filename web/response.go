@@ -1,0 +1,33 @@
+/**
+ * Copyright 2015 @ S1N1 Team.
+ * name : response
+ * author : jarryliu
+ * date : -- :
+ * description :
+ * history :
+ */
+package web
+import (
+	"net/http"
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
+var _ http.ResponseWriter = new(response)
+type response struct {
+	http.ResponseWriter
+}
+
+// 输出JSON
+func (this *response) JsonOutput(v interface{}) {
+	this.ResponseWriter.Header().Set("Content-Type", "application/json")
+	b, err := json.Marshal(v)
+	if err != nil {
+		str := fmt.Sprintf(`{"error":"%s"}`,
+			strings.Replace(err.Error(), "\"", "\\\"", -1))
+		this.ResponseWriter.Write([]byte(str))
+	} else {
+		this.ResponseWriter.Write(b)
+	}
+}

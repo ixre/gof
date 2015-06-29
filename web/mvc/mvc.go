@@ -17,7 +17,7 @@ import (
 )
 
 func CustomHandle(c Controller, ctx *web.Context, action string, args ...interface{}) {
-	w := ctx.ResponseWriter
+	w := ctx.Response
 	// 拦截器
 	filter, isFilter := c.(Filter)
 	if isFilter {

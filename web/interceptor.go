@@ -82,7 +82,7 @@ func (this *Interceptor) For(handle RequestHandler) http.Handler {
 func init() {
 	HandleDefaultHttpExcept = func(ctx *Context, err error) {
 		_, f, line, _ := runtime.Caller(1)
-		var w = ctx.ResponseWriter
+		var w = ctx.Response
 		var header http.Header = w.Header()
 		header.Add("Content-Type", "text/html")
 		w.WriteHeader(500)
@@ -144,8 +144,9 @@ func init() {
 	}
 
 	HandleHttpAfterPrint = func(ctx *Context) {
-		w := ctx.ResponseWriter
-		proxy, ok := w.(*ResponseProxyWriter)
+		w := ctx.Response
+		proxy, ok := w.ResponseWriter.(*ResponseProxyWriter)
+
 		if !ok {
 			fmt.Println("[Response] convert error")
 			return
