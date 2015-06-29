@@ -7,14 +7,16 @@
  * history :
  */
 package web
+
 import (
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
 var _ http.ResponseWriter = new(response)
+
 type response struct {
 	http.ResponseWriter
 }
