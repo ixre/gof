@@ -13,6 +13,9 @@ import (
 	"github.com/atnet/gof/log"
 )
 
+// 应用当前的上下文
+var CurrentApp App
+
 type App interface {
 	// Provided db access
 	Db() db.Connector
