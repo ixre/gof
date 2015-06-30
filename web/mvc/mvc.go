@@ -79,21 +79,20 @@ func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interf
 }
 
 func GetAction(path string, suffix string) string {
-	var action string
-	if strings.HasSuffix(path, "/") {
-		path = path[:len(path)-1]
-	}
 
-	// 返回默认Action
-	if len(path) == 0 {
-		return "Index"
-	}
+	path = path[1:]
 
 	// 获取Action
-	if lsi := strings.LastIndex(path, "/"); lsi == -1 {
+	var action string
+	arr := strings.Split(path, "/")
+	if arrLen := len(arr); arrLen == 1 {
 		action = path
-	} else {
-		action = path[lsi+1:]
+	} else if arrLen >= 2 {
+		action = arr[1]
+	}
+
+	if len(action) == 0 {
+		return "Index"
 	}
 
 	// 去扩展名
@@ -106,16 +105,5 @@ func GetAction(path string, suffix string) string {
 		}
 	}
 
-	//	//去扩展名
-	//	extIndex := strings.Index(action, ".")
-	//	if extIndex != -1 {
-	//		action = action[0:extIndex]
-	//	}
-
-	//将第一个字符转为大写,这样才可以匹配导出的函数
-	upperFirstLetter := strings.ToUpper(action[0:1])
-	if upperFirstLetter != action[0:1] {
-		action = upperFirstLetter + action[1:]
-	}
-	return action
+	return strings.Title(action)
 }
