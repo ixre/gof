@@ -75,6 +75,7 @@ func (this *Session) GetSessionId() string {
 	return this._sessionId
 }
 
+// 获取值
 func (this *Session) Get(key string) interface{} {
 	if this._data != nil {
 		if v, ok := this._data[key]; ok {
@@ -84,9 +85,19 @@ func (this *Session) Get(key string) interface{} {
 	return nil
 }
 
+// 设置键值
 func (this *Session) Set(key string, v interface{}) {
 	this.chkInit()
 	this._data[key] = v
+}
+
+// 移除键
+func (this *Session) Remove(key string)bool{
+	if _, exists := this._data[key];exists{
+		delete(this._data,key)
+		return true
+	}
+	return false
 }
 
 // 使用指定的会话代替当前会话
