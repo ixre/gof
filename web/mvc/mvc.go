@@ -32,7 +32,7 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 	if !method.IsValid() {
 		errMsg := "No action named \"" + strings.Replace(action, "_post", "", 1) +
 			"\" in " + reflect.TypeOf(c).String() + "."
-		http.Error(w, errMsg, http.StatusInternalServerError)
+		http.Error(w, errMsg, http.StatusNotFound)
 		return
 	} else {
 		//包含基础的ResponseWriter和http.Request 2个参数
@@ -65,17 +65,24 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 //@controller ： 包含多种动作，URL中的文件名自动映射到控制器的函数
 //				 注意，是区分大小写的,默认映射到index函数
 //				 如果是POST请求将映射到控制器“函数名+_post”的函数执行
+// @path    : 指定路径
 // @re_post : 是否为post请求额外加上_post来区分Post和Get请求
-func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interface{}) {
+//
+func HandlePath(controller Controller, ctx *web.Context, path string, rePost bool, args ...interface{}) {
 	r := ctx.Request
-	// 处理末尾的/
-	var path = r.URL.Path
+	if len(path) == 0 {
+		path = r.URL.Path
+	}
 	var action string = GetAction(path, "")
 	if rePost && r.Method == "POST" {
 		action += "_post"
 	}
 
 	CustomHandle(controller, ctx, action, args...)
+}
+
+func Handle(controller Controller, ctx *web.Context, rePost bool, args ...interface{}) {
+	HandlePath(controller, ctx, "", rePost, args...)
 }
 
 func GetAction(path string, suffix string) string {

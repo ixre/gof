@@ -92,9 +92,9 @@ func (this *Session) Set(key string, v interface{}) {
 }
 
 // 移除键
-func (this *Session) Remove(key string)bool{
-	if _, exists := this._data[key];exists{
-		delete(this._data,key)
+func (this *Session) Remove(key string) bool {
+	if _, exists := this._data[key]; exists {
+		delete(this._data, key)
 		return true
 	}
 	return false
