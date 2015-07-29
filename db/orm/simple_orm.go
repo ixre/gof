@@ -36,6 +36,12 @@ func (this *simpleOrm) err(err error) error {
 	return err
 }
 
+func (this *simpleOrm) debug(format string, args ...interface{}) {
+	if this.useTrace {
+		log.Printf(format+"\n", args...)
+	}
+}
+
 func (this *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	m, exists := this.tableMap[t.String()]
 	if exists {

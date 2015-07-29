@@ -18,11 +18,12 @@ type SimpleDbConnector struct {
 	_db          *sql.DB //golang db只需要open一次即可
 	_orm         orm.Orm
 	logger       log.ILogger
+	debug        bool // 是否调试模式
 }
 
 //create a new connector
 func NewSimpleConnector(driverName, driverSource string,
-	l log.ILogger, maxConn int) Connector {
+	l log.ILogger, maxConn int, debug bool) Connector {
 	db, err := sql.Open(driverName, driverSource)
 
 	if err == nil {
@@ -59,6 +60,15 @@ func (this *SimpleDbConnector) err(err error) error {
 	return err
 }
 
+func (this *SimpleDbConnector) debugPrintf(format string, s string, args ...interface{}) {
+	if this.debug && this.logger != nil {
+		var newArgs []interface{} = make([]interface{}, 0)
+		newArgs[0] = s
+		newArgs = append(newArgs, args...)
+		this.logger.Printf(format+"\n", newArgs...)
+	}
+}
+
 func (this *SimpleDbConnector) GetDb() *sql.DB {
 	return this._db
 }
@@ -68,6 +78,7 @@ func (this *SimpleDbConnector) GetOrm() orm.Orm {
 }
 
 func (this *SimpleDbConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
+	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
 	stmt, err := this.GetDb().Prepare(s)
 	if err != nil {
 		return this.err(errors.New(fmt.Sprintf(
@@ -102,13 +113,20 @@ func (this *SimpleDbConnector) QueryRow(s string, f func(*sql.Row), args ...inte
 }
 
 func (this *SimpleDbConnector) ExecScalar(s string, result interface{}, args ...interface{}) (err error) {
+
+	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+
 	if result == nil {
 		return this.err(errors.New("out result is null pointer."))
 	}
 
-	this.QueryRow(s, func(row *sql.Row) {
+	err1 := this.QueryRow(s, func(row *sql.Row) {
 		err = row.Scan(result)
 	}, args...)
+
+	if err == nil {
+		err = err1
+	}
 
 	if err != nil {
 		return this.err(errors.New(fmt.Sprintf(
@@ -120,6 +138,9 @@ func (this *SimpleDbConnector) ExecScalar(s string, result interface{}, args ...
 
 //执行
 func (this *SimpleDbConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+
+	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+
 	stmt, err := this.GetDb().Prepare(s)
 	if err != nil {
 		return 0, -1, err

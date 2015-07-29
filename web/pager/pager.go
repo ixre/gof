@@ -142,10 +142,10 @@ func (this *UrlPager) Pager() []byte {
 
 	//输出上一页
 	if this.cpi > 1 {
-		cls = "previous"
+		cls = "btn previous"
 		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi-1, CONTROL|PREVIOUS)
 	} else {
-		cls = "disabled"
+		cls = "btn disabled"
 		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi, CONTROL|PREVIOUS)
 	}
 	bys.WriteString(fmt.Sprintf(`<span class="%s"><a href="%s">%s</a></span>`, cls, u, t))
@@ -176,7 +176,7 @@ func (this *UrlPager) Pager() []byte {
 			}
 
 			//如果为页码为当前页
-			bys.WriteString(fmt.Sprintf(`<span class="current">%d</span>`, j))
+			bys.WriteString(fmt.Sprintf(`<span class="btn current">%d</span>`, j))
 
 			//下一栏分页
 			if !_gotoPrevious && j%c == 0 && j != this.pageCount {
@@ -193,10 +193,10 @@ func (this *UrlPager) Pager() []byte {
 
 	//输出下一页链接
 	if this.cpi < this.pageCount {
-		cls = "next"
+		cls = "btn next"
 		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi+1, CONTROL|NEXT)
 	} else {
-		cls = "disabled"
+		cls = "btn disabled"
 		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi, CONTROL|NEXT)
 	}
 	bys.WriteString(fmt.Sprintf(`<span class="%s"><a href="%s">%s</a></span>`, cls, u, t))
@@ -243,7 +243,7 @@ func NewUrlPager(totalPage, page int, pg PagerGetter) *UrlPager {
 // 获取总页数
 func TotalPage(record, size int) int {
 	tp := record / size
-	if record%size == 0 {
+	if record % size == 0 {
 		return tp
 	}
 	return tp + 1

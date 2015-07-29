@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"bufio"
 )
 
 const (
@@ -51,7 +52,7 @@ type ILogger interface {
 }
 
 type simpleLogger struct {
-	out         io.Writer
+	out         *bufio.Writer
 	buf         []byte
 	mux         sync.Mutex
 	flag        int
@@ -65,7 +66,7 @@ func NewLogger(writer io.Writer, prefix string, flag int) *simpleLogger {
 		writer = os.Stdout
 	}
 	l := &simpleLogger{
-		out:         writer,
+		out:         bufio.NewWriter(writer),
 		flag:        flag,
 		opened:      flag&LOpen != 0,
 		callerDepth: DEFAULT_DEPTH,
@@ -124,6 +125,7 @@ func (t *simpleLogger) output(err bool, b *[]byte, newLine bool) {
 	}
 
 	t.out.Write(*b)
+	t.out.Flush()
 }
 
 func (t *simpleLogger) AddDepth(depth int) {
