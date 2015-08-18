@@ -243,7 +243,7 @@ func NewUrlPager(totalPage, page int, pg PagerGetter) *UrlPager {
 // 获取总页数
 func TotalPage(record, size int) int {
 	tp := record / size
-	if record % size == 0 {
+	if record%size == 0 {
 		return tp
 	}
 	return tp + 1

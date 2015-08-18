@@ -9,7 +9,7 @@
 package mvc
 
 import (
-	"github.com/atnet/gof/web"
+	"github.com/jrsix/gof/web"
 )
 
 // controller filter

@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/atnet/gof/db/orm"
-	"github.com/atnet/gof/log"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jrsix/gof/db/orm"
+	"github.com/jrsix/gof/log"
 )
 
 var _ Connector = new(SimpleDbConnector)

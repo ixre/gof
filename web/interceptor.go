@@ -3,8 +3,8 @@ package web
 import (
 	"errors"
 	"fmt"
-	"github.com/atnet/gof"
-	"github.com/atnet/gof/log"
+	"github.com/jrsix/gof"
+	"github.com/jrsix/gof/log"
 	"net/http"
 	"os"
 	"runtime"

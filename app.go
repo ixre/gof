@@ -9,8 +9,8 @@
 package gof
 
 import (
-	"github.com/atnet/gof/db"
-	"github.com/atnet/gof/log"
+	"github.com/jrsix/gof/db"
+	"github.com/jrsix/gof/log"
 )
 
 // 应用当前的上下文

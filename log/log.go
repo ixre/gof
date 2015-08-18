@@ -10,6 +10,7 @@
 package log
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -17,7 +18,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"bufio"
 )
 
 const (

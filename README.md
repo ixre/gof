@@ -34,6 +34,6 @@ example:
         	var ch = make(chan int,1)
         	<- ch
 
-Details in https://github.com/atnet/gof/blob/master/web/demo/demo.go .
+Details in https://github.com/jrsix/gof/blob/master/web/demo/demo.go .
 
 

@@ -10,7 +10,7 @@ package storage
 
 import (
 	"errors"
-	"github.com/atnet/gof"
+	"github.com/jrsix/gof"
 	"sync"
 )
 

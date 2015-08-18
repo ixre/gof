@@ -77,7 +77,8 @@ func (this *RouteMap) Handle(ctx *Context) {
 	}
 }
 
-func (this *RouteMap) chkInvoke(requestPath, routeKey string, routeHandler RequestHandler, ctx *Context) (bool, error) {
+func (this *RouteMap) chkInvoke(requestPath, routeKey string,
+	routeHandler RequestHandler, ctx *Context) (bool, error) {
 	if routeHandler == nil {
 		panic(errors.New("handler can't nil!"))
 	}

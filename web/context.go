@@ -10,7 +10,7 @@
 package web
 
 import (
-	"github.com/atnet/gof"
+	"github.com/jrsix/gof"
 	"net/http"
 )
 

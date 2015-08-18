@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/atnet/gof/db/orm"
+	"github.com/jrsix/gof/db/orm"
 	"log"
 	"os"
 	"testing"
