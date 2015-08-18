@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 @ S1N1 Team.
+ * Copyright 2014 @ z3q.net.
  * name : app1.go
  * author : jarryliu
  * date : 2015-04-27 20:43:

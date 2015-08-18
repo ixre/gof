@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 @ S1N1 Team.
+ * Copyright 2015 @ z3q.net.
  * name :
  * author : jarryliu
  * date : 2015-04-27 00:53
