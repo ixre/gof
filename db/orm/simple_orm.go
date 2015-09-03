@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jrsix/gof/log"
+	"github.com/jsix/gof/log"
 	"reflect"
 	"strings"
 )

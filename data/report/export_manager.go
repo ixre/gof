@@ -11,7 +11,7 @@ package report
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/jrsix/gof/db"
+	"github.com/jsix/gof/db"
 	"os"
 	"strconv"
 	"strings"

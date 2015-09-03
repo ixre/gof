@@ -10,12 +10,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/jrsix/gof"
-	"github.com/jrsix/gof/db"
-	"github.com/jrsix/gof/log"
-	"github.com/jrsix/gof/storage"
-	"github.com/jrsix/gof/web"
-	"github.com/jrsix/gof/web/mvc"
+	"github.com/jsix/gof"
+	"github.com/jsix/gof/db"
+	"github.com/jsix/gof/log"
+	"github.com/jsix/gof/storage"
+	"github.com/jsix/gof/web"
+	"github.com/jsix/gof/web/mvc"
 	"net/http"
 	"strings"
 )

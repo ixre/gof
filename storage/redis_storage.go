@@ -13,7 +13,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/garyburd/redigo/redis"
-	"github.com/jrsix/gof"
+	"github.com/jsix/gof"
 	"reflect"
 	"strings"
 	"sync"

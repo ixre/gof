@@ -10,7 +10,7 @@
 package web
 
 import (
-	"github.com/jrsix/gof"
+	"github.com/jsix/gof"
 	"net/http"
 )
 

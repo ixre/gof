@@ -11,7 +11,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/jrsix/gof/db/orm"
+	"github.com/jsix/gof/db/orm"
 )
 
 type Connector interface {

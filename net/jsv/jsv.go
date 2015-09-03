@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/jrsix/gof"
+	"github.com/jsix/gof"
 	"net"
 	"reflect"
 )

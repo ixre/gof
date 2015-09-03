@@ -10,7 +10,7 @@ package mvc
 
 import (
 	"fmt"
-	"github.com/jrsix/gof/web"
+	"github.com/jsix/gof/web"
 	"net/http"
 	"reflect"
 	"strings"

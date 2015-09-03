@@ -11,8 +11,8 @@ package web
 import (
 	"encoding/gob"
 	"fmt"
-	"github.com/jrsix/gof"
-	"github.com/jrsix/gof/util"
+	"github.com/jsix/gof"
+	"github.com/jsix/gof/util"
 	"net/http"
 	"time"
 )

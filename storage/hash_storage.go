@@ -10,7 +10,7 @@ package storage
 
 import (
 	"errors"
-	"github.com/jrsix/gof"
+	"github.com/jsix/gof"
 	"sync"
 )
 
