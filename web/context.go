@@ -14,13 +14,6 @@ import (
 	"net/http"
 )
 
-var globalSessionStorage gof.Storage
-
-// 设置全局的会话存储
-func SetSessionStorage(s gof.Storage) {
-	globalSessionStorage = s
-}
-
 type Context struct {
 	App      gof.App
 	Request  *http.Request
@@ -43,22 +36,16 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 }
 
 func (this *Context) getSessionStorage() gof.Storage {
-	if globalSessionStorage == nil {
+	if sessionStorage == nil {
 		return this.App.Storage()
 	}
-	return globalSessionStorage
+	return sessionStorage
 }
 
 func (this *Context) Session() *Session {
 	if this._session == nil {
-		ck, err := this.Request.Cookie(sessionCookieName)
-		ss := this.getSessionStorage()
-		if err == nil {
-			this._session = LoadSession(this.Response, ss, ck.Value)
-		} else {
-			this._session = NewSession(this.Response, ss)
-			this._session.Save()
-		}
+		this._session = parseSession(this.Response, this.Request,
+			sessionCookieName, this.getSessionStorage())
 	}
 	return this._session
 }
