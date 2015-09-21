@@ -7,8 +7,6 @@ import (
 	"github.com/jsix/gof/log"
 	"net/http"
 	"os"
-	"runtime"
-	"runtime/debug"
 	"time"
 )
 
@@ -81,51 +79,7 @@ func (this *Interceptor) For(handle RequestHandler) http.Handler {
 
 func init() {
 	HandleDefaultHttpExcept = func(ctx *Context, err error) {
-		_, f, line, _ := runtime.Caller(1)
-		var w = ctx.Response
-		var header http.Header = w.Header()
-		header.Add("Content-Type", "text/html")
-		w.WriteHeader(500)
-
-		var part1 string = `<html><head><title>Exception - GOF</title>
-				<meta charset="utf-8"/>
-				<style>
-				body{background:#FFF;font-size:100%;color:#333;margin:0 2%;}
-        h1{color:red;font-size:28px;border-bottom:solid 1px #ddd;line-height:80px;}
-        div.except-panel p{margin:20px 0;}
-        div.except-panel div.summary{}
-        div.except-panel p.message{font-size:24px;}
-        div.except-panel p.contact{color:#666;font-size:18px;}
-        div.except-panel p.stack{padding-top:30px;}
-        div.except-panel p.stack em{font-size:18px;font-style: normal;}
-        div.except-panel pre{font-family: Sans,Arail;
-            border:solid 1px #ddd;padding:20px;
-            font-size:16px;background:#F5F5F5;
-            line-height: 150%;color:#888;}
-        div.except-panel .hidden{display:none;}
-			</style>
-        </head>
-        <body>`
-
-		var html string = fmt.Sprintf(`
-				<h1>系统异常：%s</h1>
-				<div class="except-panel">
-					<div class="summary">
-						<p class="message">Source：%s&nbsp;&nbsp;Line:%d</p>
-						<p class="contact">请联系管理员或 <a href="/">回到首页</a></p>
-					</div>
-					<p class="stack">
-						<em>堆栈信息：</em><br/>
-						<pre>
-							%s
-						</pre>
-					</p>
-				</div>
-		</body>
-		</html>
-		`, err.Error(), f, line, debug.Stack())
-
-		w.Write([]byte(part1 + html))
+		HttpError(ctx.Response,err)
 	}
 
 	HandleHttpBeforePrint = func(ctx *Context) bool {
