@@ -13,17 +13,17 @@ import (
 	"fmt"
 	"github.com/jsix/gof"
 	"github.com/jsix/gof/util"
+	"log"
 	"net/http"
 	"time"
-	"log"
 )
 
 const (
-	defaultSessionMaxAge int64 = 3600 * 12
-	sessionCookieName string = "gof_SessionId"
+	defaultSessionMaxAge int64  = 3600 * 12
+	sessionCookieName    string = "gof_SessionId"
 )
 
-var(
+var (
 	sessionStorage gof.Storage
 )
 
@@ -35,8 +35,7 @@ type Session struct {
 	_maxAge    int64
 }
 
-
-func getSession(w http.ResponseWriter,storage gof.Storage,sessionId string)*Session {
+func getSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *Session {
 	s := &Session{
 		_sessionId: sessionId,
 		_rsp:       w,
@@ -140,7 +139,6 @@ func (this *Session) flushToClient() {
 	http.SetCookie(this._rsp, ck)
 }
 
-
 func init() {
 	gob.Register(make(map[string]interface{})) // register session type for gob.
 }
@@ -155,13 +153,12 @@ func newSessionId() string {
 	return fmt.Sprintf("%s%d%d", randStr, dt.Second(), dt.Nanosecond())
 }
 
-
 // Set global session storage
-func SetSessionStorage(s gof.Storage){
+func SetSessionStorage(s gof.Storage) {
 	sessionStorage = s
 }
 
-func parseSession(rsp http.ResponseWriter,r *http.Request,cookieName string,sto gof.Storage)*Session {
+func parseSession(rsp http.ResponseWriter, r *http.Request, cookieName string, sto gof.Storage) *Session {
 	var s *Session
 	ck, err := r.Cookie(cookieName)
 	if sto == nil {
@@ -176,6 +173,6 @@ func parseSession(rsp http.ResponseWriter,r *http.Request,cookieName string,sto 
 }
 
 // Session adapter for http context
-func SessionAdapter(rsp http.ResponseWriter,r *http.Request)*Session {
-	return parseSession(rsp,r,sessionCookieName,sessionStorage)
+func SessionAdapter(rsp http.ResponseWriter, r *http.Request) *Session {
+	return parseSession(rsp, r, sessionCookieName, sessionStorage)
 }

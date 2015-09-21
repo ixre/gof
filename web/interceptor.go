@@ -79,7 +79,7 @@ func (this *Interceptor) For(handle RequestHandler) http.Handler {
 
 func init() {
 	HandleDefaultHttpExcept = func(ctx *Context, err error) {
-		HttpError(ctx.Response,err)
+		HttpError(ctx.Response, err)
 	}
 
 	HandleHttpBeforePrint = func(ctx *Context) bool {

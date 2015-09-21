@@ -9,13 +9,13 @@
 package web
 
 import (
-	"runtime"
-	"net/http"
-	"runtime/debug"
 	"fmt"
+	"net/http"
+	"runtime"
+	"runtime/debug"
 )
 
-func HttpError(rsp http.ResponseWriter, err error){
+func HttpError(rsp http.ResponseWriter, err error) {
 	_, f, line, _ := runtime.Caller(1)
 	rsp.Header().Add("Content-Type", "text/html")
 	rsp.WriteHeader(500)
