@@ -29,7 +29,13 @@ func NewHashStorage() gof.Storage {
 	}
 }
 
-func (this *hashStorage) Driver() string {
+
+// return storage driver
+func (this *hashStorage) Driver() interface{}{
+	return this._map
+}
+
+func (this *hashStorage) DriverName() string {
 	return DriveHashStorage
 }
 

@@ -76,7 +76,12 @@ func (this *redisStorage) getRedisBytes(key string) ([]byte, error) {
 	return src, err
 }
 
-func (this *redisStorage) Driver() string {
+// return storage driver
+func (this *redisStorage) Driver() interface{}{
+	return this._pool.Get()
+}
+
+func (this *redisStorage) DriverName() string {
 	return DriveRedisStorage
 }
 

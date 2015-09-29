@@ -11,8 +11,11 @@ package gof
 
 // Storage
 type Storage interface {
-	// Return storage drive name
-	Driver() string
+	// return storage driver
+	Driver() interface{}
+
+	// Return storage driver name
+	DriverName() string
 
 	// Get Value
 	Get(key string, dst interface{}) error
