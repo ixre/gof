@@ -31,7 +31,7 @@ func (this *simpleOrm) Version() string {
 
 func (this *simpleOrm) err(err error) error {
 	if this.useTrace && err != nil {
-		log.Println("[ ORM][ !][ ERROR]:", err.Error())
+		log.Println("[ ORM][ ERROR]:", err.Error())
 	}
 	return err
 }

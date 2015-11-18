@@ -29,9 +29,8 @@ func NewHashStorage() gof.Storage {
 	}
 }
 
-
 // return storage driver
-func (this *hashStorage) Driver() interface{}{
+func (this *hashStorage) Driver() interface{} {
 	return this._map
 }
 

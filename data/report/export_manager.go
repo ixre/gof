@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"github.com/jsix/gof/db"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 
 	//初始化添加参数
 	if _, e := ht["pageSize"]; !e {
-		ht["pageSize"] = "100000"
+		ht["pageSize"] = "10000000000"
 	}
 	if _, e := ht["pageIndex"]; !e {
 		ht["pageIndex"] = "1"
@@ -83,6 +84,7 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 		smt, err := _db.Prepare(sql)
 
 		if err != nil {
+			log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
 			return nil, 0, err
 		}
 
@@ -90,6 +92,7 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 		if row != nil {
 			err = row.Scan(&total)
 			if err != nil {
+				log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
 				return nil, total, err
 			}
 		}
@@ -98,14 +101,28 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 	//获得数据
 	if portal.sqlConfig.Query != "" {
 		sql := SqlFormat(portal.sqlConfig.Query, ht)
+		sqlLines := strings.Split(sql, ";\n")
+		if t := len(sqlLines); t > 1 {
+			for i, v := range sqlLines {
+				if i != t-1 {
+					if smt, err := _db.Prepare(v); err == nil {
+						smt.Exec()
+					}
+				}
+			}
+			sql = sqlLines[t-1]
+
+		}
 
 		smt, err := _db.Prepare(sql)
 
 		if err != nil {
+			log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
 			return nil, total, err
 		}
 		_rows, err = smt.Query()
 		if err != nil {
+			log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
 			return nil, total, err
 		}
 		defer _rows.Close()

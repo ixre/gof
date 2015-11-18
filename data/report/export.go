@@ -122,6 +122,7 @@ func GetExportParams(paramMappings string, columnNames []string) *ExportParams {
 
 	if paramMappings != "" {
 
+		paramMappings = strings.Replace(paramMappings, "%3d", "=", -1)
 		var paramsArr, splitArr []string
 
 		paramsArr = strings.Split(paramMappings, ";")
