@@ -101,6 +101,7 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 	//获得数据
 	if portal.sqlConfig.Query != "" {
 		sql := SqlFormat(portal.sqlConfig.Query, ht)
+		//log.Println("-----",sql)
 		sqlLines := strings.Split(sql, ";\n")
 		if t := len(sqlLines); t > 1 {
 			for i, v := range sqlLines {
