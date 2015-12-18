@@ -19,8 +19,7 @@ type Context struct {
 	App      gof.App
 	Request  *http.Request
 	Response *response
-	// 用于上下文数据交换
-	Items    map[string]interface{}
+	Items    map[string]interface{} // 用于上下文数据交换
 	_session *session.Session
 }
 
@@ -33,7 +32,7 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 		Response: newRsp,
 		Request:  req,
 		Items:    make(map[string]interface{}),
-		_session: app.Storage(),
+		_session: nil,
 	}
 }
 
