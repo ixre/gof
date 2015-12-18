@@ -19,8 +19,7 @@ import (
 )
 
 const (
-	defaultSessionMaxAge int64  = 3600 * 12
-	keyName              string = "gof_SessionId"
+	defaultSessionMaxAge int64 = 3600 * 12
 )
 
 var (
@@ -33,27 +32,30 @@ type Session struct {
 	_data      map[string]interface{}
 	_storage   gof.Storage
 	_maxAge    int64
+	_keyName   string
 }
 
-func getSession(w http.ResponseWriter, storage gof.Storage, sessionId string) *Session {
+func getSession(w http.ResponseWriter, storage gof.Storage, cookieName string, sessionId string) *Session {
 	s := &Session{
 		_sessionId: sessionId,
 		_rsp:       w,
 		_data:      make(map[string]interface{}),
 		_storage:   storage,
 		_maxAge:    defaultSessionMaxAge,
+		_keyName:   cookieName,
 	}
 	s._storage.Get(getSessionId(s._sessionId), &s._data)
 	return s
 }
 
-func newSession(w http.ResponseWriter, storage gof.Storage) *Session {
+func newSession(w http.ResponseWriter, storage gof.Storage, cookieName string) *Session {
 	id := newSessionId()
 	return &Session{
 		_sessionId: id,
 		_rsp:       w,
 		_storage:   storage,
 		_maxAge:    defaultSessionMaxAge,
+		_keyName:   cookieName,
 	}
 }
 
@@ -112,7 +114,6 @@ func (this *Session) Save() error {
 	if this._data == nil {
 		return nil
 	}
-
 	err := this._storage.SetExpire(getSessionId(this._sessionId), &this._data, this._maxAge)
 	if err == nil {
 		this.flushToClient()
@@ -130,7 +131,7 @@ func (this *Session) flushToClient() {
 	d := time.Duration(this._maxAge * 1e9)
 	expires := time.Now().Local().Add(d)
 	ck := &http.Cookie{
-		Name:     keyName,
+		Name:     this._keyName,
 		Value:    this._sessionId,
 		Path:     "/",
 		HttpOnly: true,
@@ -144,7 +145,7 @@ func init() {
 }
 
 func getSessionId(id string) string {
-	return "gof:web:session:" + id
+	return "gof:session:" + id
 }
 
 func newSessionId() string {
@@ -158,21 +159,28 @@ func SetStorage(s gof.Storage) {
 	_storage = s
 }
 
-func parseSession(rsp http.ResponseWriter, r *http.Request, cookieName string, sto gof.Storage) *Session {
-	var s *Session
-	ck, err := r.Cookie(cookieName)
+// get session storage
+func GetStorage() gof.Storage {
+	return _storage
+}
+
+func parseSession(rsp http.ResponseWriter, r *http.Request,
+	cookieName string, sto gof.Storage) *Session {
 	if sto == nil {
 		log.Fatalln("session storage is nil")
 	}
-	if err == nil {
-		s = getSession(rsp, sto, ck.Value)
-	} else {
-		s = newSession(rsp, sto)
+	if ck, err := r.Cookie(cookieName); err == nil {
+		return getSession(rsp, sto, ck.Name, ck.Value)
 	}
-	return s
+	return newSession(rsp, sto, cookieName)
 }
 
 // Session adapter for http context
 func Default(rsp http.ResponseWriter, r *http.Request) *Session {
-	return parseSession(rsp, r, keyName, _storage)
+	return parseSession(rsp, r, "gof_SessionId", _storage)
+}
+
+// create a session use custom key
+func Create(key string, rsp http.ResponseWriter, r *http.Request) *Session {
+	return parseSession(rsp, r, key, _storage)
 }

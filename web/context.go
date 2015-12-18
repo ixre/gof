@@ -11,6 +11,7 @@ package web
 
 import (
 	"github.com/jsix/gof"
+	"github.com/jsix/gof/web/session"
 	"net/http"
 )
 
@@ -20,7 +21,7 @@ type Context struct {
 	Response *response
 	// 用于上下文数据交换
 	Items    map[string]interface{}
-	_session *Session
+	_session *session.Session
 }
 
 func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Context {
@@ -32,20 +33,13 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 		Response: newRsp,
 		Request:  req,
 		Items:    make(map[string]interface{}),
+		_session: app.Storage(),
 	}
 }
 
-func (this *Context) getSessionStorage() gof.Storage {
-	if sessionStorage == nil {
-		return this.App.Storage()
-	}
-	return sessionStorage
-}
-
-func (this *Context) Session() *Session {
+func (this *Context) Session() *session.Session {
 	if this._session == nil {
-		this._session = parseSession(this.Response, this.Request,
-			sessionCookieName, this.getSessionStorage())
+		this._session = session.Default(this.Response, this.Request)
 	}
 	return this._session
 }

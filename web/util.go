@@ -9,13 +9,14 @@
 package web
 
 import (
+	"net/http"
 	"strconv"
 	"time"
 )
 
 // 设置缓存头部信息
-func SetCacheHeader(ctx *Context, minute int) {
-	h := ctx.Response.ResponseWriter.Header()
+func SetCacheHeader(w http.ResponseWriter, minute int) {
+	h := w.Header()
 	t := time.Now()
 	expires := time.Minute * time.Duration(minute)
 	h.Set("Pragma", "Pragma")                 //Pragma:设置页面是否缓存，为Pragma则缓存，no-cache则不缓存
