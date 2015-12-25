@@ -24,6 +24,7 @@ const (
 
 var (
 	_storage gof.Storage
+	_defaultCookieName string = "gof_SessionId"
 )
 
 type Session struct {
@@ -114,6 +115,7 @@ func (this *Session) Save() error {
 	if this._data == nil {
 		return nil
 	}
+	println(this._keyName,"------")
 	err := this._storage.SetExpire(getSessionId(this._sessionId), &this._data, this._maxAge)
 	if err == nil {
 		this.flushToClient()
@@ -154,13 +156,14 @@ func newSessionId() string {
 	return fmt.Sprintf("%s%d%d", randStr, dt.Second(), dt.Nanosecond())
 }
 
-// Set global session storage
-func SetStorage(s gof.Storage) {
+// Set global session storage and name
+func Set(s gof.Storage,defaultName string) {
 	_storage = s
+	_defaultCookieName = defaultName
 }
 
 // get session storage
-func GetStorage() gof.Storage {
+func getStorage() gof.Storage {
 	return _storage
 }
 
@@ -177,7 +180,7 @@ func parseSession(rsp http.ResponseWriter, r *http.Request,
 
 // Session adapter for http context
 func Default(rsp http.ResponseWriter, r *http.Request) *Session {
-	return parseSession(rsp, r, "gof_SessionId", _storage)
+	return parseSession(rsp, r, _defaultCookieName, _storage)
 }
 
 // create a session use custom key
