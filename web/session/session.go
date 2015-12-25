@@ -115,7 +115,6 @@ func (this *Session) Save() error {
 	if this._data == nil {
 		return nil
 	}
-	println(this._keyName,"------")
 	err := this._storage.SetExpire(getSessionId(this._sessionId), &this._data, this._maxAge)
 	if err == nil {
 		this.flushToClient()
