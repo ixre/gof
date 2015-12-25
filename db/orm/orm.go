@@ -6,8 +6,8 @@ type Orm interface {
 
 	//Set orm output information
 	SetTrace(b bool)
-
-	CreateTableMap(v interface{}, tableName string)
+	// create the mapping data table
+	TableMapping(v interface{}, tableName string)
 
 	Get(primaryVal interface{}, entity interface{}) error
 

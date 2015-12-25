@@ -88,7 +88,7 @@ func (this *simpleOrm) SetTrace(b bool) {
 }
 
 //create a fixed table map
-func (this *simpleOrm) CreateTableMap(v interface{}, tableName string) {
+func (this *simpleOrm) TableMapping(v interface{}, tableName string) {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
