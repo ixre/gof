@@ -158,7 +158,9 @@ func newSessionId() string {
 // Set global session storage and name
 func Set(s gof.Storage,defaultName string) {
 	_storage = s
-	_defaultCookieName = defaultName
+	if len(defaultName) > 0 {
+		_defaultCookieName = defaultName
+	}
 }
 
 // get session storage
