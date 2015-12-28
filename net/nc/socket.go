@@ -62,8 +62,8 @@ func (this *SocketServer) OutputOff() {
 }
 
 // print logtime.Minute * 5
-func (this *SocketServer) Print(force bool, format string, args ...interface{}) {
-	if force || this.output {
+func (this *SocketServer) Print(format string, args ...interface{}) {
+	if this.output {
 		log.Printf(format, args...)
 	}
 }
