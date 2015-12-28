@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	_storage gof.Storage
+	_storage           gof.Storage
 	_defaultCookieName string = "gof_SessionId"
 )
 
@@ -156,7 +156,7 @@ func newSessionId() string {
 }
 
 // Set global session storage and name
-func Set(s gof.Storage,defaultName string) {
+func Set(s gof.Storage, defaultName string) {
 	_storage = s
 	if len(defaultName) > 0 {
 		_defaultCookieName = defaultName
