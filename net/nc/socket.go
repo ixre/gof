@@ -105,7 +105,7 @@ func (this *SocketServer) Auth(conn net.Conn, f AuthFunc) error {
 		}
 		addr := cli.Addr.String()
 		this.clients[addr] = cli
-		this.Print(false, "[ CLIENT] - Auth Success! source %d(%s)", src, addr)
+		this.Print("[ CLIENT] - Auth Success! source %d(%s)", src, addr)
 	}
 	return err
 }
@@ -154,7 +154,7 @@ func (this *SocketServer) Listen(addr string, rc TcpReceiver) {
 	listen, err := net.ListenTCP("tcp", serveAddr)
 	for {
 		if conn, err := listen.AcceptTCP(); err == nil {
-			this.Print(false, "[ CLIENT][ CONNECT] - New client %s ; actived clients : %d",
+			this.Print("[ CLIENT][ CONNECT] - New client %s ; actived clients : %d",
 				conn.RemoteAddr().String(), len(this.clients)+1)
 			go this.receiveTcpConn(conn, rc)
 		}
@@ -182,7 +182,7 @@ func (this *SocketServer) receiveTcpConn(conn *net.TCPConn, rc TcpReceiver) {
 					this.userAddrs[uid] = strings.Replace(addr2, "$$", "$", -1)
 				}
 			}
-			this.Print(false, "[ CLIENT][ DISCONN] - Client %s disconnect, activeed clients : %d",
+			this.Print("[ CLIENT][ DISCONN] - Client %s disconnect, activeed clients : %d",
 				addr, len(this.clients))
 			break
 		}
