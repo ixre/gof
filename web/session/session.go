@@ -84,6 +84,9 @@ func (this *Session) Get(key string) interface{} {
 // 设置键值
 func (this *Session) Set(key string, v interface{}) {
 	this.chkInit()
+//	if reflect.TypeOf(v).Kind() == reflect.Ptr{
+//		panic("Session value must be ptr")
+//	}
 	this._data[key] = v
 }
 
