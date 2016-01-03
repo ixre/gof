@@ -182,7 +182,7 @@ func (this *SocketServer) receiveTcpConn(conn *net.TCPConn, rc TcpReceiver) {
 					this.userAddrs[uid] = strings.Replace(addr2, "$$", "$", -1)
 				}
 			}
-			this.Print("[ CLIENT][ DISCONN] - Client %s disconnect, activeed clients : %d",
+			this.Print("[ CLIENT][ DISCONN] - Client %s disconnect, actived clients : %d",
 				addr, len(this.clients))
 			break
 		}

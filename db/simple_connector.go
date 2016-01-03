@@ -13,12 +13,12 @@ var _ Connector = new(SimpleDbConnector)
 
 //数据库连接器
 type SimpleDbConnector struct {
-	driverName   string  //驱动名称
-	driverSource string  //驱动连接地址
-	_db          *sql.DB //golang db只需要open一次即可
-	_orm         orm.Orm
-	logger       log.ILogger
-	debug        bool // 是否调试模式
+	_driverName   string  //驱动名称
+	_driverSource string  //驱动连接地址
+	_db           *sql.DB //golang db只需要open一次即可
+	_orm          orm.Orm
+	_logger       log.ILogger
+	_debug        bool    // 是否调试模式
 }
 
 //create a new connector
@@ -45,27 +45,27 @@ func NewSimpleConnector(driverName, driverSource string,
 	return &SimpleDbConnector{
 		_db:          db,
 		_orm:         orm.NewOrm(db),
-		driverName:   driverName,
-		driverSource: driverName,
-		logger:       l,
+		_driverName:   driverName,
+		_driverSource: driverName,
+		_logger:       l,
 	}
 }
 
 func (this *SimpleDbConnector) err(err error) error {
 	if err != nil {
-		if this.logger != nil {
-			this.logger.PrintErr(err)
+		if this._logger != nil {
+			this._logger.PrintErr(err)
 		}
 	}
 	return err
 }
 
 func (this *SimpleDbConnector) debugPrintf(format string, s string, args ...interface{}) {
-	if this.debug && this.logger != nil {
+	if this._debug && this._logger != nil {
 		var newArgs []interface{} = make([]interface{}, 0)
 		newArgs[0] = s
 		newArgs = append(newArgs, args...)
-		this.logger.Printf(format+"\n", newArgs...)
+		this._logger.Printf(format+"\n", newArgs...)
 	}
 }
 
