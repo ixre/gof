@@ -18,7 +18,7 @@ type SimpleDbConnector struct {
 	_db           *sql.DB //golang db只需要open一次即可
 	_orm          orm.Orm
 	_logger       log.ILogger
-	_debug        bool    // 是否调试模式
+	_debug        bool // 是否调试模式
 }
 
 //create a new connector
@@ -43,8 +43,8 @@ func NewSimpleConnector(driverName, driverSource string,
 	}
 
 	return &SimpleDbConnector{
-		_db:          db,
-		_orm:         orm.NewOrm(db),
+		_db:           db,
+		_orm:          orm.NewOrm(db),
 		_driverName:   driverName,
 		_driverSource: driverName,
 		_logger:       l,
