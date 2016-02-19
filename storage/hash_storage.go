@@ -38,6 +38,12 @@ func (this *hashStorage) DriverName() string {
 	return DriveHashStorage
 }
 
+// Check key is exists or not
+func (this *hashStorage) Exists(key string) (exists bool) {
+	_, b := this._map[key]
+	return b
+}
+
 func (this *hashStorage) Get(key string, dst interface{}) error {
 	panic(errors.New("HashStorage not support method \"Get\"!"))
 }

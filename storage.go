@@ -16,7 +16,8 @@ type Storage interface {
 
 	// Return storage driver name
 	DriverName() string
-
+	// Check key is exists or not
+	Exists(key string) (exists bool)
 	// Get Value
 	Get(key string, dst interface{}) error
 

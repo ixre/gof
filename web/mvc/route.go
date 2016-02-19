@@ -32,7 +32,7 @@ func NewRoute(source *web.RouteMap) *Route {
 	r := &Route{
 		_ctlMap:    make(map[string]ControllerGenerate),
 		_routeMap:  source,
-		_urlSuffix: ".htm",
+		_urlSuffix: "",
 	}
 	return r
 }

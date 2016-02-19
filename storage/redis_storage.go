@@ -24,6 +24,7 @@ var DriveRedisStorage string = "redis-storage"
 type redisStorage struct {
 	_pool *redis.Pool
 	_buf  *bytes.Buffer
+	_conn redis.Conn
 	sync.Mutex
 }
 
@@ -70,9 +71,7 @@ func isBaseOfStruct(v interface{}) bool {
 }
 
 func (this *redisStorage) getRedisBytes(key string) ([]byte, error) {
-	conn := this._pool.Get()
-	src, err := redis.Bytes(conn.Do("GET", key))
-	conn.Close()
+	src, err := redis.Bytes(this.getConn().Do("GET", key))
 	return src, err
 }
 
@@ -83,6 +82,11 @@ func (this *redisStorage) Driver() interface{} {
 
 func (this *redisStorage) DriverName() string {
 	return DriveRedisStorage
+}
+
+func (this *redisStorage) Exists(key string) (exists bool) {
+	i, err := redis.Int(this.getConn().Do("EXISTS", key))
+	return err != nil && i == 1
 }
 
 func (this *redisStorage) Get(key string, dst interface{}) error {
@@ -96,24 +100,24 @@ func (this *redisStorage) Get(key string, dst interface{}) error {
 	return errors.New("dst must be struct")
 }
 
+func (this *redisStorage) getConn() redis.Conn {
+	if this._conn == nil {
+		this._conn = this._pool.Get()
+	}
+	return this._conn
+}
 func (this *redisStorage) GetBool(key string) (bool, error) {
-	conn := this._pool.Get()
-	src, err := redis.Bool(conn.Do("GET", key))
-	conn.Close()
+	src, err := redis.Bool(this.getConn().Do("GET", key))
 	return src, err
 }
 
 func (this *redisStorage) GetInt(key string) (int, error) {
-	conn := this._pool.Get()
-	src, err := redis.Int(conn.Do("GET", key))
-	conn.Close()
+	src, err := redis.Int(this.getConn().Do("GET", key))
 	return src, err
 }
 
 func (this *redisStorage) GetInt64(key string) (int64, error) {
-	conn := this._pool.Get()
-	src, err := redis.Int64(conn.Do("GET", key))
-	conn.Close()
+	src, err := redis.Int64(this.getConn().Do("GET", key))
 	return src, err
 }
 
@@ -126,48 +130,35 @@ func (this *redisStorage) GetString(key string) (string, error) {
 }
 
 func (this *redisStorage) GetFloat64(key string) (float64, error) {
-	conn := this._pool.Get()
-	src, err := redis.Float64(conn.Do("GET", key))
-	conn.Close()
+	src, err := redis.Float64(this.getConn().Do("GET", key))
 	return src, err
 }
 
 //Get raw value
 func (this *redisStorage) GetRaw(key string) (interface{}, error) {
-	conn := this._pool.Get()
-	replay, err := conn.Do("GET", key)
-	conn.Close()
+	replay, err := this.getConn().Do("GET", key)
 	return replay, err
 }
 
 func (this *redisStorage) Set(key string, v interface{}) error {
 	var err error
 	var redisValue interface{} = v
-
 	if isBaseOfStruct(v) {
 		redisValue, err = this.getByte(v)
 	}
-
-	conn := this._pool.Get()
-	_, err = conn.Do("SET", key, redisValue)
-	conn.Close()
+	_, err = this.getConn().Do("SET", key, redisValue)
 	return err
 }
 func (this *redisStorage) Del(key string) {
-	conn := this._pool.Get()
-	conn.Do("DEL", key)
+	this.getConn().Do("DEL", key)
 }
 
 func (this *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	var err error
 	var redisValue interface{} = v
-
 	if isBaseOfStruct(v) {
 		redisValue, err = this.getByte(v)
 	}
-
-	conn := this._pool.Get()
-	_, err = conn.Do("SETEX", key, seconds, redisValue)
-	conn.Close()
+	_, err = this.getConn().Do("SETEX", key, seconds, redisValue)
 	return err
 }

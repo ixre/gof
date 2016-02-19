@@ -50,7 +50,7 @@ func getSession(w http.ResponseWriter, storage gof.Storage, cookieName string, s
 }
 
 func newSession(w http.ResponseWriter, storage gof.Storage, cookieName string) *Session {
-	id := newSessionId()
+	id := newSessionId(storage)
 	return &Session{
 		_sessionId: id,
 		_rsp:       w,
@@ -149,13 +149,20 @@ func init() {
 }
 
 func getSessionId(id string) string {
-	return "gof:session:" + id
+	return "gof:ss:" + id
 }
 
-func newSessionId() string {
-	dt := time.Now()
-	randStr := util.RandString(4)
-	return fmt.Sprintf("%s%d%d", randStr, dt.Second(), dt.Nanosecond())
+func newSessionId(s gof.Storage) string {
+	var rdStr string
+	for {
+		dt := time.Now()
+		randStr := util.RandString(6)
+		rdStr = fmt.Sprintf("%s%d", randStr, dt.Second())
+		if !s.Exists(getSessionId(rdStr)) { //check session id exists
+			break
+		}
+	}
+	return rdStr
 }
 
 // Set global session storage and name
