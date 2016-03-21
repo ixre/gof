@@ -10,8 +10,8 @@ package util
 
 import (
 	"crypto/rand"
-	mr "math/rand"
 	"math"
+	mr "math/rand"
 )
 
 const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -28,11 +28,11 @@ func RandString(n int) string {
 }
 
 // 随机整数
-func RandInt(n int)int{
-	min := int(math.Pow10(n-1))
-	max := min * 10 -1
+func RandInt(n int) int {
+	min := int(math.Pow10(n - 1))
+	max := min*10 - 1
 	v := mr.Intn(max)
-	if v < min{
+	if v < min {
 		return min + v
 	}
 	return v
