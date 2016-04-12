@@ -10,8 +10,10 @@ package nc
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"net"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -19,11 +21,18 @@ import (
 type (
 	// TCP接收者
 	TcpReceiver func(conn net.Conn, read []byte) ([]byte, error)
+
+	// 服务端运行的Job
+	Job func(*SocketServer)
+
 	// 命令函数,@plan:客户端发送的报文
 	CmdFunc func(c *Client, plan string) ([]byte, error)
+
 	// 验证函数,返回编号及错误
 	AuthFunc func() (from int, err error)
-	Client   struct {
+
+	// 客户端
+	Client struct {
 		// 连接来源,如:来源与某个商户
 		Source int
 		// 用户编号,如:商户下面的客户编号
@@ -38,48 +47,74 @@ type (
 		LatestConnectTime time.Time
 	}
 
-	// Socket服务器
+	// Socket服务器, 一个IP地址对应一个连接,一个用户对应一个或多个IP和连接.
+	// 多个IP用"$"连接
 	SocketServer struct {
 		// 开启输出,默认开启
-		output       bool
+		_output      bool
 		ReadDeadLine time.Duration      //超时断开时间
-		clients      map[string]*Client //客户端身份
-		userAddrs    map[int]string     //用户的IP信息,以同时下发到多个客户端
-		handlers     map[string]CmdFunc
+		_clients     map[string]*Client //客户端身份,断开时会删除
+		_userAddrs   map[int]string     //用户的IP信息,以同时下发到多个客户端
+		_handlers    map[string]CmdFunc
+		_jobs        []Job
+		_r           TcpReceiver
 	}
 )
 
-func NewSocketServer() *SocketServer {
+func NewSocketServer(r TcpReceiver) *SocketServer {
 	return &SocketServer{
-		output:    true,
-		clients:   make(map[string]*Client),
-		userAddrs: make(map[int]string),
+		_output:    true,
+		_clients:   make(map[string]*Client),
+		_userAddrs: make(map[int]string),
+		_jobs:      make([]Job, 0),
+		_r:         r,
 	}
 }
 
 func (this *SocketServer) OutputOff() {
-	this.output = false
+	this._output = false
 }
 
-// print logtime.Minute * 5
-func (this *SocketServer) Print(format string, args ...interface{}) {
-	if this.output {
+// print
+func (this *SocketServer) Printf(format string, args ...interface{}) {
+	if this._output {
 		log.Printf(format, args...)
 	}
 }
 
-// 获取客户端信息,如果没有,返回false
+// Register job running before server start!
+func (this *SocketServer) RegisterJob(job Job) error {
+	for _, v := range this._jobs {
+		if reflect.ValueOf(v) == reflect.ValueOf(job) { // compare func ptr
+			return errors.New("Can't repeat register job!")
+		}
+	}
+	this._jobs = append(this._jobs, job)
+	return nil
+}
+
+// Unregister job
+func (this *SocketServer) UnregisterJob(job Job) {
+	for i, v := range this._jobs {
+		if reflect.ValueOf(v) == reflect.ValueOf(job) { // compare func ptr
+			this._jobs = append(this._jobs[:i], this._jobs[i+1:]...)
+			break
+		}
+	}
+}
+
+// 根据IP获取客户端信息,如果没有,返回false
 func (this *SocketServer) GetCli(conn net.Conn) (*Client, bool) {
-	c, b := this.clients[conn.RemoteAddr().String()]
+	c, b := this._clients[conn.RemoteAddr().String()]
 	return c, b
 }
 
-// 获取用户的客户端连接
-func (this *SocketServer) GetConn(userId int) []net.Conn {
-	arr := strings.Split(this.userAddrs[userId], "$")
+// 获取用户的客户端连接, 一个用户对应一个或多个连接
+func (this *SocketServer) GetConnections(userId int) []net.Conn {
+	arr := strings.Split(this._userAddrs[userId], "$")
 	var connList []net.Conn = make([]net.Conn, 0)
 	for _, v := range arr {
-		if i, ok := this.clients[v]; ok && i.Conn != nil {
+		if i, ok := this._clients[v]; ok && i.Conn != nil {
 			connList = append(connList, i.Conn)
 		}
 	}
@@ -104,8 +139,8 @@ func (this *SocketServer) Auth(conn net.Conn, f AuthFunc) error {
 			LatestConnectTime: now,
 		}
 		addr := cli.Addr.String()
-		this.clients[addr] = cli
-		this.Print("[ CLIENT] - Auth Success! source %d(%s)", src, addr)
+		this._clients[addr] = cli
+		this.Printf("[ CLIENT] - Auth Success! source %d(%s)", src, addr)
 	}
 	return err
 }
@@ -122,10 +157,10 @@ func (this *SocketServer) UAuth(conn net.Conn, f AuthFunc) error {
 			cli.User = uid
 			cli.LatestConnectTime = time.Now()
 			//设置用户连接的客户端,一个用户可能连接多个终端
-			if v, ok := this.userAddrs[uid]; ok {
-				this.userAddrs[uid] = v + "$" + cli.Addr.String()
+			if v, ok := this._userAddrs[uid]; ok {
+				this._userAddrs[uid] = v + "$" + cli.Addr.String()
 			} else {
-				this.userAddrs[uid] = cli.Addr.String()
+				this._userAddrs[uid] = cli.Addr.String()
 			}
 		}
 	}
@@ -139,28 +174,38 @@ func (this *SocketServer) NoAuth(conn net.Conn) error {
 
 // 存储客户端信息,通常需要通过某种权限后才允许访问SOCKET服务
 func (this *SocketServer) SetCli(conn net.Conn, c *Client) {
-	this.clients[conn.RemoteAddr().String()] = c
+	this._clients[conn.RemoteAddr().String()] = c
 }
 
 func (this *SocketServer) setUserAddrs(id int, addr string) {
-	this.userAddrs[id] = addr
+	this._userAddrs[id] = addr
 }
 
-func (this *SocketServer) Listen(addr string, rc TcpReceiver) {
+func (this *SocketServer) runJobs() {
+	for _, v := range this._jobs {
+		go v(this)
+	}
+}
+
+func (this *SocketServer) Listen(addr string) {
+	this.runJobs() //running job
+
 	serveAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
+
 	listen, err := net.ListenTCP("tcp", serveAddr)
 	for {
 		if conn, err := listen.AcceptTCP(); err == nil {
-			this.Print("[ CLIENT][ CONNECT] - New client %s ; actived clients : %d",
-				conn.RemoteAddr().String(), len(this.clients)+1)
-			go this.receiveTcpConn(conn, rc)
+			this.Printf("[ CLIENT][ CONNECT] - New client %s ; actived clients : %d",
+				conn.RemoteAddr().String(), len(this._clients)+1)
+			go this.receiveTcpConn(conn, this._r)
 		}
 	}
 }
 
+// Receive client connection
 func (this *SocketServer) receiveTcpConn(conn *net.TCPConn, rc TcpReceiver) {
 	const delim byte = '\n'
 	for {
@@ -171,22 +216,23 @@ func (this *SocketServer) receiveTcpConn(conn *net.TCPConn, rc TcpReceiver) {
 			addr := conn.RemoteAddr().String()
 			//断开连接,清理数据
 			//一个用户可能通过不同的地址连接
-			if v, ok := this.clients[addr]; ok {
+			if v, ok := this._clients[addr]; ok {
 				uid := v.User
-				delete(this.clients, addr)
-				addr2 := this.userAddrs[uid]         //获取用户所有的客户端地址
+				delete(this._clients, addr)
+				addr2 := this._userAddrs[uid]        //获取用户所有的客户端地址
 				if strings.Index(addr2, "$") == -1 { //清除用户终端地址
-					delete(this.userAddrs, uid)
+					delete(this._userAddrs, uid)
 				} else {
 					addr2 = strings.Replace(addr2, addr, "", 1)
-					this.userAddrs[uid] = strings.Replace(addr2, "$$", "$", -1)
+					this._userAddrs[uid] = strings.Replace(addr2, "$$", "$", -1)
 				}
 			}
-			this.Print("[ CLIENT][ DISCONN] - Client %s disconnect, actived clients : %d",
-				addr, len(this.clients))
+			this.Printf("[ CLIENT][ DISCONN] - Client %s disconnect, actived clients : %d",
+				addr, len(this._clients))
 			break
 		}
 
+		// custom handle client request
 		if d, err := rc(conn, line[:len(line)-1]); err != nil { // remove '\n'
 			conn.Write([]byte("error$" + err.Error()))
 		} else if d != nil {

@@ -23,3 +23,8 @@ func Round(val float64, pos int) float64 {
 func Round32(val float32, pos int) float32 {
 	return float32(Round(float64(val), pos))
 }
+
+// 普通近似值计算, 不四舍五入,n为小数点精度
+func FixFloat32(v float64, n int) float64 {
+	return math.Floor(v*math.Pow10(n)) / math.Pow10(n)
+}
