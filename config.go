@@ -1,6 +1,7 @@
 /**
  * config file end with enter line
- */
+https://github.com/vaughan0/go-ini/blob/master/ini.go
+*/
 
 package gof
 
