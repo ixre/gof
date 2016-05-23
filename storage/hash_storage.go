@@ -11,6 +11,7 @@ package storage
 import (
 	"errors"
 	"github.com/jsix/gof"
+	"reflect"
 	"sync"
 )
 
@@ -45,7 +46,15 @@ func (this *hashStorage) Exists(key string) (exists bool) {
 }
 
 func (this *hashStorage) Get(key string, dst interface{}) error {
-	panic(errors.New("HashStorage not support method \"Get\"!"))
+	if k, ok := this._map[key]; ok {
+		if reflect.TypeOf(k).Kind() == reflect.Ptr {
+			dst = k
+		} else {
+			dst = &k
+		}
+		return nil
+	}
+	return errors.New("not such key")
 }
 
 func (this *hashStorage) GetBool(key string) (bool, error) {

@@ -11,7 +11,7 @@ func LogErr(err error) {
 	if Context != nil {
 		//log := Context.Log()
 		//log.AddDepth(0)
-		Context.Log().PrintErr(err)
+		Context.Log().Error(err)
 		//log.ResetDepth()
 	}
 }

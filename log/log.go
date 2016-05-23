@@ -38,28 +38,31 @@ var (
 	std ILogger = NewLogger(os.Stderr, "", LOpen|LStdFlags|LESource|DEFAULT_DEPTH)
 )
 
-type ILogger interface {
-	AddDepth(int)
-	ResetDepth()
-	Println(...interface{})
-	Printf(string, ...interface{})
-	PrintErr(error)
-	SetFlag(int)
-	Panicf(string, ...interface{})
-	Panicln(...interface{})
-	Fatalf(string, ...interface{})
-	Fatalln(...interface{})
-}
-
-type simpleLogger struct {
-	out         *bufio.Writer
-	buf         []byte
-	mux         sync.Mutex
-	flag        int
-	opened      bool
-	prefix      string
-	callerDepth int
-}
+type (
+	//todo:?? 存储错误到文件中
+	ILogger interface {
+		AddDepth(int)
+		ResetDepth()
+		Println(...interface{})
+		Printf(string, ...interface{})
+		// capture error
+		Error(error)
+		SetFlag(int)
+		Panicf(string, ...interface{})
+		Panicln(...interface{})
+		Fatalf(string, ...interface{})
+		Fatalln(...interface{})
+	}
+	simpleLogger struct {
+		out         *bufio.Writer
+		buf         []byte
+		mux         sync.Mutex
+		flag        int
+		opened      bool
+		prefix      string
+		callerDepth int
+	}
+)
 
 func NewLogger(writer io.Writer, prefix string, flag int) *simpleLogger {
 	if writer == nil {
@@ -157,7 +160,7 @@ func (t *simpleLogger) Printf(s string, v ...interface{}) {
 	}
 }
 
-func (t *simpleLogger) PrintErr(e error) {
+func (t *simpleLogger) Error(e error) {
 	if t.opened && e != nil {
 		t.buf = t.buf[:0]
 		t.formatHeader(&t.buf)
@@ -220,8 +223,8 @@ func Printf(s string, v ...interface{}) {
 	std.Printf(s, v...)
 }
 
-func PrintErr(e error) {
-	std.PrintErr(e)
+func Error(e error) {
+	std.Error(e)
 }
 
 func Panicf(s string, v ...interface{}) {

@@ -54,7 +54,7 @@ func NewSimpleConnector(driverName, driverSource string,
 func (this *SimpleDbConnector) err(err error) error {
 	if err != nil {
 		if this._logger != nil {
-			this._logger.PrintErr(err)
+			this._logger.Error(err)
 		}
 	}
 	return err

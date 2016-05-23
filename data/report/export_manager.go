@@ -177,11 +177,11 @@ func (manager *ExportItemManager) GetExportItem(portalKey string) *ExportItem {
 			[]string{dir, manager.RootPath, portalKey, manager.CfgFileExt},
 			"")
 		if f, err := os.Stat(filePath); err == nil && f.IsDir() == false {
-			itm := &ExportItem{
+			item := &ExportItem{
 				PortalKey:   portalKey,
 				Base:        baseExportPortal,
 				ItemManager: manager}
-			return itm
+			return item
 		}
 	}
 	return nil

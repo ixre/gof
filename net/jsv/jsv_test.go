@@ -22,7 +22,7 @@ func Test_A(t *testing.T) {
 		t.Fatalf("[TCP]: Connect Refused %s", server)
 	}
 
-	data := []byte(`{"partner_id":"101","secret":"d435a520e50e960b"}>>Partner.GetPartner`)
+	data := []byte(`{"merchant_id":"101","secret":"d435a520e50e960b"}>>Merchant.GetMerchant`)
 
 	for i := 0; i < 10000; i++ {
 		_, err := conn.Write(data)
