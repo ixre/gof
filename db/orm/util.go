@@ -65,8 +65,8 @@ func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 }
 
 // 获取实体的字段
-func GetFields(t reflect.Type) (ixs []int, mapNames []string) {
-	ixs = []int{}
+func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
+	posArr = []int{}
 	mapNames = []string{}
 
 	fNum := t.NumField()
@@ -84,11 +84,10 @@ func GetFields(t reflect.Type) (ixs []int, mapNames []string) {
 			fmn = f.Name
 		}
 		mapNames = append(mapNames, fmn)
-		ixs = append(ixs, i)
+		posArr = append(posArr, i)
 		fmn = ""
 	}
-
-	return ixs, mapNames
+	return posArr, mapNames
 }
 
 func SetField(field reflect.Value, d []byte) {
@@ -158,7 +157,7 @@ func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (pa
 			continue
 		}
 
-		field := val.Field(i)
+		field := val.Field(meta.FieldsIndex[i]) // 获取字段所在定义中的位置
 		isSet = false
 
 		switch field.Type().Kind() {
