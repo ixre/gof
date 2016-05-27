@@ -415,7 +415,7 @@ func (this *simpleOrm) Delete(entity interface{}, where string,
 	)
 
 	if this.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, args))
 	}
 
 	/* query */
