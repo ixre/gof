@@ -119,16 +119,18 @@ func (this *CachedTemplate) compileTemplate(name string) (
 
 func (this *CachedTemplate) Execute(w io.Writer,
 	name string, data interface{}) error {
-	//this.mux.RLock() //仅对读加锁
-	//defer this.mux.RUnlock()
+	this.mux.RLock() //仅对读加锁
 	tpl, ok := this.set[name]
 	if !ok {
+        this.mux.RUnlock()
 		var err error
 		if tpl, err = this.compileTemplate(name); err != nil {
 			return err
 		}
 		this.set[name] = tpl
-	}
+	}else{
+        defer this.mux.RUnlock()
+    }
 	return tpl.Execute(w, data)
 }
 
