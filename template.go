@@ -105,7 +105,6 @@ func (this *CachedTemplate) parseTemplate(name string) (
 
 func (this *CachedTemplate) compileTemplate(name string) (
 	*template.Template, error) {
-	//this.mux.Lock() //仅对读加锁
 	tpl, err := this.parseTemplate(name)
 	if err == nil {
 		this.set[name] = tpl
@@ -113,7 +112,6 @@ func (this *CachedTemplate) compileTemplate(name string) (
 	} else {
 		log.Println("[ Gof][ Template][ Error] -", err.Error())
 	}
-	//this.mux.Unlock()
 	return tpl, err
 }
 
@@ -122,15 +120,15 @@ func (this *CachedTemplate) Execute(w io.Writer,
 	this.mux.RLock() //仅对读加锁
 	tpl, ok := this.set[name]
 	if !ok {
-        this.mux.RUnlock()
+		this.mux.RUnlock()
 		var err error
 		if tpl, err = this.compileTemplate(name); err != nil {
 			return err
 		}
 		this.set[name] = tpl
-	}else{
-        defer this.mux.RUnlock()
-    }
+	} else {
+		defer this.mux.RUnlock()
+	}
 	return tpl.Execute(w, data)
 }
 
