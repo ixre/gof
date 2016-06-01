@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jsix/gof/log"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -415,7 +415,7 @@ func (this *simpleOrm) Delete(entity interface{}, where string,
 	)
 
 	if this.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%#v", sql, args))
 	}
 
 	/* query */
@@ -514,7 +514,9 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 		var lastInsertId int64 = 0
 		if err == nil {
 			rowNum, err = result.RowsAffected()
-			lastInsertId, _ = result.LastInsertId()
+			if err == nil {
+				lastInsertId, err = result.LastInsertId()
+			}
 			return rowNum, lastInsertId, err
 		}
 		return rowNum, lastInsertId, this.err(errors.New(err.Error() + "\n[ SQL]" + sql))
