@@ -25,23 +25,30 @@ var (
 )
 
 type CachedTemplate struct {
-	baseDirectory string
-	set           map[string]*template.Template
-	mux           *sync.RWMutex
+	basePath   string
+	shareFiles []string
+	set        map[string]*template.Template
+	mux        *sync.RWMutex
 }
 
-func NewCachedTemplate(dir string) *CachedTemplate {
+func NewCachedTemplate(basePath string, files ...string) *CachedTemplate {
 	g := &CachedTemplate{
-		baseDirectory: dir,
-		set:           make(map[string]*template.Template, 0),
-		mux:           &sync.RWMutex{},
+		basePath:   basePath,
+		set:        make(map[string]*template.Template, 0),
+		mux:        &sync.RWMutex{},
+		shareFiles: files,
 	}
 	return g.init()
 }
 
-func (g *CachedTemplate) init() *CachedTemplate {
-	go g.fsNotify()
-	return g
+func (this *CachedTemplate) init() *CachedTemplate {
+	for i, v := range this.shareFiles {
+		if !strings.HasPrefix(v, this.basePath) {
+			this.shareFiles[i] = this.basePath + v
+		}
+	}
+	go this.fsNotify()
+	return this
 }
 
 // calling on file changed
@@ -50,12 +57,14 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 		matches := eventRegexp.FindAllStringSubmatch(event.String(), 1)
 		if len(matches) > 0 {
 			filePath := matches[0][1]
-			if i := strings.Index(filePath, this.baseDirectory); i != -1 {
-				file := filePath[i+len(this.baseDirectory):]
+			if i := strings.Index(filePath, this.basePath); i != -1 {
+				file := filePath[i+len(this.basePath):]
 				if strings.Index(file, "_old_") == -1 &&
 					strings.Index(file, "_tmp_") == -1 &&
 					strings.Index(file, "_swp_") == -1 {
-					this.compileTemplate(file) // recompile template
+					if f, err := os.Stat(file); err == nil && !f.IsDir() {
+						this.compileTemplate(file) // recompile template
+					}
 				}
 			}
 		}
@@ -83,7 +92,7 @@ func (this *CachedTemplate) fsNotify() {
 		}
 	}(this)
 
-	filepath.Walk(this.baseDirectory, func(path string,
+	filepath.Walk(this.basePath, func(path string,
 		info os.FileInfo, err error) error {
 		if info.IsDir() && info.Name()[0] != '.' {
 			return w.Add(path)
@@ -98,7 +107,9 @@ func (this *CachedTemplate) fsNotify() {
 func (this *CachedTemplate) parseTemplate(name string) (
 	*template.Template, error) {
 	this.mux.Lock() //对写加锁
-	tpl, err := template.ParseFiles(this.baseDirectory + name)
+	files := append([]string{this.basePath + name},
+		this.shareFiles...) //name需要第一个位置
+	tpl, err := template.ParseFiles(files...)
 	this.mux.Unlock()
 	return tpl, err
 }
