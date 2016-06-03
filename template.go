@@ -62,9 +62,9 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 				if strings.Index(file, "_old_") == -1 &&
 					strings.Index(file, "_tmp_") == -1 &&
 					strings.Index(file, "_swp_") == -1 {
-					if f, err := os.Stat(file); err == nil && !f.IsDir() {
-						this.compileTemplate(file) // recompile template
-					}
+					//if f, err := os.Stat(file); err == nil && !f.IsDir() {
+					this.compileTemplate(file) // recompile template
+					//}
 				}
 			}
 		}
