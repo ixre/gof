@@ -94,10 +94,11 @@ func (this *CachedTemplate) fsNotify() {
 
 	filepath.Walk(this.basePath, func(path string,
 		info os.FileInfo, err error) error {
-		if info.IsDir() && info.Name()[0] != '.' {
-			return w.Add(path)
+		if err == nil && info.IsDir() &&
+			info.Name()[0] != '.' { // not hidden file
+			err = w.Add(path)
 		}
-		return nil
+		return err
 	})
 	var ch chan bool = make(chan bool)
 	<-ch
