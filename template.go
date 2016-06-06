@@ -74,35 +74,39 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 // file system notify
 func (this *CachedTemplate) fsNotify() {
 	w, err := fsnotify.NewWatcher()
+	if err == nil {
+		// watch event
+		go func(g *CachedTemplate) {
+			for {
+				select {
+				case event := <-w.Events:
+					if event.Op&fsnotify.Write != 0 ||
+						event.Op&fsnotify.Create != 0 {
+						g.fileChanged(&event)
+					}
+				case err := <-w.Errors:
+					log.Println("Error:", err)
+				}
+			}
+		}(this)
+
+		err = filepath.Walk(this.basePath, func(path string,
+			info os.FileInfo, err error) error {
+			if err == nil && info.IsDir() &&
+				info.Name()[0] != '.' {
+				// not hidden file
+				err = w.Add(path)
+			}
+			return err
+		})
+	}
 	if err != nil {
+		w.Close()
 		panic(err)
 		os.Exit(0)
+		return
 	}
-	go func(g *CachedTemplate) {
-		for {
-			select {
-			case event := <-w.Events:
-				if event.Op&fsnotify.Write != 0 ||
-					event.Op&fsnotify.Create != 0 {
-					g.fileChanged(&event)
-				}
-			case err := <-w.Errors:
-				log.Println("Error:", err)
-			}
-		}
-	}(this)
-
-	filepath.Walk(this.basePath, func(path string,
-		info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() &&
-			info.Name()[0] != '.' { // not hidden file
-			err = w.Add(path)
-		}
-		return err
-	})
-	var ch chan bool = make(chan bool)
-	<-ch
-	w.Close()
+	<-make(chan bool)
 }
 
 func (this *CachedTemplate) parseTemplate(name string) (
