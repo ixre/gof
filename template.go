@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -25,10 +26,11 @@ var (
 )
 
 type CachedTemplate struct {
-	basePath   string
-	shareFiles []string
-	set        map[string]*template.Template
-	mux        *sync.RWMutex
+	basePath      string
+	shareFiles    []string
+	set           map[string]*template.Template
+	mux           *sync.RWMutex
+	winPathRegexp *regexp.Regexp
 }
 
 func NewCachedTemplate(basePath string, files ...string) *CachedTemplate {
@@ -53,8 +55,15 @@ func (this *CachedTemplate) init() *CachedTemplate {
 
 // calling on file changed
 func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
-	if eventRegexp.MatchString(event.String()) {
-		matches := eventRegexp.FindAllStringSubmatch(event.String(), 1)
+	eventStr := event.String()
+	if runtime.GOOS == "windows" {
+		if this.winPathRegexp == nil {
+			this.winPathRegexp = regexp.MustCompile("\\\\+")
+		}
+		eventStr = this.winPathRegexp.ReplaceAllString(eventStr, "/")
+	}
+	if eventRegexp.MatchString(eventStr) {
+		matches := eventRegexp.FindAllStringSubmatch(eventStr, 1)
 		if len(matches) > 0 {
 			filePath := matches[0][1]
 			if i := strings.Index(filePath, this.basePath); i != -1 {
@@ -62,6 +71,7 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 				if strings.Index(file, "_old_") == -1 &&
 					strings.Index(file, "_tmp_") == -1 &&
 					strings.Index(file, "_swp_") == -1 {
+					//todo: bug
 					//if f, err := os.Stat(file); err == nil && !f.IsDir() {
 					this.compileTemplate(file) // recompile template
 					//}
@@ -93,8 +103,7 @@ func (this *CachedTemplate) fsNotify() {
 		err = filepath.Walk(this.basePath, func(path string,
 			info os.FileInfo, err error) error {
 			if err == nil && info.IsDir() &&
-				info.Name()[0] != '.' {
-				// not hidden file
+				info.Name()[0] != '.' { // not hidden file
 				err = w.Add(path)
 			}
 			return err
