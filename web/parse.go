@@ -42,7 +42,7 @@ func ParseFormToEntity(values map[string][]string, instance interface{}) {
 				}
 				break
 			case reflect.Bool:
-				val := strings.ToLower(strVal) == "true" || strVal == "1"
+				val := strings.ToLower(strVal) == "true" || strVal == "1" || strVal == "on"
 				field.Set(reflect.ValueOf(val))
 				break
 
