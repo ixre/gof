@@ -9,10 +9,10 @@ import (
 	"github.com/jsix/gof/log"
 )
 
-var _ Connector = new(SimpleDbConnector)
+var _ Connector = new(simpleConnector)
 
 //数据库连接器
-type SimpleDbConnector struct {
+type simpleConnector struct {
 	_driverName   string  //驱动名称
 	_driverSource string  //驱动连接地址
 	_db           *sql.DB //golang db只需要open一次即可
@@ -42,7 +42,7 @@ func NewSimpleConnector(driverName, driverSource string,
 		db.SetMaxOpenConns(maxConn)
 	}
 
-	return &SimpleDbConnector{
+	return &simpleConnector{
 		_db:           db,
 		_orm:          orm.NewOrm(db),
 		_driverName:   driverName,
@@ -51,7 +51,7 @@ func NewSimpleConnector(driverName, driverSource string,
 	}
 }
 
-func (this *SimpleDbConnector) err(err error) error {
+func (this *simpleConnector) err(err error) error {
 	if err != nil {
 		if this._logger != nil {
 			this._logger.Error(err)
@@ -60,7 +60,7 @@ func (this *SimpleDbConnector) err(err error) error {
 	return err
 }
 
-func (this *SimpleDbConnector) debugPrintf(format string, s string, args ...interface{}) {
+func (this *simpleConnector) debugPrintf(format string, s string, args ...interface{}) {
 	if this._debug && this._logger != nil {
 		var newArgs []interface{} = make([]interface{}, 0)
 		newArgs[0] = s
@@ -69,15 +69,19 @@ func (this *SimpleDbConnector) debugPrintf(format string, s string, args ...inte
 	}
 }
 
-func (this *SimpleDbConnector) GetDb() *sql.DB {
+func (this *simpleConnector) Driver() string {
+	return this._driverName
+}
+
+func (this *simpleConnector) GetDb() *sql.DB {
 	return this._db
 }
 
-func (this *SimpleDbConnector) GetOrm() orm.Orm {
+func (this *simpleConnector) GetOrm() orm.Orm {
 	return this._orm
 }
 
-func (this *SimpleDbConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
+func (this *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
 	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
 	stmt, err := this.GetDb().Prepare(s)
 	if err != nil {
@@ -97,7 +101,7 @@ func (this *SimpleDbConnector) Query(s string, f func(*sql.Rows), args ...interf
 }
 
 //查询Rows
-func (this *SimpleDbConnector) QueryRow(s string, f func(*sql.Row), args ...interface{}) error {
+func (this *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interface{}) error {
 	stmt, err := this.GetDb().Prepare(s)
 	if err != nil {
 		return this.err(errors.New(fmt.Sprintf(
@@ -112,7 +116,7 @@ func (this *SimpleDbConnector) QueryRow(s string, f func(*sql.Row), args ...inte
 	return nil
 }
 
-func (this *SimpleDbConnector) ExecScalar(s string, result interface{}, args ...interface{}) (err error) {
+func (this *simpleConnector) ExecScalar(s string, result interface{}, args ...interface{}) (err error) {
 
 	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
 
@@ -137,7 +141,7 @@ func (this *SimpleDbConnector) ExecScalar(s string, result interface{}, args ...
 }
 
 //执行
-func (this *SimpleDbConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+func (this *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
 
 	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
 
@@ -159,7 +163,7 @@ func (this *SimpleDbConnector) Exec(s string, args ...interface{}) (rows int, la
 	return int(affect), int(lastId), nil
 }
 
-func (this *SimpleDbConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
+func (this *simpleConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
 	n, _, err := this.Exec(sql, args...)
 	return n, this.err(err)
 }
