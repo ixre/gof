@@ -117,5 +117,5 @@ func init() {
 		"root:@tcp(localhost:3306)/mysql?charset=utf8", nil, -1)
 	_orm = _connector.GetOrm()
 	_orm.SetTrace(!true)
-	_orm.TableMapping(User{}, "user")
+	_orm.Mapping(User{}, "user")
 }

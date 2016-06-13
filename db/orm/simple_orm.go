@@ -13,7 +13,7 @@ var _ Orm = new(simpleOrm)
 
 //it's a IOrm Implements for mysql
 type simpleOrm struct {
-	tableMap map[string]*TableMapMeta
+	tableMap map[string]*TableMeta
 	*sql.DB
 	useTrace bool
 }
@@ -21,7 +21,7 @@ type simpleOrm struct {
 func NewOrm(db *sql.DB) Orm {
 	return &simpleOrm{
 		DB:       db,
-		tableMap: make(map[string]*TableMapMeta),
+		tableMap: make(map[string]*TableMeta),
 	}
 }
 
@@ -42,7 +42,7 @@ func (this *simpleOrm) debug(format string, args ...interface{}) {
 	}
 }
 
-func (this *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
+func (this *simpleOrm) getTableMapMeta(t reflect.Type) *TableMeta {
 	m, exists := this.tableMap[t.String()]
 	if exists {
 		return m
@@ -76,7 +76,7 @@ func (this *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) 
 	return GetPKName(t)
 }
 
-func (this *simpleOrm) unionField(meta *TableMapMeta, v string) string {
+func (this *simpleOrm) unionField(meta *TableMeta, v string) string {
 	if len(meta.TableName) != 0 {
 		return meta.TableName + "." + v
 	}
@@ -88,13 +88,13 @@ func (this *simpleOrm) SetTrace(b bool) {
 }
 
 //create a fixed table map
-func (this *simpleOrm) TableMapping(v interface{}, tableName string) {
+func (this *simpleOrm) Mapping(v interface{}, table string) {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 	meta := this.getTableMapMeta(t)
-	meta.TableName = tableName
+	meta.TableName = table
 	this.tableMap[t.String()] = meta
 }
 
