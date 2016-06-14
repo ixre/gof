@@ -142,7 +142,7 @@ func GetExportParams(paramMappings string, columnNames []string) *ExportParams {
 func SqlFormat(sql string, ht map[string]string) (formatted string) {
 	formatted = sql
 	for k, v := range ht {
-		formatted = strings.Replace(formatted, "{"+k+"}", v, 20)
+		formatted = strings.Replace(formatted, "{"+k+"}", v, -1)
 	}
 	return formatted
 }
