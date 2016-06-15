@@ -35,9 +35,10 @@ type CachedTemplate struct {
 }
 
 // when notify is false , will not compile on file change!
-func NewCachedTemplate(basePath string,notify bool,files ...string) *CachedTemplate {
+func NewCachedTemplate(basePath string, notify bool, files ...string) *CachedTemplate {
 	g := &CachedTemplate{
 		_basePath:   basePath,
+		_fsNotify:   notify,
 		_set:        make(map[string]*template.Template, 0),
 		_mux:        &sync.RWMutex{},
 		_shareFiles: files,
