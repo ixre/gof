@@ -76,14 +76,27 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 				if strings.Index(file, "_old_") == -1 &&
 					strings.Index(file, "_tmp_") == -1 &&
 					strings.Index(file, "_swp_") == -1 {
-					//todo: bug
-					//if f, err := os.Stat(file); err == nil && !f.IsDir() {
-					this.compileTemplate(file) // recompile template
-					//}
+					this.handleChange(file) //do some things on file changed.
 				}
 			}
 		}
 	}
+}
+
+func (this *CachedTemplate) handleChange(file string)(err error){
+	fullName := this._basePath + file
+	for _,v := range this._shareFiles{
+		if v == fullName{
+			this._set = map[string]*template.Template{}
+			break;
+		}
+	}
+	//todo: bug
+	//if f, err := os.Stat(file); err == nil && !f.IsDir() {
+	_,err = this.compileTemplate(file) // recompile template
+	//}
+
+	return err
 }
 
 // file system notify
