@@ -13,18 +13,17 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 const (
-	FirstLinkFormat      = ""
-	PagerLinkFormat      = "?page=%d"
-	PagerLinkCount       = 10
-	FirstPageText        = "首页"
-	LastPageText         = "末页"
-	NextPageText         = "下一页"
-	PreviousPageText     = "上一页"
-	CollagePagerLinkText = "..."
-	gpFormat             = "javascript:gp(%d)"
+	FirstLinkFormat  = ""
+	PagerLinkFormat  = "?page=%d"
+	PagerLinkCount   = 10
+	FirstPageText    = "首页"
+	LastPageText     = "末页"
+	NextPageText     = "下一页"
+	PreviousPageText = "上一页"
 )
 const (
 	CONTROL = 1 << iota
@@ -33,89 +32,67 @@ const (
 )
 
 var (
-	GetterDefaultPager    PagerGetter = new(defaultPagerGetter)
-	GetterJavaScriptPager PagerGetter = new(jsPagerGetter)
+	GetterDefaultPager PagerGetter = new(defaultPagerGetter)
 )
 
 // 分页产生器
 type PagerGetter interface {
-	Get(page, total, nowPage, flag int) (url, text string)
+	SetPager(*UrlPager) error
+	//page为当前页
+	Get(page, flag int) (url, text string)
 }
 
 // 默认的产生器，在查询后添加page=?
 type defaultPagerGetter struct {
+	p *UrlPager
 }
 
-func (this *defaultPagerGetter) Get(page, total, nowPage, flag int) (url, text string) {
+func (this *defaultPagerGetter) SetPager(v *UrlPager) error {
+	this.p = v
+	return nil
+}
+
+func (this *defaultPagerGetter) Get(page, flag int) (url, text string) {
 	if flag&CONTROL != 0 {
 		if flag&PREVIOUS != 0 {
 			if page == 1 {
 				return "javascript:;", FirstPageText
 			}
-			return fmt.Sprintf(PagerLinkFormat, nowPage), PreviousPageText
+			return fmt.Sprintf(this.p.Query, page-1), PreviousPageText
 		}
 
 		if flag&NEXT != 0 {
-			if page == total {
+			if page == this.p.Pages {
 				return "javascript:;", LastPageText
 			}
-			return fmt.Sprintf(PagerLinkFormat, nowPage), NextPageText
+			return fmt.Sprintf(this.p.Query, page+1), NextPageText
 		}
 	}
 
-	if nowPage == 1 && len(FirstLinkFormat) != 0 {
-		return FirstLinkFormat, strconv.Itoa(nowPage)
+	if -page == 1 && len(FirstLinkFormat) != 0 {
+		return fmt.Sprintf(this.p.Query, 1), "1"
 	}
-	return fmt.Sprintf(PagerLinkFormat, nowPage), strconv.Itoa(nowPage)
-}
-
-// Javascript 分页产生器,使用gp(?)来跳页
-type jsPagerGetter struct{}
-
-func (this *jsPagerGetter) Get(page, total, nowPage, flag int) (url, text string) {
-	if flag&CONTROL != 0 {
-		if flag&PREVIOUS != 0 {
-			if page == 1 {
-				return "javascript:;", FirstPageText
-			}
-			return fmt.Sprintf(gpFormat, nowPage), PreviousPageText
-		}
-
-		if flag&NEXT != 0 {
-			if page == total {
-				return "javascript:;", LastPageText
-			}
-			return fmt.Sprintf(gpFormat, nowPage), NextPageText
-		}
-	}
-
-	return fmt.Sprintf(gpFormat, nowPage), strconv.Itoa(nowPage)
+	return fmt.Sprintf(this.p.Query, page), strconv.Itoa(page)
 }
 
 type UrlPager struct {
-	//当前页面索引（从1开始）
-	cpi int
+	//当前页面索引,从0开始
+	Index int
+
+	//查询条件
+	Query string
 
 	//连接和页码
 	getter PagerGetter
 
 	//页面总数
-	pageCount int
+	Pages int
 
 	//链接长度,创建多少个跳页链接
-	LinkCount int
+	Number int
 
 	//记录条数
-	RecordCount int
-
-	//选页框文本
-	//SelectPageText string
-
-	//第一页链接格式
-	firstPageLink string
-
-	//分页链接格式
-	linkFormat string
+	Total int
 
 	//页码文本格式
 	pageTextFormat string
@@ -133,118 +110,129 @@ type UrlPager struct {
 	PagingOnZero bool
 }
 
+func (this *UrlPager) check() {
+	if this.Index < 1 {
+		this.Index = 1
+	}
+	if len(strings.TrimSpace(this.Query)) == 0 {
+		this.Query = PagerLinkFormat
+	}
+}
+
 func (this *UrlPager) Pager() []byte {
 	var bys *bytes.Buffer
 	var cls string
-	var u, t string
+	var url, text string
 
+	//检查数据
+	this.check()
+	this.getter.SetPager(this)
+
+	//开始拼接html
 	bys = bytes.NewBufferString("<div class=\"pager\">")
 
 	//输出上一页
-	if this.cpi > 1 {
+	if this.Index > 0 {
 		cls = "btn previous"
-		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi-1, CONTROL|PREVIOUS)
+		url, text = this.getter.Get(this.Index, CONTROL|PREVIOUS)
 	} else {
 		cls = "btn disabled"
-		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi, CONTROL|PREVIOUS)
+		url, text = this.getter.Get(this.Index, CONTROL|PREVIOUS)
 	}
-	bys.WriteString(fmt.Sprintf(`<span class="%s"><a href="%s">%s</a></span>`, cls, u, t))
+	bys.WriteString(fmt.Sprintf(`<a class="%s" href="%s">%s</a>`, cls, url, text))
 
 	//起始页:CurrentPageIndex / 10 * 10+1
 	//结束页:(CurrentPageIndex%10==0?CurrentPageIndex-1: CurrentPageIndex) / 10 * 10
 	//当前页数能整除10的时候需要减去10页，否则不能选中
 
-	//链接页码数量(默认10)
-	var c int = this.LinkCount
-	var startPage int = (this.cpi-1)/c*c + 1
-	var _gotoPrevious bool = false //是否上一栏分页
+	//详见:https://github.com/jsix/notes/blob/master/code/pagination.js
+	//var linkNumber = this.opts.num; //页码数
+	//var currIndex = this.opts.curr; //当前页,从0开始
+	//var pageCount = this.opts.pages; //总页面
+	//var beginPage = currIndex; //页码链接开始页
+	//var offset = parseInt(linkNumber / 2) + linkNumber % 2; //选中
+	//if (beginPage - offset + linkNumber > pageCount) { //最后一组
+	//	beginPage = pageCount - linkNumber;
+	//} else if (beginPage > offset) {
+	//	beginPage -= offset;
+	//} else {
+	//	beginPage = 1;
+	//}
+	//
+	//for (var i = 1, j = beginPage; i <= linkNumber && j < pageCount; i++) {
+	//j++;
 
-	for i, j := 1, startPage; i <= c && j < this.pageCount; i++ {
-		if this.cpi%c == 0 {
-			j = (this.cpi-1)/c*c + i
-		} else {
-			j = this.cpi/c*c + i
-		}
+	linkNumber := this.Number //链接接数(默认10)
+	currIndex := this.Index   //当前页数
+	pageCount := this.Pages   //总页数
+	beginPage := currIndex    //开始页
 
-		if j == this.cpi {
-			_gotoPrevious = j != 1 && j%c == 1
-
-			//上一栏分页
-			if _gotoPrevious {
-				u, _ := this.getter.Get(this.cpi, this.pageCount, j-1, 0)
-				bys.WriteString(fmt.Sprintf(`<a class="page" href="%s">%s</a>`, u, CollagePagerLinkText))
-			}
-
+	//计算开始页,将自动补全左右的链接
+	offset := linkNumber/2 + linkNumber%2
+	if beginPage-offset+linkNumber > pageCount {
+		beginPage = pageCount - linkNumber
+	} else if beginPage > offset {
+		beginPage = beginPage - offset
+	} else {
+		beginPage = 0
+	}
+	//拼接页码
+	for i, j := 1, beginPage; i <= linkNumber && j < pageCount; i++ {
+		j++
+		if j == currIndex {
 			//如果为页码为当前页
-			bys.WriteString(fmt.Sprintf(`<span class="btn current">%d</span>`, j))
-
-			//下一栏分页
-			if !_gotoPrevious && j%c == 0 && j != this.pageCount {
-				u, _ := this.getter.Get(this.cpi, this.pageCount, j+1, 0)
-				bys.WriteString(fmt.Sprintf(`<a class="page" href="%s">%s</a>`, u, CollagePagerLinkText))
-			}
-
+			bys.WriteString(fmt.Sprintf(`<a class="pn current">%d</a>`, j))
 		} else {
 			//页码不为当前页，则输出页码
-			u, t := this.getter.Get(this.cpi, this.pageCount, j, 0)
-			bys.WriteString(fmt.Sprintf(`<a class="page" href="%s">%s</a>`, u, t))
+			u, t := this.getter.Get(j, 0)
+			bys.WriteString(fmt.Sprintf(`<a class="pn" href="%s">%s</a>`, u, t))
 		}
 	}
 
 	//输出下一页链接
-	if this.cpi < this.pageCount {
+	if this.Index < this.Pages {
 		cls = "btn next"
-		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi+1, CONTROL|NEXT)
+		url, text = this.getter.Get(this.Index, CONTROL|NEXT)
 	} else {
 		cls = "btn disabled"
-		u, t = this.getter.Get(this.cpi, this.pageCount, this.cpi, CONTROL|NEXT)
+		url, text = this.getter.Get(this.Index, CONTROL|NEXT)
 	}
-	bys.WriteString(fmt.Sprintf(`<span class="%s"><a href="%s">%s</a></span>`, cls, u, t))
+	bys.WriteString(fmt.Sprintf(`<a class="%s" href="%s">%s</a>`, cls, url, text))
 
 	//显示信息
-	const pagerStr string = "<span class=\"pageinfo\">&nbsp;第%d/%d页，共%d条。</span>"
+	const pagerStr string = "<span class=\"info\">&nbsp;第%d/%d页，共%d条。</span>"
 	if len(this.PagerTotal) == 0 {
 		this.PagerTotal = pagerStr
 	}
-	bys.WriteString(fmt.Sprintf(this.PagerTotal, this.cpi, this.pageCount, this.RecordCount))
+	bys.WriteString(fmt.Sprintf(this.PagerTotal, this.Index, this.Pages, this.Total))
 
 	bys.WriteString("</div>")
 	return bys.Bytes()
 }
 
 func (this *UrlPager) PagerString() string {
-	if !this.PagingOnZero && this.pageCount == 1 {
+	if !this.PagingOnZero && this.Pages == 1 {
 		return ""
 	}
 	return string(this.Pager())
 }
 
-func NewUrlPager(totalPage, page int, pg PagerGetter) *UrlPager {
-	if page < 1 {
-		page = 1
-	}
-	if totalPage < 1 {
-		totalPage = 1
-	}
-
+func NewUrlPager(total int, size int, current int, query string) *UrlPager {
 	p := &UrlPager{}
-	p.pageCount = totalPage
-	p.cpi = page
-	p.LinkCount = PagerLinkCount
-
-	if pg == nil {
-		p.getter = GetterDefaultPager
-	} else {
-		p.getter = pg
-	}
+	p.Pages = MathPages(total, size)
+	p.Index = current
+	p.Number = PagerLinkCount
+	p.Query = query
+	p.getter = GetterDefaultPager
+	p.getter.SetPager(p)
 	return p
 }
 
 // 获取总页数
-func TotalPage(record, size int) int {
-	tp := record / size
-	if record%size == 0 {
-		return tp
+func MathPages(total, size int) int {
+	p := total / size
+	if total%size == 0 {
+		return p
 	}
-	return tp + 1
+	return p + 1
 }

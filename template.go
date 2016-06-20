@@ -83,17 +83,17 @@ func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
 	}
 }
 
-func (this *CachedTemplate) handleChange(file string)(err error){
+func (this *CachedTemplate) handleChange(file string) (err error) {
 	fullName := this._basePath + file
-	for _,v := range this._shareFiles{
-		if v == fullName{
+	for _, v := range this._shareFiles {
+		if v == fullName {
 			this._set = map[string]*template.Template{}
-			break;
+			break
 		}
 	}
 	//todo: bug
 	//if f, err := os.Stat(file); err == nil && !f.IsDir() {
-	_,err = this.compileTemplate(file) // recompile template
+	_, err = this.compileTemplate(file) // recompile template
 	//}
 
 	return err
