@@ -26,7 +26,7 @@ var _ IDataExportPortal = new(ExportItem)
 type ExportItem struct {
 	Base      *DataExportPortal
 	PortalKey string
-	sqlConfig *ExportItemConfig
+	sqlConfig *ItemConfig
 	//管理器
 	ItemManager *ExportItemManager
 }
@@ -159,7 +159,7 @@ type ExportItemManager struct {
 }
 
 //获取导出项
-func (manager *ExportItemManager) GetExportItem(portalKey string) *ExportItem {
+func (manager *ExportItemManager) GetExportItem(portalKey string) IDataExportPortal {
 
 	if manager.RootPath == "" {
 		manager.RootPath = "/conf/query/"
@@ -169,8 +169,8 @@ func (manager *ExportItemManager) GetExportItem(portalKey string) *ExportItem {
 		manager.CfgFileExt = ".xml"
 	}
 
-	if itm, exist := manager.exportItems[portalKey]; exist {
-		return &itm
+	if item, exist := manager.exportItems[portalKey]; exist {
+		return &item
 	} else {
 		dir, _ := os.Getwd()
 		filePath := strings.Join(
