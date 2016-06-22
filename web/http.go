@@ -15,6 +15,8 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"time"
+	"strconv"
 )
 
 type (
@@ -24,6 +26,8 @@ type (
 		Default(handler http.Handler)
 		// 添加子域的处理程序
 		Set(sub string, handler http.Handler)
+		// 获取处理程序
+		Get(sub string) http.Handler
 		// 处理HTTP请求
 		ServeHTTP(w http.ResponseWriter, r *http.Request)
 		// 监听端口,并启动
@@ -46,6 +50,11 @@ func (this HttpHostsHandler) ListenAndServe(addr string) error {
 
 func (this HttpHostsHandler) Default(handler http.Handler) {
 	this["*"] = handler
+}
+
+// 获取处理程序
+func (this HttpHostsHandler) Get(subName string) http.Handler {
+	return this[subName]
 }
 
 func (this HttpHostsHandler) Set(subName string, handler http.Handler) {
@@ -109,4 +118,16 @@ func HttpError(rsp http.ResponseWriter, err error) {
 		`, err.Error(), f, line, debug.Stack())
 
 	rsp.Write([]byte(part1 + html))
+}
+
+
+// 设置缓存头部信息
+func SetCacheHeader(w http.ResponseWriter, minute int) {
+	h := w.Header()
+	t := time.Now()
+	expires := time.Minute * time.Duration(minute)
+	h.Set("Pragma", "Pragma")                 //Pragma:设置页面是否缓存，为Pragma则缓存，no-cache则不缓存
+	h.Set("Expires", t.Add(expires).String()) //Expires:过时期限值
+	//h.Set("Last-Modified",t.String()); 			//Last-Modified:页面的最后生成时间
+	h.Set("Cache-Control", "max-age="+strconv.Itoa(minute*60)) //Cache-Control来控制页面的缓存与否,public:浏览器和缓存服务器都可以缓存页面信息；
 }
