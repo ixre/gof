@@ -10,10 +10,63 @@ package web
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"runtime"
 	"runtime/debug"
+	"strings"
 )
+
+type (
+	// 一个针对多个子域的HTTP处理程序
+	MultiHttpHandler interface {
+		// 设置默认的处理程序
+		Default(handler http.Handler)
+		// 添加子域的处理程序
+		Set(sub string, handler http.Handler)
+		// 处理HTTP请求
+		ServeHTTP(w http.ResponseWriter, r *http.Request)
+		// 监听端口,并启动
+		ListenAndServe(addr string) error
+	}
+
+	HttpHostsHandler map[string]http.Handler
+)
+
+var _ MultiHttpHandler = new(HttpHostsHandler)
+
+func (this HttpHostsHandler) ListenAndServe(addr string) error {
+	log.Println("** server running on", addr)
+	err := http.ListenAndServe(addr, this)
+	if err != nil {
+		log.Println("** serve exit! ", err.Error())
+	}
+	return err
+}
+
+func (this HttpHostsHandler) Default(handler http.Handler) {
+	this["*"] = handler
+}
+
+func (this HttpHostsHandler) Set(subName string, handler http.Handler) {
+	this[subName] = handler
+}
+
+func (this HttpHostsHandler) GetSubName(r *http.Request) string {
+	return r.Host[:strings.Index(r.Host, ".")+1]
+}
+
+func (this HttpHostsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h, ok := this[this.GetSubName(r)] //根据主机头返回响应内容
+	if !ok {
+		h, _ = this["*"] //获取通用的serve
+	}
+	if h != nil {
+		h.ServeHTTP(w, r)
+	} else {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}
+}
 
 func HttpError(rsp http.ResponseWriter, err error) {
 	_, f, line, _ := runtime.Caller(1)

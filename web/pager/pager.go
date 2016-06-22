@@ -173,7 +173,7 @@ func (this *UrlPager) Pager() []byte {
 	if beginPage-offset > pageCount-linkNumber &&
 		pageCount-linkNumber > 0 {
 		beginPage = pageCount - linkNumber
-	}else if beginPage > offset && //超出第一组,但不为最后一组
+	} else if beginPage > offset && //超出第一组,但不为最后一组
 		beginPage != pageCount {
 		beginPage = beginPage - offset
 	} else {
