@@ -14,9 +14,9 @@ import (
 	"net/http"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 )
 
 type (
@@ -119,7 +119,6 @@ func HttpError(rsp http.ResponseWriter, err error) {
 
 	rsp.Write([]byte(part1 + html))
 }
-
 
 // 设置缓存头部信息
 func SetCacheHeader(w http.ResponseWriter, minute int) {
