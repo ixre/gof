@@ -120,7 +120,7 @@ func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
 		if fmn == "" {
 			fmn = f.Name
 		}
-		keysCheck(&fmn)
+		internalKeysCheck(&fmn)
 		mapNames = append(mapNames, fmn)
 		posArr = append(posArr, i)
 		fmn = ""
@@ -128,9 +128,10 @@ func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
 	return posArr, mapNames
 }
 
-func keysCheck(field *string) {
+// format internal keywords
+func internalKeysCheck(field *string) {
 	switch *field {
-	case "key", "where":
+	case "key", "where", "type":
 		*field = strings.Join([]string{"`", *field, "`"}, "")
 	}
 }
