@@ -136,6 +136,13 @@ func internalKeysCheck(field *string) {
 	}
 }
 
+func BindFields(meta *TableMeta, dst *reflect.Value, rawBytes [][]byte) error {
+	for i, fi := range meta.FieldsIndex {
+		SetField(dst.Field(fi), rawBytes[i])
+	}
+	return nil
+}
+
 func SetField(field reflect.Value, d []byte) {
 	if field.IsValid() {
 		//fmt.Println(field.String(), "==>", field.Type().Kind())

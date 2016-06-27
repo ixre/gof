@@ -147,11 +147,8 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	if err != nil {
 		return this.err(err)
 	}
-	for i := 0; i < fieldLen; i++ {
-		field := val.Field(i)
-		SetField(field, rawBytes[i])
-	}
-	return nil
+
+	return BindFields(meta, &val, rawBytes)
 }
 
 func (this *simpleOrm) GetBy(entity interface{}, where string,
@@ -183,6 +180,7 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 	meta := this.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
+
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
 
@@ -218,11 +216,7 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 		return this.err(err)
 	}
 
-	for i := 0; i < fieldLen; i++ {
-		field := val.Field(i)
-		SetField(field, rawBytes[i])
-	}
-	return nil
+	return BindFields(meta, &val, rawBytes)
 }
 
 func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
@@ -275,11 +269,7 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 		return this.err(err)
 	}
 
-	for i := 0; i < fieldLen; i++ {
-		field := val.Field(i)
-		SetField(field, rawBytes[i])
-	}
-	return nil
+	return BindFields(meta, &val, rawBytes)
 }
 
 //Select more than 1 entity list
@@ -374,15 +364,14 @@ func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args .
 	for rows.Next() {
 		e := reflect.New(baseType)
 		v := e.Elem()
-
 		if err = rows.Scan(scanVal...); err != nil {
 			break
 		}
+		//for i, fi := range meta.FieldsIndex {
+		//	SetField(v.Field(fi), rawBytes[i])
+		//}
 
-		for i, fi := range meta.FieldsIndex {
-			SetField(v.Field(fi), rawBytes[i])
-		}
-
+		BindFields(meta, &v, rawBytes)
 		if eleIsPtr {
 			toArr = reflect.Append(toArr, e)
 		} else {
