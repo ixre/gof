@@ -285,19 +285,19 @@ func (this *simpleOrm) SelectByQuery(to interface{}, sql string, args ...interfa
 }
 
 // query rows
-func (this *simpleOrm) selectBy(to interface{}, sql string, fullSql bool, args ...interface{}) error {
+func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...interface{}) error {
 	var fieldLen int
 	var eleIsPtr bool // 元素是否为指针
 
-	toVal := reflect.Indirect(reflect.ValueOf(to))
-	toTyp := reflect.TypeOf(to).Elem()
+	toVal := reflect.Indirect(reflect.ValueOf(dst))
+	toTyp := reflect.TypeOf(dst).Elem()
 
 	if toTyp.Kind() == reflect.Ptr {
 		toTyp = toTyp.Elem()
 	}
 
 	if toTyp.Kind() != reflect.Slice {
-		return this.err(errors.New("to must be slice"))
+		return this.err(errors.New("dst must be slice"))
 	}
 
 	baseType := toTyp.Elem()

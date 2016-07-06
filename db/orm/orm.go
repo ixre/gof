@@ -27,21 +27,22 @@ type (
 		// create the mapping data table
 		Mapping(v interface{}, table string)
 
-		Get(primaryVal interface{}, entity interface{}) error
+		Get(primaryVal interface{}, dst interface{}) error
 
 		//get entity by condition
-		GetBy(entity interface{}, where string, args ...interface{}) error
+		GetBy(dst interface{}, where string, args ...interface{}) error
 
 		//get entity by sql query result
-		GetByQuery(entity interface{}, sql string, args ...interface{}) error
+		GetByQuery(dst interface{}, sql string, args ...interface{}) error
 
 		//Select more than 1 entity list
 		//@to : refrence to queryed entity list
 		//@params : query condition
 		//@where : other condition
-		Select(to interface{}, where string, args ...interface{}) error
+		Select(dst interface{}, where string, args ...interface{}) error
 
-		SelectByQuery(to interface{}, sql string, args ...interface{}) error
+		//select by sql query,dst must be one slice.
+		SelectByQuery(dst interface{}, sql string, args ...interface{}) error
 
 		//delete entity and effect to database
 		Delete(entity interface{}, where string, args ...interface{}) (effect int64, err error)
@@ -314,4 +315,17 @@ func ItrField(meta *TableMeta, val *reflect.Value, includePk bool) (params []int
 		}
 	}
 	return params, fieldArr
+}
+
+//************  HELPER  ************//
+
+// save entity and return pk and error
+func Save(o Orm, entity interface{}, pk int) (returnPk int, err error) {
+	if pk > 0 {
+		_, _, err = o.Save(pk, entity)
+		return pk, err
+	}
+	var id64 int64
+	_, id64, err = o.Save(nil, entity)
+	return int(id64), err
 }
