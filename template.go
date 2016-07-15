@@ -46,61 +46,61 @@ func NewCachedTemplate(basePath string, notify bool, files ...string) *CachedTem
 	return g.init()
 }
 
-func (this *CachedTemplate) init() *CachedTemplate {
-	for i, v := range this._shareFiles {
-		if !strings.HasPrefix(v, this._basePath) {
-			this._shareFiles[i] = this._basePath + v
+func (c *CachedTemplate) init() *CachedTemplate {
+	for i, v := range c._shareFiles {
+		if !strings.HasPrefix(v, c._basePath) {
+			c._shareFiles[i] = c._basePath + v
 		}
 	}
-	if this._fsNotify {
-		go this.fsNotify()
+	if c._fsNotify {
+		go c.fsNotify()
 	}
-	return this
+	return c
 }
 
 // calling on file changed
-func (this *CachedTemplate) fileChanged(event *fsnotify.Event) {
+func (c *CachedTemplate) fileChanged(event *fsnotify.Event) {
 	eventStr := event.String()
 	if runtime.GOOS == "windows" {
-		if this._winPathRegexp == nil {
-			this._winPathRegexp = regexp.MustCompile("\\\\+")
+		if c._winPathRegexp == nil {
+			c._winPathRegexp = regexp.MustCompile("\\\\+")
 		}
-		eventStr = this._winPathRegexp.ReplaceAllString(eventStr, "/")
+		eventStr = c._winPathRegexp.ReplaceAllString(eventStr, "/")
 	}
 	if eventRegexp.MatchString(eventStr) {
 		matches := eventRegexp.FindAllStringSubmatch(eventStr, 1)
 		if len(matches) > 0 {
 			filePath := matches[0][1]
-			if i := strings.Index(filePath, this._basePath); i != -1 {
-				file := filePath[i+len(this._basePath):]
+			if i := strings.Index(filePath, c._basePath); i != -1 {
+				file := filePath[i+len(c._basePath):]
 				if strings.Index(file, "_old_") == -1 &&
 					strings.Index(file, "_tmp_") == -1 &&
 					strings.Index(file, "_swp_") == -1 {
-					this.handleChange(file) //do some things on file changed.
+					c.handleChange(file) //do some things on file changed.
 				}
 			}
 		}
 	}
 }
 
-func (this *CachedTemplate) handleChange(file string) (err error) {
-	fullName := this._basePath + file
-	for _, v := range this._shareFiles {
+func (c *CachedTemplate) handleChange(file string) (err error) {
+	fullName := c._basePath + file
+	for _, v := range c._shareFiles {
 		if v == fullName {
-			this._set = map[string]*template.Template{}
+			c._set = map[string]*template.Template{}
 			break
 		}
 	}
 	//todo: bug
 	//if f, err := os.Stat(file); err == nil && !f.IsDir() {
-	_, err = this.compileTemplate(file) // recompile template
+	_, err = c.compileTemplate(file) // recompile template
 	//}
 
 	return err
 }
 
 // file system notify
-func (this *CachedTemplate) fsNotify() {
+func (c *CachedTemplate) fsNotify() {
 	w, err := fsnotify.NewWatcher()
 	if err == nil {
 		// watch event
@@ -116,9 +116,9 @@ func (this *CachedTemplate) fsNotify() {
 					log.Println("Error:", err)
 				}
 			}
-		}(this)
+		}(c)
 
-		err = filepath.Walk(this._basePath, func(path string,
+		err = filepath.Walk(c._basePath, func(path string,
 			info os.FileInfo, err error) error {
 			if err == nil && info.IsDir() &&
 				info.Name()[0] != '.' { // not hidden file
@@ -136,21 +136,21 @@ func (this *CachedTemplate) fsNotify() {
 	<-make(chan bool)
 }
 
-func (this *CachedTemplate) parseTemplate(name string) (
+func (c *CachedTemplate) parseTemplate(name string) (
 	*template.Template, error) {
-	this._mux.Lock() //对写加锁
-	files := append([]string{this._basePath + name},
-		this._shareFiles...) //name需要第一个位置
+	c._mux.Lock() //对写加锁
+	files := append([]string{c._basePath + name},
+		c._shareFiles...) //name需要第一个位置
 	tpl, err := template.ParseFiles(files...)
-	this._mux.Unlock()
+	c._mux.Unlock()
 	return tpl, err
 }
 
-func (this *CachedTemplate) compileTemplate(name string) (
+func (c *CachedTemplate) compileTemplate(name string) (
 	*template.Template, error) {
-	tpl, err := this.parseTemplate(name)
+	tpl, err := c.parseTemplate(name)
 	if err == nil {
-		this._set[name] = tpl
+		c._set[name] = tpl
 		log.Println("[ Gof][ Template][ Compile]: ", name)
 	} else {
 		log.Println("[ Gof][ Template][ Error] -", err.Error())
@@ -158,24 +158,24 @@ func (this *CachedTemplate) compileTemplate(name string) (
 	return tpl, err
 }
 
-func (this *CachedTemplate) Execute(w io.Writer,
+func (c *CachedTemplate) Execute(w io.Writer,
 	name string, data interface{}) error {
-	this._mux.RLock() //仅对读加锁
-	tpl, ok := this._set[name]
+	c._mux.RLock() //仅对读加锁
+	tpl, ok := c._set[name]
 	if !ok {
-		this._mux.RUnlock()
+		c._mux.RUnlock()
 		var err error
-		if tpl, err = this.compileTemplate(name); err != nil {
+		if tpl, err = c.compileTemplate(name); err != nil {
 			return err
 		}
-		this._set[name] = tpl
+		c._set[name] = tpl
 	} else {
-		defer this._mux.RUnlock()
+		defer c._mux.RUnlock()
 	}
 	return tpl.Execute(w, data)
 }
 
-func (this *CachedTemplate) Render(w io.Writer,
+func (c *CachedTemplate) Render(w io.Writer,
 	name string, data interface{}) error {
-	return this.Execute(w, name, data)
+	return c.Execute(w, name, data)
 }
