@@ -25,42 +25,42 @@ func NewOrm(db *sql.DB) Orm {
 	}
 }
 
-func (this *simpleOrm) Version() string {
+func (o *simpleOrm) Version() string {
 	return "1.0.2"
 }
 
-func (this *simpleOrm) err(err error) error {
-	if this.useTrace && err != nil {
+func (o *simpleOrm) err(err error) error {
+	if o.useTrace && err != nil && err != sql.ErrNoRows {
 		log.Println("[ ORM][ ERROR]:", err.Error())
 	}
 	return err
 }
 
-func (this *simpleOrm) debug(format string, args ...interface{}) {
-	if this.useTrace {
+func (o *simpleOrm) debug(format string, args ...interface{}) {
+	if o.useTrace {
 		log.Printf(format+"\n", args...)
 	}
 }
 
-func (this *simpleOrm) getTableMapMeta(t reflect.Type) *TableMeta {
-	m, exists := this.tableMap[t.String()]
+func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMeta {
+	m, exists := o.tableMap[t.String()]
 	if exists {
 		return m
 	}
 
 	m = GetTableMapMeta(t)
-	this.tableMap[t.String()] = m
+	o.tableMap[t.String()] = m
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println("[ ORM][ META]:", m)
 	}
 
 	return m
 }
 
-func (this *simpleOrm) getTableName(t reflect.Type) string {
+func (o *simpleOrm) getTableName(t reflect.Type) string {
 	//todo: 用int做键
-	v, exists := this.tableMap[t.String()]
+	v, exists := o.tableMap[t.String()]
 	if exists {
 		return v.TableName
 	}
@@ -68,37 +68,37 @@ func (this *simpleOrm) getTableName(t reflect.Type) string {
 }
 
 //if not defined primary key.the first key will as primary key
-func (this *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
-	v, exists := this.tableMap[t.String()]
+func (o *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
+	v, exists := o.tableMap[t.String()]
 	if exists {
 		return v.PkFieldName, v.PkIsAuto
 	}
 	return GetPKName(t)
 }
 
-func (this *simpleOrm) unionField(meta *TableMeta, v string) string {
+func (o *simpleOrm) unionField(meta *TableMeta, v string) string {
 	if len(meta.TableName) != 0 {
 		return meta.TableName + "." + v
 	}
 	return v
 }
 
-func (this *simpleOrm) SetTrace(b bool) {
-	this.useTrace = b
+func (o *simpleOrm) SetTrace(b bool) {
+	o.useTrace = b
 }
 
 //create a fixed table map
-func (this *simpleOrm) Mapping(v interface{}, table string) {
+func (o *simpleOrm) Mapping(v interface{}, table string) {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 	meta.TableName = table
-	this.tableMap[t.String()] = meta
+	o.tableMap[t.String()] = meta
 }
 
-func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
+func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	var sql string
 	var fieldLen int
 	t := reflect.TypeOf(entity)
@@ -108,12 +108,12 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return this.err(errors.New("Unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
 	}
 	val = val.Elem()
 
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
@@ -130,14 +130,14 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 		meta.PkFieldName,
 	)
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primaryVal))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return this.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 		return err
 	}
 	defer stmt.Close()
@@ -145,13 +145,13 @@ func (this *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	row := stmt.QueryRow(primaryVal)
 	err = row.Scan(scanVal...)
 	if err != nil {
-		return this.err(err)
+		return o.err(err)
 	}
 
 	return BindFields(meta, &val, rawBytes)
 }
 
-func (this *simpleOrm) GetBy(entity interface{}, where string,
+func (o *simpleOrm) GetBy(entity interface{}, where string,
 	args ...interface{}) error {
 
 	var sql string
@@ -163,21 +163,21 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return this.err(errors.New("unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("unaddressable of entity ,it must be a ptr"))
 	}
 
 	if strings.Trim(where, "") == "" {
-		return this.err(errors.New("param where can't be empty "))
+		return o.err(errors.New("param where can't be empty "))
 	}
 
 	val = val.Elem()
 
 	if !val.IsValid() {
-		return this.err(errors.New("not validate or not initialize."))
+		return o.err(errors.New("not validate or not initialize."))
 	}
 
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 
@@ -195,17 +195,17 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 		where,
 	)
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sql, where, args))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		if this.useTrace {
+		if o.useTrace {
 			log.Println("[ ORM][ ERROR]:", err.Error(), " [ SQL]:", sql)
 		}
-		return this.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
 	defer stmt.Close()
 
@@ -213,13 +213,13 @@ func (this *simpleOrm) GetBy(entity interface{}, where string,
 	err = row.Scan(scanVal...)
 
 	if err != nil {
-		return this.err(err)
+		return o.err(err)
 	}
 
 	return BindFields(meta, &val, rawBytes)
 }
 
-func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
+func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	args ...interface{}) error {
 	var fieldLen int
 	t := reflect.TypeOf(entity)
@@ -229,20 +229,20 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return this.err(errors.New("Unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
 	}
 
 	val = val.Elem()
 
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
 
 	for i, v := range meta.FieldMapNames {
-		fieldArr[i] = this.unionField(meta, v)
+		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
 
@@ -250,15 +250,15 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 		sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
 	}
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s", sql))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 
 	if err != nil {
-		return this.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
 	defer stmt.Close()
 
@@ -266,7 +266,7 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 	err = row.Scan(scanVal...)
 
 	if err != nil {
-		return this.err(err)
+		return o.err(err)
 	}
 
 	return BindFields(meta, &val, rawBytes)
@@ -276,16 +276,16 @@ func (this *simpleOrm) GetByQuery(entity interface{}, sql string,
 //@to : referenced queried entity list
 //@entity : query condition
 //@where : other condition
-func (this *simpleOrm) Select(to interface{}, where string, args ...interface{}) error {
-	return this.selectBy(to, where, false, args...)
+func (o *simpleOrm) Select(to interface{}, where string, args ...interface{}) error {
+	return o.selectBy(to, where, false, args...)
 }
 
-func (this *simpleOrm) SelectByQuery(to interface{}, sql string, args ...interface{}) error {
-	return this.selectBy(to, sql, true, args...)
+func (o *simpleOrm) SelectByQuery(to interface{}, sql string, args ...interface{}) error {
+	return o.selectBy(to, sql, true, args...)
 }
 
 // query rows
-func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...interface{}) error {
+func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...interface{}) error {
 	var fieldLen int
 	var eleIsPtr bool // 元素是否为指针
 
@@ -297,7 +297,7 @@ func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args 
 	}
 
 	if toTyp.Kind() != reflect.Slice {
-		return this.err(errors.New("dst must be slice"))
+		return o.err(errors.New("dst must be slice"))
 	}
 
 	baseType := toTyp.Elem()
@@ -307,7 +307,7 @@ func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args 
 	}
 
 	/* build sql */
-	meta := this.getTableMapMeta(baseType)
+	meta := o.getTableMapMeta(baseType)
 	fieldLen = len(meta.FieldMapNames)
 
 	fieldArr := make([]string, fieldLen)
@@ -315,7 +315,7 @@ func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args 
 	var rawBytes [][]byte = make([][]byte, fieldLen)
 
 	for i, v := range meta.FieldMapNames {
-		fieldArr[i] = this.unionField(meta, v)
+		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
 
@@ -338,21 +338,21 @@ func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args 
 		}
 	}
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s [ Params] - %+v", sql, args))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return this.err(errors.New(fmt.Sprintf("%s - [ SQL]: %s- [Args]:%+v", err.Error(), sql, args)))
+		return o.err(errors.New(fmt.Sprintf("%s - [ SQL]: %s- [Args]:%+v", err.Error(), sql, args)))
 	}
 
 	defer stmt.Close()
 	rows, err := stmt.Query(args...)
 
 	if err != nil {
-		return this.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
 
 	defer rows.Close()
@@ -379,10 +379,10 @@ func (this *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args 
 		}
 	}
 	toVal.Set(toArr)
-	return this.err(err)
+	return o.err(err)
 }
 
-func (this *simpleOrm) Delete(entity interface{}, where string,
+func (o *simpleOrm) Delete(entity interface{}, where string,
 	args ...interface{}) (effect int64, err error) {
 	var sql string
 
@@ -392,7 +392,7 @@ func (this *simpleOrm) Delete(entity interface{}, where string,
 	}
 
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 
 	if where == "" {
 		return 0, errors.New("Unknown condition")
@@ -403,14 +403,14 @@ func (this *simpleOrm) Delete(entity interface{}, where string,
 		where,
 	)
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%#v", sql, args))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return 0, this.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s", err.Error(), sql)))
+		return 0, o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s", err.Error(), sql)))
 
 	}
 	defer stmt.Close()
@@ -421,45 +421,45 @@ func (this *simpleOrm) Delete(entity interface{}, where string,
 		rowNum, err = result.RowsAffected()
 	}
 	if err != nil {
-		return rowNum, this.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return rowNum, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	}
 	return rowNum, nil
 }
 
-func (this *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err error) {
+func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err error) {
 	var sql string
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 
 	sql = fmt.Sprintf("DELETE FROM %s WHERE %s=?",
 		meta.TableName,
 		meta.PkFieldName,
 	)
 
-	if this.useTrace {
+	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, primary))
 	}
 
 	/* query */
-	stmt, err := this.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return this.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s \n [ SQL]:%s", err.Error(), sql)))
+		return o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s \n [ SQL]:%s", err.Error(), sql)))
 
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(primary)
 	if err != nil {
-		return this.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	}
 	return nil
 }
 
-func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
+func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
 	var sql string
 	//var condition string
 	//var fieldLen int
@@ -471,7 +471,7 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 	val := reflect.Indirect(reflect.ValueOf(entity))
 
 	/* build sql */
-	meta := this.getTableMapMeta(t)
+	meta := o.getTableMapMeta(t)
 	//fieldLen = len(meta.FieldNames)
 	params, fieldArr := ItrFieldForSave(meta, &val, false)
 
@@ -487,14 +487,14 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 			strings.Join(pArr, ","),
 		)
 
-		if this.useTrace {
+		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
 
 		/* query */
-		stmt, err := this.DB.Prepare(sql)
+		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, this.err(errors.New("[ ORM][ ERROR]:" + err.Error() + "\n[ SQL]" + sql))
+			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + "\n[ SQL]" + sql))
 		}
 		defer stmt.Close()
 
@@ -508,7 +508,7 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 			}
 			return rowNum, lastInsertId, err
 		}
-		return rowNum, lastInsertId, this.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return rowNum, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	} else {
 		//update model
 
@@ -528,15 +528,15 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 		)
 
 		/* query */
-		stmt, err := this.DB.Prepare(sql)
+		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, this.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
+			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
 		}
 		defer stmt.Close()
 
 		params = append(params, primaryKey)
 
-		if this.useTrace {
+		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
 
@@ -546,6 +546,6 @@ func (this *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows in
 			rowNum, err = result.RowsAffected()
 			return rowNum, 0, err
 		}
-		return rowNum, 0, this.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return rowNum, 0, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	}
 }

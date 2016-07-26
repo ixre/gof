@@ -19,7 +19,16 @@ import (
 	"sync"
 )
 
+type IRedisStorage interface {
+	// get keys start with prefix
+	Keys(prefix string) ([]string, error)
+	// delete keys contain prefix
+	PrefixDel(prefix string) (int, error)
+}
+
 var DriveRedisStorage string = "redis-storage"
+var _ gof.Storage = new(redisStorage)
+var _ IRedisStorage = new(redisStorage)
 
 type redisStorage struct {
 	_pool *redis.Pool
@@ -34,14 +43,14 @@ func NewRedisStorage(pool *redis.Pool) gof.Storage {
 	}
 }
 
-func (this *redisStorage) getByte(v interface{}) ([]byte, error) {
-	this.Mutex.Lock()
-	defer this.Mutex.Unlock()
-	enc := gob.NewEncoder(this._buf)
+func (r *redisStorage) getByte(v interface{}) ([]byte, error) {
+	r.Mutex.Lock()
+	defer r.Mutex.Unlock()
+	enc := gob.NewEncoder(r._buf)
 	err := enc.Encode(v)
 	if err == nil {
-		b := this._buf.Bytes()
-		this._buf.Reset()
+		b := r._buf.Bytes()
+		r._buf.Reset()
 		return b, nil
 	}
 	if strings.Index(err.Error(), "type not registered") != -1 {
@@ -50,13 +59,13 @@ func (this *redisStorage) getByte(v interface{}) ([]byte, error) {
 	return nil, err
 }
 
-func (this *redisStorage) decodeBytes(b []byte, dst interface{}) error {
-	this.Mutex.Lock()
-	defer this.Mutex.Unlock()
-	this._buf.Write(b)
-	dec := gob.NewDecoder(this._buf)
+func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
+	r.Mutex.Lock()
+	defer r.Mutex.Unlock()
+	r._buf.Write(b)
+	dec := gob.NewDecoder(r._buf)
 	err := dec.Decode(dst)
-	this._buf.Reset()
+	r._buf.Reset()
 	return err
 }
 
@@ -69,109 +78,130 @@ func isBaseOfStruct(v interface{}) bool {
 	return kind == reflect.Struct || kind == reflect.Map || kind == reflect.Array
 }
 
-func (this *redisStorage) getRedisBytes(key string) ([]byte, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) getRedisBytes(key string) ([]byte, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Bytes(conn.Do("GET", key))
 	return src, err
 }
 
 // return storage driver
-func (this *redisStorage) Driver() interface{} {
-	return this._pool
+func (r *redisStorage) Driver() interface{} {
+	return r._pool
 }
 
-func (this *redisStorage) DriverName() string {
+func (r *redisStorage) DriverName() string {
 	return DriveRedisStorage
 }
 
-func (this *redisStorage) Exists(key string) (exists bool) {
-	conn := this._pool.Get()
+func (r *redisStorage) Exists(key string) (exists bool) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	i, err := redis.Int(conn.Do("EXISTS", key))
 	return err != nil && i == 1
 }
 
-func (this *redisStorage) Get(key string, dst interface{}) error {
+func (r *redisStorage) Get(key string, dst interface{}) error {
 	if isBaseOfStruct(dst) {
-		src, err := this.getRedisBytes(key)
+		src, err := r.getRedisBytes(key)
 		if err == nil {
-			err = this.decodeBytes(src, dst)
+			err = r.decodeBytes(src, dst)
 		}
 		return err
 	}
 	return errors.New("dst must be struct")
 }
 
-func (this *redisStorage) GetBool(key string) (bool, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) GetBool(key string) (bool, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Bool(conn.Do("GET", key))
 	return src, err
 }
 
-func (this *redisStorage) GetInt(key string) (int, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) GetInt(key string) (int, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Int(conn.Do("GET", key))
 	return src, err
 }
 
-func (this *redisStorage) GetInt64(key string) (int64, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) GetInt64(key string) (int64, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Int64(conn.Do("GET", key))
 	return src, err
 }
 
-func (this *redisStorage) GetString(key string) (string, error) {
-	d, err := this.getRedisBytes(key)
+func (r *redisStorage) GetString(key string) (string, error) {
+	d, err := r.getRedisBytes(key)
 	if err != nil {
 		return "", err
 	}
 	return string(d), err
 }
 
-func (this *redisStorage) GetFloat64(key string) (float64, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) GetFloat64(key string) (float64, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Float64(conn.Do("GET", key))
 	return src, err
 }
 
 //Get raw value
-func (this *redisStorage) GetRaw(key string) (interface{}, error) {
-	conn := this._pool.Get()
+func (r *redisStorage) GetRaw(key string) (interface{}, error) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	replay, err := conn.Do("GET", key)
 	return replay, err
 }
 
-func (this *redisStorage) Set(key string, v interface{}) error {
+func (r *redisStorage) Set(key string, v interface{}) error {
 	var err error
 	var redisValue interface{} = v
 	if isBaseOfStruct(v) {
-		redisValue, err = this.getByte(v)
+		redisValue, err = r.getByte(v)
 	}
-	conn := this._pool.Get()
+	conn := r._pool.Get()
 	defer conn.Close()
 	_, err = conn.Do("SET", key, redisValue)
 	return err
 }
-func (this *redisStorage) Del(key string) {
-	conn := this._pool.Get()
+func (r *redisStorage) Del(key string) {
+	conn := r._pool.Get()
 	defer conn.Close()
 	conn.Do("DEL", key)
 }
 
-func (this *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
+func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	var err error
 	var redisValue interface{} = v
 	if isBaseOfStruct(v) {
-		redisValue, err = this.getByte(v)
+		redisValue, err = r.getByte(v)
 	}
-	conn := this._pool.Get()
+	conn := r._pool.Get()
 	defer conn.Close()
 	_, err = conn.Do("SETEX", key, seconds, redisValue)
 	return err
+}
+
+// get keys start with prefix
+func (r *redisStorage) Keys(prefix string) ([]string, error) {
+	conn := r._pool.Get()
+	defer conn.Close()
+	return redis.Strings(conn.Do("KEYS", prefix))
+}
+
+// delete keys contain prefix
+func (r *redisStorage) PrefixDel(prefix string) (int, error) {
+	keys, err := r.Keys(prefix)
+	if err != nil {
+		return 0, err
+	}
+	conn := r._pool.Get()
+	defer conn.Close()
+	for _, key := range keys {
+		conn.Do("DEL", key)
+	}
+	return len(keys), nil
 }

@@ -56,7 +56,7 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 	var stderr *shellStdBuffer //标准错误输出
 
 	if strings.TrimSpace(command) == "" {
-		return -1, "", errors.New("no such command")
+		return 0, "", errors.New("no such command")
 	}
 
 	if debug {
@@ -75,9 +75,11 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 	cmd.Stderr = stderr
 
 	err = cmd.Start()
-	if err == nil {
-		err = cmd.Wait()
+	if err != nil {
+		return 1, "", err
 	}
+
+	err = cmd.Wait()
 
 	status = cmd.ProcessState.Sys().(syscall.WaitStatus)
 	isSuccess := cmd.ProcessState.Success()

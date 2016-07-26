@@ -78,60 +78,61 @@ func NewSimpleConnector(driverName, driverSource string,
 	}
 }
 
-func (this *simpleConnector) err(err error) error {
+func (t *simpleConnector) err(err error) error {
 	if err != nil {
-		if this._logger != nil {
-			this._logger.Error(err)
+		if t._logger != nil {
+			t._logger.Error(err)
 		}
 	}
 	return err
 }
 
-func (this *simpleConnector) debugPrintf(format string, s string, args ...interface{}) {
-	if this._debug && this._logger != nil {
+func (t *simpleConnector) debugPrintf(format string, s string, args ...interface{}) {
+	if t._debug && t._logger != nil {
 		var newArgs []interface{} = make([]interface{}, 0)
 		newArgs[0] = s
 		newArgs = append(newArgs, args...)
-		this._logger.Printf(format+"\n", newArgs...)
+		t._logger.Printf(format+"\n", newArgs...)
 	}
 }
 
-func (this *simpleConnector) Driver() string {
-	return this._driverName
+func (t *simpleConnector) Driver() string {
+	return t._driverName
 }
 
-func (this *simpleConnector) GetDb() *sql.DB {
-	return this._db
+func (t *simpleConnector) GetDb() *sql.DB {
+	return t._db
 }
 
-func (this *simpleConnector) GetOrm() orm.Orm {
-	return this._orm
+func (t *simpleConnector) GetOrm() orm.Orm {
+	return t._orm
 }
 
-func (this *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
-	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
-	stmt, err := this.GetDb().Prepare(s)
-	if err != nil {
-		return this.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+	stmt, err := t.GetDb().Prepare(s)
+	var rows *sql.Rows
+	if err == nil {
+		rows, err = stmt.Query(args...)
 	}
-	rows, err := stmt.Query(args...)
-	if err != nil {
-		return this.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+	if err == nil {
+		stmt.Close()
+		if f != nil && rows != nil {
+			f(rows)
+		}
+	} else if err != sql.ErrNoRows {
+		err = t.err(errors.New(fmt.Sprintf(
+			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n",
+			err.Error(), s, args)))
 	}
-	defer stmt.Close()
-	if f != nil {
-		f(rows)
-	}
-	return nil
+	return err
 }
 
 //查询Rows
-func (this *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interface{}) error {
-	stmt, err := this.GetDb().Prepare(s)
+func (t *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interface{}) error {
+	stmt, err := t.GetDb().Prepare(s)
 	if err != nil {
-		return this.err(errors.New(fmt.Sprintf(
+		return t.err(errors.New(fmt.Sprintf(
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 	} else {
 		defer stmt.Close()
@@ -143,42 +144,35 @@ func (this *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interf
 	return nil
 }
 
-func (this *simpleConnector) ExecScalar(s string, result interface{}, args ...interface{}) (err error) {
-
-	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
-
+func (t *simpleConnector) ExecScalar(s string, result interface{},
+	args ...interface{}) (err error) {
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
 	if result == nil {
-		return this.err(errors.New("out result is null pointer."))
+		return t.err(errors.New("out result is null"))
 	}
-
-	err1 := this.QueryRow(s, func(row *sql.Row) {
+	err1 := t.QueryRow(s, func(row *sql.Row) {
 		err = row.Scan(result)
 	}, args...)
-
 	if err == nil {
 		err = err1
 	}
-
-	if err != nil {
-		return this.err(errors.New(fmt.Sprintf(
+	if err != nil && err != sql.ErrNoRows {
+		return t.err(errors.New(fmt.Sprintf(
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 	}
-
 	return err
 }
 
 //执行
-func (this *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
-
-	this.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
-
-	stmt, err := this.GetDb().Prepare(s)
+func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+	stmt, err := t.GetDb().Prepare(s)
 	if err != nil {
 		return 0, -1, err
 	}
 	result, err := stmt.Exec(args...)
 	if err != nil {
-		err = this.err(errors.New(fmt.Sprintf(
+		err = t.err(errors.New(fmt.Sprintf(
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 		return 0, -1, err
 	}
@@ -190,7 +184,7 @@ func (this *simpleConnector) Exec(s string, args ...interface{}) (rows int, last
 	return int(affect), int(lastId), nil
 }
 
-func (this *simpleConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
-	n, _, err := this.Exec(sql, args...)
-	return n, this.err(err)
+func (t *simpleConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
+	n, _, err := t.Exec(sql, args...)
+	return n, t.err(err)
 }
