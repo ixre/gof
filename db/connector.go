@@ -48,7 +48,7 @@ type simpleConnector struct {
 	_debug        bool // 是否调试模式
 }
 
-//create a new connector
+// create a new connector
 func NewSimpleConnector(driverName, driverSource string,
 	l log.ILogger, maxConn int, debug bool) Connector {
 	db, err := sql.Open(driverName, driverSource)

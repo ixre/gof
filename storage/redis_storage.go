@@ -13,7 +13,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/garyburd/redigo/redis"
-	"github.com/jsix/gof"
 	"reflect"
 	"strings"
 	"sync"
@@ -27,7 +26,7 @@ type IRedisStorage interface {
 }
 
 var DriveRedisStorage string = "redis-storage"
-var _ gof.Storage = new(redisStorage)
+var _ Interface = new(redisStorage)
 var _ IRedisStorage = new(redisStorage)
 
 type redisStorage struct {
@@ -36,7 +35,7 @@ type redisStorage struct {
 	sync.Mutex
 }
 
-func NewRedisStorage(pool *redis.Pool) gof.Storage {
+func NewRedisStorage(pool *redis.Pool) Interface {
 	return &redisStorage{
 		_pool: pool,
 		_buf:  new(bytes.Buffer),

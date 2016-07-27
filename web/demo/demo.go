@@ -31,70 +31,70 @@ type HttpApp struct {
 }
 
 // 配置，支持从文件中加载。用于文件存储某些简单数据。
-func (this *HttpApp) Config() *gof.Config {
-	if this.config == nil {
-		this.config = gof.NewConfig()
-		this.config.Set("SYS_NAME", "GOF DEMO")
-		this.config.Set("MYSQL_HOST", "127.0.0.1")
-		this.config.Set("MYSQL_PORT", 3306)
-		this.config.Set("MYSQL_MAXCONN", 1000)
-		this.config.Set("MYSQL_USR", "root")
-		this.config.Set("MYSQL_PWD", "")
-		this.config.Set("MYSQL_DBNAME", "")
+func (h *HttpApp) Config() *gof.Config {
+	if h.config == nil {
+		h.config = gof.NewConfig()
+		h.config.Set("SYS_NAME", "GOF DEMO")
+		h.config.Set("MYSQL_HOST", "127.0.0.1")
+		h.config.Set("MYSQL_PORT", 3306)
+		h.config.Set("MYSQL_MAXCONN", 1000)
+		h.config.Set("MYSQL_USR", "root")
+		h.config.Set("MYSQL_PWD", "")
+		h.config.Set("MYSQL_DBNAME", "")
 	}
-	return this.config
+	return h.config
 }
 
 // 数据库连接器、Connector.ORM()可以访问ORM
-func (this *HttpApp) Db() db.Connector {
-	if this.dbConnector == nil {
+func (h *HttpApp) Db() db.Connector {
+	if h.dbConnector == nil {
 		source := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf-8&loc=Local",
-			this.Config().GetString("MYSQL_USR"),
-			this.Config().GetString("MYSQL_PWD"),
-			this.Config().GetString("MYSQL_HOST"),
-			this.Config().GetInt("MYSQL_PORT"),
-			this.Config().GetString("MYSQL_DBNAME"),
+			h.Config().GetString("MYSQL_USR"),
+			h.Config().GetString("MYSQL_PWD"),
+			h.Config().GetString("MYSQL_HOST"),
+			h.Config().GetInt("MYSQL_PORT"),
+			h.Config().GetString("MYSQL_DBNAME"),
 		)
-		this.dbConnector = db.NewSimpleConnector("mysql", source, this.Log(),
-			this.Config().GetInt("MYSQL_MAXCONN"))
+		h.dbConnector = db.NewSimpleConnector("mysql", source, h.Log(),
+			h.Config().GetInt("MYSQL_MAXCONN"), false)
 	}
-	return this.dbConnector
+	return h.dbConnector
 }
 
 // 模板
-func (this *HttpApp) Template() *gof.Template {
-	if this.template == nil {
-		this.template = &gof.Template{
+func (h *HttpApp) Template() *gof.Template {
+	if h.template == nil {
+		h.template = &gof.Template{
 			Init: func(v *gof.TemplateDataMap) {
-				(*v)["SYS_NAME"] = this.Config().GetString("SYS_NAME")
+				(*v)["SYS_NAME"] = h.Config().GetString("SYS_NAME")
 			},
 		}
 	}
-	return this.template
+	return h.template
 }
 
 // 是否调试
-func (this *HttpApp) Debug() bool {
+func (h *HttpApp) Debug() bool {
 	return false
 }
 
 // 存储,通常用来存储全局的变量。或缓存一些共享的数据。
-func (this *HttpApp) Storage() gof.Storage {
+func (h *HttpApp) Storage() storage.Interface {
 	// 使用一个Redis存储数据
 	return storage.NewRedisStorage(nil)
 }
 
 // 日志
-func (this *HttpApp) Log() log.ILogger {
-	if this.logger == nil {
+func (h *HttpApp) Log() log.ILogger {
+	if h.logger == nil {
 		var flag int = 0
-		if this.Debug() {
+		if h.Debug() {
 			flag = log.LOpen | log.LESource | log.LStdFlags
 		}
 		// 可创建文件的io.Writer,将日志存储到文件。
-		this.logger = log.NewLogger(nil, " O2O", flag)
+		h.logger = log.NewLogger(nil, " O2O", flag)
 	}
-	return this.logger
+	return h.logger
 }
 
 //获取Http请求代理处理程序
@@ -135,20 +135,20 @@ func testControllerGenerator() mvc.Controller {
 
 // 请求时执行函数，返回true继续执行，返回false即中止。
 // 可以做验证如：判断用户登陆这类的逻辑。
-func (this *testController) Requesting(ctx *web.Context) bool {
+func (h *testController) Requesting(ctx *web.Context) bool {
 	return true
 }
 
 // 请求结束时执行。
 // 可以做统一设置Header,gzip压缩，页面执行时间此类逻辑
-func (this *testController) RequestEnd(ctx *web.Context) {
+func (h *testController) RequestEnd(ctx *web.Context) {
 	ctx.Response.Write([]byte("\r\nRequest End."))
 }
 
 // Index动作，GET请求。来源URL:/test/index
 // Index为默认的动作，即也可以通过/test访问呢。
 // 如果为POST请求，约定在动作名称后添加"_post",即"Index_post"
-func (this *testController) Index(ctx *web.Context) {
+func (h *testController) Index(ctx *web.Context) {
 	ctx.Response.Write([]byte("\r\nRequesting....."))
 }
 

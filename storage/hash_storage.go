@@ -10,7 +10,6 @@ package storage
 
 import (
 	"errors"
-	"github.com/jsix/gof"
 	"reflect"
 	"sync"
 )
@@ -18,13 +17,15 @@ import (
 var DriveHashStorage string = "hash-storage"
 var typeError error = errors.New("type convert error!")
 
+var _ Interface = new(hashStorage)
+
 // 哈希表存储
 type hashStorage struct {
 	_map map[string]interface{}
 	sync.Mutex
 }
 
-func NewHashStorage() gof.Storage {
+func NewHashStorage() Interface {
 	return &hashStorage{
 		_map: make(map[string]interface{}),
 	}

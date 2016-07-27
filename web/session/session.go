@@ -11,7 +11,7 @@ package session
 import (
 	"encoding/gob"
 	"fmt"
-	"github.com/jsix/gof"
+	"github.com/jsix/gof/storage"
 	"github.com/jsix/gof/util"
 	"log"
 	"net/http"
@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	_storage           gof.Storage
+	_storage           storage.Interface
 	_defaultCookieName string = "gof_SessionId"
 )
 
@@ -31,50 +31,51 @@ type Session struct {
 	_sessionId string
 	_rsp       http.ResponseWriter
 	_data      map[string]interface{}
-	_storage   gof.Storage
+	_storage   storage.Interface
 	_maxAge    int64
 	_keyName   string
 }
 
-func getSession(w http.ResponseWriter, storage gof.Storage, cookieName string, sessionId string) *Session {
-	s := &Session{
+func getSession(w http.ResponseWriter, s storage.Interface,
+	cookieName string, sessionId string) *Session {
+	ns := &Session{
 		_sessionId: sessionId,
 		_rsp:       w,
 		_data:      make(map[string]interface{}),
-		_storage:   storage,
+		_storage:   s,
 		_maxAge:    defaultSessionMaxAge,
 		_keyName:   cookieName,
 	}
-	s._storage.Get(getSessionId(s._sessionId), &s._data)
-	return s
+	ns._storage.Get(getSessionId(ns._sessionId), &ns._data)
+	return ns
 }
 
-func newSession(w http.ResponseWriter, storage gof.Storage, cookieName string) *Session {
-	id := newSessionId(storage)
+func newSession(w http.ResponseWriter, s storage.Interface, cookieName string) *Session {
+	id := newSessionId(s)
 	return &Session{
 		_sessionId: id,
 		_rsp:       w,
-		_storage:   storage,
+		_storage:   s,
 		_maxAge:    defaultSessionMaxAge,
 		_keyName:   cookieName,
 	}
 }
 
-func (this *Session) chkInit() {
-	if this._data == nil {
-		this._data = make(map[string]interface{})
+func (s *Session) chkInit() {
+	if s._data == nil {
+		s._data = make(map[string]interface{})
 	}
 }
 
 // 获取会话编号
-func (this *Session) GetSessionId() string {
-	return this._sessionId
+func (s *Session) GetSessionId() string {
+	return s._sessionId
 }
 
 // 获取值
-func (this *Session) Get(key string) interface{} {
-	if this._data != nil {
-		if v, ok := this._data[key]; ok {
+func (s *Session) Get(key string) interface{} {
+	if s._data != nil {
+		if v, ok := s._data[key]; ok {
 			return v
 		}
 	}
@@ -82,83 +83,85 @@ func (this *Session) Get(key string) interface{} {
 }
 
 // 设置键值
-func (this *Session) Set(key string, v interface{}) {
-	this.chkInit()
+func (s *Session) Set(key string, v interface{}) {
+	s.chkInit()
 	//	if reflect.TypeOf(v).Kind() == reflect.Ptr{
 	//		panic("Session value must be ptr")
 	//	}
-	this._data[key] = v
+	s._data[key] = v
 }
 
 // 移除键
-func (this *Session) Remove(key string) bool {
-	if _, exists := this._data[key]; exists {
-		delete(this._data, key)
+func (s *Session) Remove(key string) bool {
+	if _, exists := s._data[key]; exists {
+		delete(s._data, key)
 		return true
 	}
 	return false
 }
 
 // 使用指定的会话代替当前会话
-func (this *Session) UseInstead(sessionId string) {
-	this._sessionId = sessionId
-	this._storage.Get(getSessionId(this._sessionId), &this._data)
-	this.flushToClient()
+func (s *Session) UseInstead(sessionId string) {
+	s._sessionId = sessionId
+	s._storage.Get(getSessionId(s._sessionId), &s._data)
+	s.flushToClient()
 }
 
 // 销毁会话
-func (this *Session) Destroy() {
-	this._storage.Del(getSessionId(this._sessionId))
-	this.SetMaxAge(-this._maxAge)
-	this.flushToClient()
+func (s *Session) Destroy() {
+	s._storage.Del(getSessionId(s._sessionId))
+	s.SetMaxAge(-s._maxAge)
+	s.flushToClient()
 }
 
 // 保存会话
-func (this *Session) Save() error {
-	if this._data == nil {
+func (s *Session) Save() error {
+	if s._data == nil {
 		return nil
 	}
-	err := this._storage.SetExpire(getSessionId(this._sessionId), &this._data, this._maxAge)
+	err := s._storage.SetExpire(getSessionId(s._sessionId), &s._data, s._maxAge)
 	if err == nil {
-		this.flushToClient()
+		s.flushToClient()
 	}
 	return err
 }
 
 // 设置过期秒数
-func (this *Session) SetMaxAge(seconds int64) {
-	this._maxAge = seconds
+func (s *Session) SetMaxAge(seconds int64) {
+	s._maxAge = seconds
 }
 
 //存储到客户端
-func (this *Session) flushToClient() {
-	d := time.Duration(this._maxAge * 1e9)
+func (s *Session) flushToClient() {
+	d := time.Duration(s._maxAge * 1e9)
 	expires := time.Now().Local().Add(d)
 	ck := &http.Cookie{
-		Name:     this._keyName,
-		Value:    this._sessionId,
+		Name:     s._keyName,
+		Value:    s._sessionId,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  expires,
 	}
-	http.SetCookie(this._rsp, ck)
+	http.SetCookie(s._rsp, ck)
 }
 
 func init() {
-	gob.Register(make(map[string]interface{})) // register session type for gob.
+	// register session type for gob.
+	gob.Register(make(map[string]interface{}))
 }
 
 func getSessionId(id string) string {
 	return "gof:ss:" + id
 }
 
-func newSessionId(s gof.Storage) string {
+func newSessionId(s storage.Interface) string {
 	var rdStr string
 	for {
 		dt := time.Now()
 		randStr := util.RandString(6)
 		rdStr = fmt.Sprintf("%s%d", randStr, dt.Second())
-		if !s.Exists(getSessionId(rdStr)) { //check session id exists
+		if !s.Exists(getSessionId(rdStr)) {
+			//check session id exists
 			break
 		}
 	}
@@ -166,35 +169,25 @@ func newSessionId(s gof.Storage) string {
 }
 
 // Set global session storage and name
-func Set(s gof.Storage, defaultName string) {
+func Set(s storage.Interface, defaultName string) {
 	_storage = s
 	if len(defaultName) > 0 {
 		_defaultCookieName = defaultName
 	}
 }
 
-// get session storage
-func getStorage() gof.Storage {
-	return _storage
-}
-
 func parseSession(rsp http.ResponseWriter, r *http.Request,
-	cookieName string, sto gof.Storage) *Session {
-	if sto == nil {
+	cookieName string, s storage.Interface) *Session {
+	if s == nil {
 		log.Fatalln("session storage is nil")
 	}
 	if ck, err := r.Cookie(cookieName); err == nil {
-		return getSession(rsp, sto, ck.Name, ck.Value)
+		return getSession(rsp, s, ck.Name, ck.Value)
 	}
-	return newSession(rsp, sto, cookieName)
+	return newSession(rsp, s, cookieName)
 }
 
 // Session adapter for http context
 func Default(rsp http.ResponseWriter, r *http.Request) *Session {
 	return parseSession(rsp, r, _defaultCookieName, _storage)
-}
-
-// create a session use custom key
-func Create(key string, rsp http.ResponseWriter, r *http.Request) *Session {
-	return parseSession(rsp, r, key, _storage)
 }

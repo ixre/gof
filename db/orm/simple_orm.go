@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jsix/gof/storage"
 	"log"
 	"reflect"
 	"strings"
@@ -23,6 +24,10 @@ func NewOrm(db *sql.DB) Orm {
 		DB:       db,
 		tableMap: make(map[string]*TableMeta),
 	}
+}
+
+func NewCachedOrm(db *sql.DB, s storage.Interface) Orm {
+	return NewCacheProxyOrm(NewOrm(db), s)
 }
 
 func (o *simpleOrm) Version() string {

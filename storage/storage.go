@@ -7,10 +7,10 @@
  * history :
  */
 
-package gof
+package storage
 
 // Storage
-type Storage interface {
+type Interface interface {
 	// return storage driver
 	Driver() interface{}
 
