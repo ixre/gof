@@ -32,7 +32,7 @@ var _ IRedisStorage = new(redisStorage)
 type redisStorage struct {
 	_pool *redis.Pool
 	_buf  *bytes.Buffer
-	sync.Mutex
+	mux   sync.Mutex
 }
 
 func NewRedisStorage(pool *redis.Pool) Interface {
@@ -43,29 +43,25 @@ func NewRedisStorage(pool *redis.Pool) Interface {
 }
 
 func (r *redisStorage) getByte(v interface{}) ([]byte, error) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	r._buf.Reset()
 	enc := gob.NewEncoder(r._buf)
 	err := enc.Encode(v)
-	if err == nil {
-		b := r._buf.Bytes()
-		r._buf.Reset()
-		return b, nil
+	if err != nil {
+		if strings.Index(err.Error(), "type not registered") != -1 {
+			panic(err)
+		}
 	}
-	if strings.Index(err.Error(), "type not registered") != -1 {
-		panic(err)
-	}
-	return nil, err
+	return r._buf.Bytes(), err
 }
 
 func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-	r._buf.Write(b)
-	dec := gob.NewDecoder(r._buf)
-	err := dec.Decode(dst)
+	r.mux.Lock()
+	defer r.mux.Unlock()
 	r._buf.Reset()
-	return err
+	r._buf.Write(b)
+	return gob.NewDecoder(r._buf).Decode(dst)
 }
 
 func isBaseOfStruct(v interface{}) bool {
@@ -93,7 +89,7 @@ func (r *redisStorage) DriverName() string {
 	return DriveRedisStorage
 }
 
-func (r *redisStorage) Exists(key string) (exists bool) {
+func (r *redisStorage) Exists(key string) bool {
 	conn := r._pool.Get()
 	defer conn.Close()
 	i, err := redis.Int(conn.Do("EXISTS", key))
@@ -104,7 +100,7 @@ func (r *redisStorage) Get(key string, dst interface{}) error {
 	if isBaseOfStruct(dst) {
 		src, err := r.getRedisBytes(key)
 		if err == nil {
-			err = r.decodeBytes(src, dst)
+			err = r.decodeBytes(src, &dst)
 		}
 		return err
 	}
