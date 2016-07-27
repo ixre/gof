@@ -100,7 +100,7 @@ func (r *redisStorage) Get(key string, dst interface{}) error {
 	if isBaseOfStruct(dst) {
 		src, err := r.getRedisBytes(key)
 		if err == nil {
-			err = r.decodeBytes(src, &dst)
+			err = r.decodeBytes(src,dst)
 		}
 		return err
 	}
