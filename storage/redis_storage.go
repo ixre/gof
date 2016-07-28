@@ -64,10 +64,23 @@ func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
 	return gob.NewDecoder(r._buf).Decode(dst)
 }
 
-func isBaseOfStruct(v interface{}) bool {
+func checkInputValueType(v interface{}) bool {
 	kind := reflect.TypeOf(v).Kind()
 	return kind == reflect.Ptr || kind == reflect.Struct ||
 		kind == reflect.Map || kind == reflect.Array
+}
+
+func checkOutputValueType(v interface{}) bool {
+	vType := reflect.TypeOf(v)
+	kind := vType.Kind()
+	if kind == reflect.Ptr {
+		kind = vType.Elem().Kind()
+		if kind == reflect.Ptr {
+			panic(errors.New("dst ptr is a ptr."))
+		}
+	}
+	return kind == reflect.Struct || kind == reflect.Map ||
+		kind == reflect.Array
 }
 
 func (r *redisStorage) getRedisBytes(key string) ([]byte, error) {
@@ -94,7 +107,7 @@ func (r *redisStorage) Exists(key string) bool {
 }
 
 func (r *redisStorage) Get(key string, dst interface{}) error {
-	if isBaseOfStruct(dst) {
+	if checkOutputValueType(dst) {
 		src, err := r.getRedisBytes(key)
 		if err == nil {
 			err = r.decodeBytes(src, dst)
@@ -151,7 +164,7 @@ func (r *redisStorage) GetRaw(key string) (interface{}, error) {
 func (r *redisStorage) Set(key string, v interface{}) error {
 	var err error
 	var redisValue interface{} = v
-	if isBaseOfStruct(v) {
+	if checkInputValueType(v) {
 		redisValue, err = r.getByte(v)
 	}
 	conn := r._pool.Get()
@@ -168,7 +181,7 @@ func (r *redisStorage) Del(key string) {
 func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	var err error
 	var redisValue interface{} = v
-	if isBaseOfStruct(v) {
+	if checkInputValueType(v) {
 		redisValue, err = r.getByte(v)
 	}
 	conn := r._pool.Get()
