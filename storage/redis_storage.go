@@ -42,26 +42,34 @@ func NewRedisStorage(pool *redis.Pool) Interface {
 	}
 }
 
-func (r *redisStorage) getByte(v interface{}) ([]byte, error) {
+func (r *redisStorage) Driver() interface{} {
+	return r._pool
+}
+
+func (r *redisStorage) DriverName() string {
+	return DriveRedisStorage
+}
+
+func (r *redisStorage) encodeBytes(v interface{}) ([]byte, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	r._buf.Reset()
 	enc := gob.NewEncoder(r._buf)
 	err := enc.Encode(v)
-	if err != nil {
-		if strings.Index(err.Error(), "type not registered") != -1 {
-			panic(err)
-		}
+	if err != nil && strings.Index(err.Error(), "type not registered") != -1 {
+		panic(err)
 	}
-	return r._buf.Bytes(), err
+	b := r._buf.Bytes()
+	r._buf.Reset()
+	return b, err
 }
 
 func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	r._buf.Reset()
 	r._buf.Write(b)
-	return gob.NewDecoder(r._buf).Decode(dst)
+	err := gob.NewDecoder(r._buf).Decode(dst)
+	r._buf.Reset()
+	return err
 }
 
 func checkInputValueType(v interface{}) bool {
@@ -71,44 +79,28 @@ func checkInputValueType(v interface{}) bool {
 }
 
 func checkOutputValueType(v interface{}) bool {
-	vType := reflect.TypeOf(v)
-	kind := vType.Kind()
-	if kind == reflect.Ptr {
-		kind = vType.Elem().Kind()
-		if kind == reflect.Ptr {
-			panic(errors.New("dst ptr is a ptr."))
-		}
-	}
-	return kind == reflect.Struct || kind == reflect.Map ||
-		kind == reflect.Array
+	return reflect.TypeOf(v).Kind() == reflect.Ptr
+	//vType := reflect.TypeOf(v)
+	//kind := vType.Kind()
+	//if kind == reflect.Ptr {
+	//	kind = vType.Elem().Kind()
+	//	if kind == reflect.Ptr {
+	//		panic(errors.New("dst ptr is a ptr."))
+	//	}
+	//}
+	//return kind == reflect.Ptr
 }
 
-func (r *redisStorage) getRedisBytes(key string) ([]byte, error) {
+func (r *redisStorage) getBytes(key string) ([]byte, error) {
 	conn := r._pool.Get()
 	defer conn.Close()
 	src, err := redis.Bytes(conn.Do("GET", key))
 	return src, err
 }
 
-// return storage driver
-func (r *redisStorage) Driver() interface{} {
-	return r._pool
-}
-
-func (r *redisStorage) DriverName() string {
-	return DriveRedisStorage
-}
-
-func (r *redisStorage) Exists(key string) bool {
-	conn := r._pool.Get()
-	defer conn.Close()
-	i, err := redis.Int(conn.Do("EXISTS", key))
-	return err != nil && i == 1
-}
-
 func (r *redisStorage) Get(key string, dst interface{}) error {
 	if checkOutputValueType(dst) {
-		src, err := r.getRedisBytes(key)
+		src, err := r.getBytes(key)
 		if err == nil {
 			err = r.decodeBytes(src, dst)
 		}
@@ -139,7 +131,7 @@ func (r *redisStorage) GetInt64(key string) (int64, error) {
 }
 
 func (r *redisStorage) GetString(key string) (string, error) {
-	d, err := r.getRedisBytes(key)
+	d, err := r.getBytes(key)
 	if err != nil {
 		return "", err
 	}
@@ -153,7 +145,6 @@ func (r *redisStorage) GetFloat64(key string) (float64, error) {
 	return src, err
 }
 
-//Get raw value
 func (r *redisStorage) GetRaw(key string) (interface{}, error) {
 	conn := r._pool.Get()
 	defer conn.Close()
@@ -161,17 +152,25 @@ func (r *redisStorage) GetRaw(key string) (interface{}, error) {
 	return replay, err
 }
 
+func (r *redisStorage) Exists(key string) bool {
+	conn := r._pool.Get()
+	defer conn.Close()
+	i, err := redis.Int(conn.Do("EXISTS", key))
+	return err != nil && i == 1
+}
+
 func (r *redisStorage) Set(key string, v interface{}) error {
 	var err error
 	var redisValue interface{} = v
 	if checkInputValueType(v) {
-		redisValue, err = r.getByte(v)
+		redisValue, err = r.encodeBytes(v)
 	}
 	conn := r._pool.Get()
 	defer conn.Close()
 	_, err = conn.Do("SET", key, redisValue)
 	return err
 }
+
 func (r *redisStorage) Del(key string) {
 	conn := r._pool.Get()
 	defer conn.Close()
@@ -182,7 +181,7 @@ func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error
 	var err error
 	var redisValue interface{} = v
 	if checkInputValueType(v) {
-		redisValue, err = r.getByte(v)
+		redisValue, err = r.encodeBytes(v)
 	}
 	conn := r._pool.Get()
 	defer conn.Close()
