@@ -65,12 +65,9 @@ func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
 }
 
 func isBaseOfStruct(v interface{}) bool {
-	valueType := reflect.TypeOf(v)
-	kind := valueType.Kind()
-	if kind == reflect.Ptr {
-		kind = valueType.Elem().Kind()
-	}
-	return kind == reflect.Struct || kind == reflect.Map || kind == reflect.Array
+	kind := reflect.TypeOf(v).Kind()
+	return kind == reflect.Ptr || kind == reflect.Struct ||
+		kind == reflect.Map || kind == reflect.Array
 }
 
 func (r *redisStorage) getRedisBytes(key string) ([]byte, error) {
@@ -100,7 +97,7 @@ func (r *redisStorage) Get(key string, dst interface{}) error {
 	if isBaseOfStruct(dst) {
 		src, err := r.getRedisBytes(key)
 		if err == nil {
-			err = r.decodeBytes(src,dst)
+			err = r.decodeBytes(src, dst)
 		}
 		return err
 	}
