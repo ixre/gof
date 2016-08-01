@@ -15,7 +15,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"reflect"
 	"strings"
-	"sync"
 )
 
 type IRedisStorage interface {
@@ -31,32 +30,27 @@ var _ IRedisStorage = new(redisStorage)
 
 func NewRedisStorage(pool *redis.Pool) Interface {
 	return &redisStorage{
-		_pool: pool,
-		_buf:  new(bytes.Buffer),
+		pool: pool,
 	}
 }
 
 type redisStorage struct {
-	_pool *redis.Pool
-	_buf  *bytes.Buffer
-	mux   sync.Mutex
+	pool *redis.Pool
 }
 
 func (r *redisStorage) encodeBytes(v interface{}) ([]byte, error) {
-    // todo: 如何使用 r._buf 来避免创建新的Buffer
-	buf := bytes.NewBuffer([]byte{})
-	enc := gob.NewEncoder(buf)
-	err := enc.Encode(v)
+	buf := bytes.NewBuffer(nil)
+	err := gob.NewEncoder(buf).Encode(v)
 	r.checkTypeErr(err)
 	return buf.Bytes(), err
 }
 
 func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
-	r.mux.Lock()
-	defer r.mux.Unlock()
-	r._buf.Reset()
-	r._buf.Write(b)
-	return gob.NewDecoder(r._buf).Decode(dst)
+	buf := bytes.NewBuffer(nil)
+	buf.Write(b)
+	err := gob.NewDecoder(buf).Decode(dst)
+	r.checkTypeErr(err)
+	return err
 }
 
 func (r *redisStorage) checkTypeErr(err error) {
@@ -85,7 +79,7 @@ func checkOutputValueType(v interface{}) bool {
 }
 
 func (r *redisStorage) Driver() interface{} {
-	return r._pool
+	return r.pool
 }
 
 func (r *redisStorage) DriverName() string {
@@ -93,7 +87,7 @@ func (r *redisStorage) DriverName() string {
 }
 
 func (r *redisStorage) getBytes(key string) ([]byte, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	src, err := redis.Bytes(conn.Do("GET", key))
 	return src, err
@@ -111,21 +105,21 @@ func (r *redisStorage) Get(key string, dst interface{}) error {
 }
 
 func (r *redisStorage) GetBool(key string) (bool, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	src, err := redis.Bool(conn.Do("GET", key))
 	return src, err
 }
 
 func (r *redisStorage) GetInt(key string) (int, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	src, err := redis.Int(conn.Do("GET", key))
 	return src, err
 }
 
 func (r *redisStorage) GetInt64(key string) (int64, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	src, err := redis.Int64(conn.Do("GET", key))
 	return src, err
@@ -140,21 +134,21 @@ func (r *redisStorage) GetString(key string) (string, error) {
 }
 
 func (r *redisStorage) GetFloat64(key string) (float64, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	src, err := redis.Float64(conn.Do("GET", key))
 	return src, err
 }
 
 func (r *redisStorage) GetRaw(key string) (interface{}, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	replay, err := conn.Do("GET", key)
 	return replay, err
 }
 
 func (r *redisStorage) Exists(key string) bool {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	i, err := redis.Int(conn.Do("EXISTS", key))
 	return err != nil && i == 1
@@ -166,14 +160,14 @@ func (r *redisStorage) Set(key string, v interface{}) error {
 	if checkInputValueType(v) {
 		redisValue, err = r.encodeBytes(v)
 	}
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	_, err = conn.Do("SET", key, redisValue)
 	return err
 }
 
 func (r *redisStorage) Del(key string) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	conn.Do("DEL", key)
 }
@@ -184,7 +178,7 @@ func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error
 	if checkInputValueType(v) {
 		redisValue, err = r.encodeBytes(v)
 	}
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	_, err = conn.Do("SETEX", key, seconds, redisValue)
 	return err
@@ -192,7 +186,7 @@ func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error
 
 // get keys start with prefix
 func (r *redisStorage) Keys(prefix string) ([]string, error) {
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	return redis.Strings(conn.Do("KEYS", prefix))
 }
@@ -203,7 +197,7 @@ func (r *redisStorage) PrefixDel(prefix string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	conn := r._pool.Get()
+	conn := r.pool.Get()
 	defer conn.Close()
 	for _, key := range keys {
 		conn.Do("DEL", key)
