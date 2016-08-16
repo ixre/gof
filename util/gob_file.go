@@ -27,37 +27,37 @@ func NewGobFile(file string) *GobFile {
 }
 
 // 从文件中反序列化
-func (this *GobFile) Unmarshal(dst interface{}) error {
-	this.mux.Lock()
-	fi, err := os.Open(this.File)
+func (g *GobFile) Unmarshal(dst interface{}) error {
+	g.mux.Lock()
+	fi, err := os.Open(g.File)
 	if err == nil {
 		enc := gob.NewDecoder(fi)
 		err = enc.Decode(dst)
 	}
-	this.mux.Unlock()
+	g.mux.Unlock()
 	return err
 }
 
 // 序列化并存储到文件
-func (this *GobFile) marshal(src interface{}) error {
+func (g *GobFile) marshal(src interface{}) error {
 	//检测目录是否存在,不存在则创建目录
-	dir := path.Dir(this.File)
+	dir := path.Dir(g.File)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.MkdirAll(dir, os.ModePerm)
 	}
-	this.mux.Lock()
-	f, err := os.OpenFile(this.File,
+	g.mux.Lock()
+	f, err := os.OpenFile(g.File,
 		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
 		os.ModePerm)
 	if err == nil {
 		enc := gob.NewEncoder(f)
 		err = enc.Encode(src)
 	}
-	this.mux.Unlock()
+	g.mux.Unlock()
 	return err
 }
 
 // 保存到文件中
-func (this *GobFile) Save(src interface{}) error {
-	return this.marshal(src)
+func (g *GobFile) Save(src interface{}) error {
+	return g.marshal(src)
 }

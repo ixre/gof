@@ -177,11 +177,13 @@ func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastIns
 		return 0, -1, err
 	}
 	defer stmt.Close()
-
-	lastId, _ := result.LastInsertId()
-	affect, _ := result.RowsAffected()
-
-	return int(affect), int(lastId), nil
+	var lastId int64
+	var affect int64
+	affect, err = result.RowsAffected()
+	if err == nil {
+		lastId, err = result.LastInsertId()
+	}
+	return int(affect), int(lastId), err
 }
 
 func (t *simpleConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
