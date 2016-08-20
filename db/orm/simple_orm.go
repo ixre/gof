@@ -475,7 +475,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 	}
 	val := reflect.Indirect(reflect.ValueOf(entity))
 
-	/* build sql */
+	// build sql
 	meta := o.getTableMapMeta(t)
 	//fieldLen = len(meta.FieldNames)
 	params, fieldArr := ItrFieldForSave(meta, &val, false)

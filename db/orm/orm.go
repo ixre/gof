@@ -206,7 +206,8 @@ func SetField(field reflect.Value, d []byte) {
 }
 
 //遍历所有列，并得到参数及列名
-func ItrFieldForSave(meta *TableMeta, val *reflect.Value, includePk bool) (params []interface{}, fieldArr []string) {
+func ItrFieldForSave(meta *TableMeta, val *reflect.Value, includePk bool) (
+	params []interface{}, fieldArr []string) {
 	var isSet bool
 	for i, k := range meta.FieldMapNames {
 
@@ -220,31 +221,29 @@ func ItrFieldForSave(meta *TableMeta, val *reflect.Value, includePk bool) (param
 
 		switch field.Type().Kind() {
 		case reflect.String:
-			if field.String() != "" {
-				isSet = true
-				if val.Kind() == reflect.Ptr {
-					params = append(params, field.String())
-				} else {
-					params = append(params, field.String())
-				}
+			//if field.String() != "" {
+			isSet = true
+			if val.Kind() == reflect.Ptr {
+				params = append(params, field.String())
+			} else {
+				params = append(params, field.String())
 			}
-			break
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		//}
+		case reflect.Int, reflect.Int8,
+			reflect.Int16, reflect.Int32, reflect.Int64:
 			//if field.Int() != 0 {
 			isSet = true
 			params = append(params, field.Int())
-		//}
+
 		case reflect.Float32, reflect.Float64:
 			//if v := field.Float(); v != 0 {
 			isSet = true
 			params = append(params, field.Float())
-		//}
 
 		case reflect.Bool:
 			strVal := field.String()
 			val := strings.ToLower(strVal) == "true" || strVal == "1"
 			field.Set(reflect.ValueOf(val))
-			break
 
 		case reflect.Struct:
 			v := field.Interface()
@@ -263,68 +262,10 @@ func ItrFieldForSave(meta *TableMeta, val *reflect.Value, includePk bool) (param
 	}
 	return params, fieldArr
 }
-
-func ItrField(meta *TableMeta, val *reflect.Value, includePk bool) (params []interface{}, fieldArr []string) {
-	var isSet bool
-	for i, k := range meta.FieldMapNames {
-
-		if !includePk && meta.PkIsAuto &&
-			meta.FieldMapNames[i] == meta.PkFieldName {
-			continue
-		}
-
-		field := val.Field(i)
-		isSet = false
-
-		switch field.Type().Kind() {
-		case reflect.String:
-			if field.String() != "" {
-				isSet = true
-				if val.Kind() == reflect.Ptr {
-					params = append(params, field.String())
-				} else {
-					params = append(params, field.String())
-				}
-			}
-			break
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			if field.Int() != 0 {
-				isSet = true
-				params = append(params, field.Int())
-			}
-		case reflect.Float32, reflect.Float64:
-			if v := field.Float(); v != 0 {
-				isSet = true
-				params = append(params, field.Float())
-			}
-
-		//		case reflect.Bool:
-		//			val := strings.ToLower(strVal) == "true" || strVal == "1"
-		//			field.Set(reflect.ValueOf(val))
-		//			break
-
-		case reflect.Struct:
-			v := field.Interface()
-			switch v.(type) {
-			case time.Time:
-				if v.(time.Time).Year() > 1 {
-					isSet = true
-					params = append(params, v.(time.Time))
-				}
-			}
-		}
-
-		if isSet {
-			fieldArr = append(fieldArr, k)
-		}
-	}
-	return params, fieldArr
-}
-
-//************  HELPER  ************//
 
 // save entity and return pk and error
-func Save(o Orm, entity interface{}, pk int) (returnPk int, err error) {
+func Save(o Orm, entity interface{}, pk int) (int, error) {
+	var err error
 	if pk > 0 {
 		_, _, err = o.Save(pk, entity)
 		return pk, err
