@@ -134,7 +134,7 @@ func testControllerGenerator() mvc.Controller {
 }
 
 // 请求时执行函数，返回true继续执行，返回false即中止。
-// 可以做验证如：判断用户登陆这类的逻辑。
+// 可以做验证如：判断用户登录这类的逻辑。
 func (h *testController) Requesting(ctx *web.Context) bool {
 	return true
 }

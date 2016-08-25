@@ -70,19 +70,19 @@ type (
 )
 
 // 从Map中拷贝数据
-func (this *Params) Copy(form map[string]string) {
+func (p *Params) Copy(form map[string]string) {
 	for k, v := range form {
 		if k != "total" && k != "rows" && k != "params" {
-			this.Parameters[k] = v
+			p.Parameters[k] = v
 		}
 	}
 }
 
 // 从表单参数中导入数据
-func (this *Params) CopyForm(form url.Values) {
+func (p *Params) CopyForm(form url.Values) {
 	for k, v := range form {
 		if k != "total" && k != "rows" && k != "params" {
-			this.Parameters[k] = v[0]
+			p.Parameters[k] = v[0]
 		}
 	}
 }
