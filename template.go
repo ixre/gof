@@ -138,16 +138,15 @@ func (c *CachedTemplate) fsNotify() {
 
 func (c *CachedTemplate) parseTemplate(name string) (
 	*template.Template, error) {
-	c._mux.Lock() //对写加锁
 	files := append([]string{c._basePath + name},
 		c._shareFiles...) //name需要第一个位置
-	tpl, err := template.ParseFiles(files...)
-	c._mux.Unlock()
-	return tpl, err
+	return template.ParseFiles(files...)
 }
 
 func (c *CachedTemplate) compileTemplate(name string) (
 	*template.Template, error) {
+	c._mux.Lock()
+	defer c._mux.Unlock()
 	tpl, err := c.parseTemplate(name)
 	if err == nil {
 		c._set[name] = tpl
@@ -162,15 +161,12 @@ func (c *CachedTemplate) Execute(w io.Writer,
 	name string, data interface{}) error {
 	c._mux.RLock() //仅对读加锁
 	tpl, ok := c._set[name]
+	c._mux.RUnlock()
 	if !ok {
-		c._mux.RUnlock()
 		var err error
 		if tpl, err = c.compileTemplate(name); err != nil {
 			return err
 		}
-		c._set[name] = tpl
-	} else {
-		defer c._mux.RUnlock()
 	}
 	return tpl.Execute(w, data)
 }
