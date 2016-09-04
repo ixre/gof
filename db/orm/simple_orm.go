@@ -16,18 +16,20 @@ var _ Orm = new(simpleOrm)
 type simpleOrm struct {
 	tableMap map[string]*TableMeta
 	*sql.DB
-	useTrace bool
+	driverName string
+	useTrace   bool
 }
 
-func NewOrm(db *sql.DB) Orm {
+func NewOrm(driver string, db *sql.DB) Orm {
 	return &simpleOrm{
-		DB:       db,
-		tableMap: make(map[string]*TableMeta),
+		DB:         db,
+		driverName: driver,
+		tableMap:   make(map[string]*TableMeta),
 	}
 }
 
-func NewCachedOrm(db *sql.DB, s storage.Interface) Orm {
-	return NewCacheProxyOrm(NewOrm(db), s)
+func NewCachedOrm(driver string, db *sql.DB, s storage.Interface) Orm {
+	return NewCacheProxyOrm(NewOrm(driver, db), s)
 }
 
 func (o *simpleOrm) Version() string {
@@ -52,8 +54,7 @@ func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMeta {
 	if exists {
 		return m
 	}
-
-	m = GetTableMapMeta(t)
+	m = GetTableMapMeta(o.driverName, t)
 	o.tableMap[t.String()] = m
 
 	if o.useTrace {

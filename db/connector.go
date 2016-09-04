@@ -71,7 +71,7 @@ func NewSimpleConnector(driverName, driverSource string,
 
 	return &simpleConnector{
 		_db:           db,
-		_orm:          orm.NewOrm(db),
+		_orm:          orm.NewOrm(driverName, db),
 		_driverName:   driverName,
 		_driverSource: driverName,
 		_logger:       l,

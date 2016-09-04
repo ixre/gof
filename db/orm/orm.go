@@ -59,8 +59,8 @@ type (
 )
 
 // 获取表元数据
-func GetTableMapMeta(t reflect.Type) *TableMeta {
-	ixs, maps := GetFields(t)
+func GetTableMapMeta(driver string, t reflect.Type) *TableMeta {
+	ixs, maps := GetFields(driver, t)
 	pkName, pkIsAuto := GetPKName(t)
 	m := &TableMeta{
 		TableName:     t.Name(),
@@ -107,7 +107,7 @@ func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 }
 
 // 获取实体的字段
-func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
+func GetFields(driver string, t reflect.Type) (posArr []int, mapNames []string) {
 	posArr = []int{}
 	mapNames = []string{}
 
@@ -125,7 +125,7 @@ func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
 		if fmn == "" {
 			fmn = f.Name
 		}
-		internalKeysCheck(&fmn)
+		internalKeysCheck(driver, &fmn)
 		mapNames = append(mapNames, fmn)
 		posArr = append(posArr, i)
 		fmn = ""
@@ -134,9 +134,15 @@ func GetFields(t reflect.Type) (posArr []int, mapNames []string) {
 }
 
 // format internal keywords
-func internalKeysCheck(field *string) {
+func internalKeysCheck(driver string, field *string) {
+	if driver == "mysql" {
+		checkMysqlInternalKeys(field)
+	}
+}
+
+func checkMysqlInternalKeys(field *string) {
 	switch *field {
-	case "key", "where", "type":
+	case "key", "where", "type", "describe":
 		*field = strings.Join([]string{"`", *field, "`"}, "")
 	}
 }
