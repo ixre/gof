@@ -23,6 +23,8 @@ import (
 
 var (
 	eventRegexp = regexp.MustCompile("\"(.+)\":\\s*(\\S+)")
+	// cache template file of parent directory
+	T_CACHE_PARENT = true
 )
 
 type CachedTemplate struct {
@@ -121,7 +123,8 @@ func (c *CachedTemplate) fsNotify() {
 		err = filepath.Walk(c._basePath, func(path string,
 			info os.FileInfo, err error) error {
 			if err == nil && info.IsDir() &&
-				info.Name()[0] != '.' { // not hidden file
+				info.Name()[0] != '.' {
+				// not hidden file
 				err = w.Add(path)
 			}
 			return err
@@ -149,7 +152,10 @@ func (c *CachedTemplate) compileTemplate(name string) (
 	defer c._mux.Unlock()
 	tpl, err := c.parseTemplate(name)
 	if err == nil {
-		c._set[name] = tpl
+		if T_CACHE_PARENT || (strings.Index(name, "../") != -1 &&
+			strings.Index(name, "..\\") != -1) {
+			c._set[name] = tpl
+		}
 		log.Println("[ Gof][ Template][ Compile]: ", name)
 	} else {
 		log.Println("[ Gof][ Template][ Error] -", err.Error())
