@@ -152,8 +152,8 @@ func (c *CachedTemplate) compileTemplate(name string) (
 	defer c._mux.Unlock()
 	tpl, err := c.parseTemplate(name)
 	if err == nil {
-		if T_CACHE_PARENT || (strings.Index(name, "../") != -1 &&
-			strings.Index(name, "..\\") != -1) {
+		if T_CACHE_PARENT || (strings.Index(name, "../") == -1 &&
+			strings.Index(name, "..\\") == -1) {
 			c._set[name] = tpl
 		}
 		log.Println("[ Gof][ Template][ Compile]: ", name)
