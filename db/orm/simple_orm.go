@@ -315,7 +315,6 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	/* build sql */
 	meta := o.getTableMapMeta(baseType)
 	fieldLen = len(meta.FieldMapNames)
-
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)

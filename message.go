@@ -12,18 +12,18 @@ type Message struct {
 	Message string      `json:"message"`
 }
 
-func (this *Message) Error(err error) *Message {
+func (m *Message) Error(err error) *Message {
 	if err != nil {
-		this.Result = false
-		this.Message = err.Error()
+		m.Result = false
+		m.Message = err.Error()
 	} else {
-		this.Result = true
+		m.Result = true
 	}
-	return this
+	return m
 }
 
 //序列化
-func (this Message) Marshal() []byte {
-	json, _ := json.Marshal(this)
+func (m Message) Marshal() []byte {
+	json, _ := json.Marshal(m)
 	return json
 }
