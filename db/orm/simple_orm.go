@@ -111,49 +111,40 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
 		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
 	}
 	val = val.Elem()
-
 	/* build sql */
 	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal []interface{} = make([]interface{}, fieldLen)
 	var rawBytes [][]byte = make([][]byte, fieldLen)
-
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = v
 		scanVal[i] = &rawBytes[i]
 	}
-
 	sql = fmt.Sprintf("SELECT %s FROM %s WHERE %s=?",
 		strings.Join(fieldArr, ","),
 		meta.TableName,
 		meta.PkFieldName,
 	)
-
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primaryVal))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
-		return err
 	}
 	defer stmt.Close()
-
 	row := stmt.QueryRow(primaryVal)
 	err = row.Scan(scanVal...)
 	if err != nil {
 		return o.err(err)
 	}
-
 	return BindFields(meta, &val, rawBytes)
 }
 

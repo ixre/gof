@@ -46,8 +46,7 @@ func (r *redisStorage) encodeBytes(v interface{}) ([]byte, error) {
 }
 
 func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
-	buf := bytes.NewBuffer(nil)
-	buf.Write(b)
+	buf := bytes.NewBuffer(b)
 	err := gob.NewDecoder(buf).Decode(dst)
 	r.checkTypeErr(err)
 	return err
