@@ -64,9 +64,11 @@ func NewSimpleConnector(driverName, driverSource string,
 		return nil
 	}
 
-	// 设置最大连接数
+	// 设置最大连接数,设置MaxOpenConns和MaxIdleConns
+	// 不出现：statement.go:27: Invalid Connection 警告信息
 	if maxConn > 0 {
 		db.SetMaxOpenConns(maxConn)
+		db.SetMaxIdleConns(maxConn)
 	}
 
 	return &simpleConnector{
