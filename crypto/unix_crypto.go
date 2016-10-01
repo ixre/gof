@@ -74,58 +74,61 @@ func NewUnixCrypto(token, offset string) *UnixCrypto {
 }
 
 // return md5 bytes
-func (this *UnixCrypto) GetBytes() []byte {
-	return this.md5Bytes
+func (u *UnixCrypto) GetBytes() []byte {
+	return u.md5Bytes
 }
 
-func (this *UnixCrypto) Encode() []byte {
+func (uc *UnixCrypto) Encode() []byte {
 	unx := getUnix()
-	l := this.pos
+	l := uc.pos
 
-	this.mux.Lock()
+	uc.mux.Lock()
 	defer func() {
-		this.buf.Reset()
-		this.mux.Unlock()
+		uc.buf.Reset()
+		uc.mux.Unlock()
 	}()
 
-	this.buf.Write(this.md5Bytes[:l])
+	uc.buf.Write(uc.md5Bytes[:l])
 
 	for i := 0; i < 10; i++ {
-		this.buf.WriteString(unx[i : i+1])
-		this.buf.Write(this.md5Bytes[l+i : l+i+1])
+		uc.buf.WriteString(unx[i : i+1])
+		uc.buf.Write(uc.md5Bytes[l+i : l+i+1])
 	}
 
-	this.buf.Write(this.md5Bytes[10+l:])
-	return this.buf.Bytes()
+	uc.buf.Write(uc.md5Bytes[10+l:])
+	return uc.buf.Bytes()
 }
 
-func (this *UnixCrypto) Decode(s string) ([]byte, int64) {
-	smd := make([]byte, len(this.md5Bytes))
+func (u *UnixCrypto) Decode(s string) ([]byte, int64) {
+	smd := make([]byte, len(u.md5Bytes))
 	unx := make([]byte, unixLen)
 
 	if len(s) < len(smd) {
 		return nil, 0
 	}
 
-	copy(smd, s[:this.pos])
-	for i, v := range s[this.pos+unixLen*2:] {
-		smd[this.pos+unixLen+i] = byte(v)
+	copy(smd, s[:u.pos])
+	for i, v := range s[u.pos+unixLen*2:] {
+		smd[u.pos+unixLen+i] = byte(v)
 	}
 
 	for i := 0; i < unixLen*2; i++ {
-		v := s[this.pos+i]
+		v := s[u.pos+i]
 		if i%2 == 0 {
 			unx[i/2] = v
 		} else {
-			smd[this.pos+i/2] = v
+			smd[u.pos+i/2] = v
 		}
 	}
 
-	unix, _ := strconv.ParseInt(string(unx), 10, 32)
+	unix, err := strconv.ParseInt(string(unx), 10, 32)
+	if err != nil {
+		unix = 0
+	}
 	return smd, unix
 }
 
-func (this *UnixCrypto) Compare(s string) (bool, []byte, int64) {
-	b, u := this.Decode(s)
-	return bytes.Compare(b, this.md5Bytes) == 0, b, u
+func (uc *UnixCrypto) Compare(s string) (bool, []byte, int64) {
+	b, u := uc.Decode(s)
+	return bytes.Compare(b, uc.md5Bytes) == 0, b, u
 }
