@@ -46,7 +46,7 @@ func getSession(w http.ResponseWriter, s storage.Interface,
 		_maxAge:    defaultSessionMaxAge,
 		_keyName:   cookieName,
 	}
-	ns._storage.Get(getSessionId(ns._sessionId),
+	ns._storage.Get(GetStorageKey(ns._sessionId),
 		&ns._data)
 	return ns
 }
@@ -104,14 +104,14 @@ func (s *Session) Remove(key string) bool {
 // 使用指定的会话代替当前会话
 func (s *Session) UseInstead(sessionId string) {
 	s._sessionId = sessionId
-	s._storage.Get(getSessionId(s._sessionId), &s._data)
+	s._storage.Get(GetStorageKey(s._sessionId), &s._data)
 	s.flushToClient()
 }
 
 // 销毁会话
 func (s *Session) Destroy() {
-	s._storage.Del(getSessionId(s._sessionId))
-	s.SetMaxAge(-s._maxAge)
+	s._storage.Del(GetStorageKey(s._sessionId))
+	s.setMaxAge(-s._maxAge)
 	s.flushToClient()
 }
 
@@ -120,7 +120,7 @@ func (s *Session) Save() error {
 	if s._data == nil {
 		return nil
 	}
-	err := s._storage.SetExpire(getSessionId(s._sessionId), &s._data, s._maxAge)
+	err := s._storage.SetExpire(GetStorageKey(s._sessionId), &s._data, s._maxAge)
 	if err == nil {
 		s.flushToClient()
 	}
@@ -128,8 +128,13 @@ func (s *Session) Save() error {
 }
 
 // 设置过期秒数
-func (s *Session) SetMaxAge(seconds int64) {
+func (s *Session) setMaxAge(seconds int64) {
 	s._maxAge = seconds
+}
+
+// 获取会话的保存时间
+func (s *Session) MaxAge() int64 {
+	return s._maxAge
 }
 
 //存储到客户端
@@ -151,8 +156,9 @@ func init() {
 	gob.Register(make(map[string]interface{}))
 }
 
-func getSessionId(id string) string {
-	return "gof:ss:" + id
+// 获取Session存储的键
+func GetStorageKey(sessionId string) string {
+	return "gof:ss:" + sessionId
 }
 
 func newSessionId(s storage.Interface) string {
@@ -161,7 +167,7 @@ func newSessionId(s storage.Interface) string {
 		dt := time.Now()
 		randStr := util.RandString(6)
 		rdStr = fmt.Sprintf("%s%d", randStr, dt.Second())
-		if !s.Exists(getSessionId(rdStr)) {
+		if !s.Exists(GetStorageKey(rdStr)) {
 			//check session id exists
 			break
 		}
