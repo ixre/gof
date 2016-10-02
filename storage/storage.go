@@ -20,11 +20,11 @@ var typeError = errors.New("type convert error")
 
 // Storage
 type Interface interface {
-	// return storage driver
-	Driver() interface{}
-
 	// Return storage driver name
-	DriverName() string
+	Driver() string
+
+	// return storage source
+	Source() interface{}
 
 	// Check key is exists or not
 	Exists(key string) (exists bool)

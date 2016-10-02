@@ -29,11 +29,11 @@ func NewHashStorage() Interface {
 }
 
 // return storage driver
-func (h *hashStorage) Driver() interface{} {
+func (h *hashStorage) Source() interface{} {
 	return h.storage
 }
 
-func (h *hashStorage) DriverName() string {
+func (h *hashStorage) Driver() string {
 	return DriveHashStorage
 }
 

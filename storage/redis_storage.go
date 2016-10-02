@@ -129,11 +129,11 @@ func checkOutputValueType(v interface{}) bool {
 	//return kind == reflect.Ptr
 }
 
-func (r *redisStorage) Driver() interface{} {
+func (r *redisStorage) Source() interface{} {
 	return r.pool
 }
 
-func (r *redisStorage) DriverName() string {
+func (r *redisStorage) Driver() string {
 	return DriveRedisStorage
 }
 
