@@ -14,9 +14,6 @@ import (
 	"sync"
 )
 
-var DriveHashStorage string = "hash-storage"
-var typeError error = errors.New("type convert error!")
-
 var _ Interface = new(hashStorage)
 
 // 哈希表存储

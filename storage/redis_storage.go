@@ -12,10 +12,63 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"log"
 	"reflect"
 	"strings"
+	"time"
 )
+
+// Create a pool of Redis client
+func NewRedisPool(host string, port int, db int, auth string,
+	maxIdle int, idleTimeout int) *redis.Pool {
+
+	if port <= 0 {
+		port = 6379
+	}
+	if maxIdle <= 0 {
+		maxIdle = 10000
+	}
+	if idleTimeout <= 0 {
+		idleTimeout = 20000
+	}
+
+	return &redis.Pool{
+		MaxIdle:     maxIdle,
+		IdleTimeout: time.Duration(idleTimeout) * time.Second,
+		Dial: func() (redis.Conn, error) {
+			var c redis.Conn
+			var err error
+			for {
+				c, err = redis.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+				if err == nil {
+					break
+				}
+				log.Printf("[ Redis] - redis(%s:%d) dial failed - %s , Redial after 5 seconds\n",
+					host, port, err.Error())
+				time.Sleep(time.Second * 5)
+			}
+
+			if len(auth) != 0 {
+				if _, err = c.Do("AUTH", auth); err != nil {
+					c.Close()
+					log.Fatalf("[ Redis][ AUTH] - %s\n", err.Error())
+				}
+			}
+			if _, err = c.Do("SELECT", db); err != nil {
+				c.Close()
+				log.Fatalf("[ Redis][ SELECT] - redis(%s:%d) select db failed - %s",
+					host, port, err.Error())
+			}
+			return c, err
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
+	}
+}
 
 type IRedisStorage interface {
 	// get keys start with prefix
@@ -24,7 +77,6 @@ type IRedisStorage interface {
 	PrefixDel(prefix string) (int, error)
 }
 
-var DriveRedisStorage string = "redis-storage"
 var _ Interface = new(redisStorage)
 var _ IRedisStorage = new(redisStorage)
 

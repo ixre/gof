@@ -9,6 +9,15 @@
 
 package storage
 
+import "errors"
+
+const (
+	DriveHashStorage  string = "hash-storage"
+	DriveRedisStorage string = "redis-storage"
+)
+
+var typeError = errors.New("type convert error")
+
 // Storage
 type Interface interface {
 	// return storage driver
