@@ -73,7 +73,7 @@ type (
 func (p *Params) Copy(form map[string]string) {
 	for k, v := range form {
 		if k != "total" && k != "rows" && k != "params" {
-			p.Parameters[k] = v
+			p.Parameters[k] = strings.TrimSpace(v)
 		}
 	}
 }
@@ -82,7 +82,7 @@ func (p *Params) Copy(form map[string]string) {
 func (p *Params) CopyForm(form url.Values) {
 	for k, v := range form {
 		if k != "total" && k != "rows" && k != "params" {
-			p.Parameters[k] = v[0]
+			p.Parameters[k] = strings.TrimSpace(v[0])
 		}
 	}
 }
