@@ -25,6 +25,7 @@ var (
 	eventRegexp = regexp.MustCompile("\"(.+)\":\\s*(\\S+)")
 	// cache template file of parent directory
 	T_CACHE_PARENT = true
+	T_SHOW_LOG     = false
 )
 
 type CachedTemplate struct {
@@ -58,6 +59,13 @@ func (c *CachedTemplate) init() *CachedTemplate {
 		go c.fsNotify()
 	}
 	return c
+}
+
+func (c *CachedTemplate) println(err bool, v ...interface{}) {
+	if err || T_SHOW_LOG {
+		v = append([]interface{}{"[ Gof][ Template]"}, v...)
+		log.Println(v...)
+	}
 }
 
 // calling on file changed
@@ -115,7 +123,7 @@ func (c *CachedTemplate) fsNotify() {
 						g.fileChanged(&event)
 					}
 				case err := <-w.Errors:
-					log.Println("Error:", err)
+					c.println(true, "[ Notify][ Error]:", err)
 				}
 			}
 		}(c)
@@ -141,8 +149,8 @@ func (c *CachedTemplate) fsNotify() {
 
 func (c *CachedTemplate) parseTemplate(name string) (
 	*template.Template, error) {
-	files := append([]string{c._basePath + name},
-		c._shareFiles...) //name需要第一个位置
+	//主要的模板文件,需要第一个位置
+	files := append([]string{c._basePath + name}, c._shareFiles...)
 	return template.ParseFiles(files...)
 }
 
@@ -156,9 +164,9 @@ func (c *CachedTemplate) compileTemplate(name string) (
 			strings.Index(name, "..\\") == -1) {
 			c._set[name] = tpl
 		}
-		log.Println("[ Gof][ Template][ Compile]: ", name)
+		c.println(false, "[ Compile]: ", name)
 	} else {
-		log.Println("[ Gof][ Template][ Error] -", err.Error())
+		c.println(true, "[ Compile][ Error]: ", err.Error())
 	}
 	return tpl, err
 }
