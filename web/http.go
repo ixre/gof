@@ -39,39 +39,39 @@ type (
 
 var _ MultiHttpHandler = new(HttpHostsHandler)
 
-func (this HttpHostsHandler) ListenAndServe(addr string) error {
+func (h HttpHostsHandler) ListenAndServe(addr string) error {
 	log.Println("** server running on", addr)
-	err := http.ListenAndServe(addr, this)
+	err := http.ListenAndServe(addr, h)
 	if err != nil {
 		log.Println("** serve exit! ", err.Error())
 	}
 	return err
 }
 
-func (this HttpHostsHandler) Default(handler http.Handler) {
-	this["*"] = handler
+func (h HttpHostsHandler) Default(handler http.Handler) {
+	h["*"] = handler
 }
 
 // 获取处理程序
-func (this HttpHostsHandler) Get(subName string) http.Handler {
-	return this[subName]
+func (h HttpHostsHandler) Get(subName string) http.Handler {
+	return h[subName]
 }
 
-func (this HttpHostsHandler) Set(subName string, handler http.Handler) {
-	this[subName] = handler
+func (h HttpHostsHandler) Set(subName string, handler http.Handler) {
+	h[subName] = handler
 }
 
-func (this HttpHostsHandler) GetSubName(r *http.Request) string {
+func (h HttpHostsHandler) GetSubName(r *http.Request) string {
 	return r.Host[:strings.Index(r.Host, ".")+1]
 }
 
-func (this HttpHostsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h, ok := this[this.GetSubName(r)] //根据主机头返回响应内容
+func (h HttpHostsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	hh, ok := h[h.GetSubName(r)] //根据主机头返回响应内容
 	if !ok {
-		h, _ = this["*"] //获取通用的serve
+		hh, _ = h["*"] //获取通用的serve
 	}
-	if h != nil {
-		h.ServeHTTP(w, r)
+	if hh != nil {
+		hh.ServeHTTP(w, r)
 	} else {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
