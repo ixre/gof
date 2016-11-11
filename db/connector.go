@@ -18,23 +18,25 @@ import (
 	"github.com/jsix/gof/log"
 )
 
-type Connector interface {
-	Driver() string
+type (
+	Connector interface {
+		Driver() string
 
-	GetDb() *sql.DB
+		GetDb() *sql.DB
 
-	GetOrm() orm.Orm
+		GetOrm() orm.Orm
 
-	Query(sql string, f func(*sql.Rows), arg ...interface{}) error
+		Query(sql string, f func(*sql.Rows), arg ...interface{}) error
 
-	QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error
+		QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error
 
-	ExecScalar(s string, result interface{}, arg ...interface{}) error
+		ExecScalar(s string, result interface{}, arg ...interface{}) error
 
-	Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error)
+		Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error)
 
-	ExecNonQuery(sql string, args ...interface{}) (int, error)
-}
+		ExecNonQuery(sql string, args ...interface{}) (int, error)
+	}
+)
 
 var _ Connector = new(simpleConnector)
 

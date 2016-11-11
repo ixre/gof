@@ -14,17 +14,28 @@ var _ Orm = new(simpleOrm)
 
 //it's a IOrm Implements for mysql
 type simpleOrm struct {
-	tableMap map[string]*TableMeta
+	tableMap map[string]*TableMapMeta
 	*sql.DB
 	driverName string
 	useTrace   bool
+	dialect    Dialect
 }
 
 func NewOrm(driver string, db *sql.DB) Orm {
+	var dialect Dialect
+	switch driver {
+	case "mysql":
+		dialect = &MySqlDialect{}
+	case "mssql":
+		dialect = &MsSqlDialect{}
+	case "sqlite":
+		dialect = &SqLiteDialect{}
+	}
 	return &simpleOrm{
 		DB:         db,
 		driverName: driver,
-		tableMap:   make(map[string]*TableMeta),
+		dialect:    dialect,
+		tableMap:   make(map[string]*TableMapMeta),
 	}
 }
 
@@ -34,6 +45,10 @@ func NewCachedOrm(driver string, db *sql.DB, s storage.Interface) Orm {
 
 func (o *simpleOrm) Version() string {
 	return "1.0.2"
+}
+
+func (s *simpleOrm) Dialect() Dialect {
+	return s.dialect
 }
 
 func (o *simpleOrm) err(err error) error {
@@ -49,7 +64,7 @@ func (o *simpleOrm) debug(format string, args ...interface{}) {
 	}
 }
 
-func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMeta {
+func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	m, exists := o.tableMap[t.String()]
 	if exists {
 		return m
@@ -82,7 +97,7 @@ func (o *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 	return GetPKName(t)
 }
 
-func (o *simpleOrm) unionField(meta *TableMeta, v string) string {
+func (o *simpleOrm) unionField(meta *TableMapMeta, v string) string {
 	if len(meta.TableName) != 0 {
 		return meta.TableName + "." + v
 	}

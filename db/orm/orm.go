@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"reflect"
 	"strconv"
 	"strings"
@@ -8,7 +9,7 @@ import (
 )
 
 type (
-	TableMeta struct {
+	TableMapMeta struct {
 		TableName   string
 		PkFieldName string
 		PkIsAuto    bool
@@ -20,6 +21,8 @@ type (
 	Orm interface {
 		// version of orm
 		Version() string
+
+		Dialect() Dialect
 
 		//Set orm output information
 		SetTrace(b bool)
@@ -53,16 +56,42 @@ type (
 		Save(primary interface{}, entity interface{}) (rows int64, lastInsertId int64, err error)
 	}
 
+	// 表
+	Table struct {
+		Name    string
+		Comment string
+		Engine  string
+		Charset string
+		Columns []*Column
+	}
+
+	// 列
+	Column struct {
+		Name    string
+		Pk      bool
+		Auto    bool
+		NotNull bool
+		Type    string
+		Comment string
+	}
+
 	// find some information of entity
 	OrmFinder interface {
+	}
+
+	Dialect interface {
+		// 数据库方言名称
+		Name() string
+		// 获取表结构
+		TableStruct(db *sql.DB, table string) (*Table, error)
 	}
 )
 
 // 获取表元数据
-func GetTableMapMeta(driver string, t reflect.Type) *TableMeta {
+func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {
 	ixs, maps := GetFields(driver, t)
 	pkName, pkIsAuto := GetPKName(t)
-	m := &TableMeta{
+	m := &TableMapMeta{
 		TableName:     t.Name(),
 		PkFieldName:   pkName,
 		PkIsAuto:      pkIsAuto,
@@ -147,7 +176,7 @@ func checkMysqlInternalKeys(field *string) {
 	}
 }
 
-func BindFields(meta *TableMeta, dst *reflect.Value, rawBytes [][]byte) error {
+func BindFields(meta *TableMapMeta, dst *reflect.Value, rawBytes [][]byte) error {
 	for i, fi := range meta.FieldsIndex {
 		SetField(dst.Field(fi), rawBytes[i])
 	}
@@ -212,7 +241,7 @@ func SetField(field reflect.Value, d []byte) {
 }
 
 //遍历所有列，并得到参数及列名
-func ItrFieldForSave(meta *TableMeta, val *reflect.Value, includePk bool) (
+func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
 	params []interface{}, fieldArr []string) {
 	var isSet bool
 	for i, k := range meta.FieldMapNames {
