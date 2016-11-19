@@ -71,10 +71,12 @@ func NewRedisPool(host string, port int, db int, auth string,
 }
 
 type IRedisStorage interface {
+	// return a redis connections
+	GetConn() redis.Conn
 	// get keys start with prefix
 	Keys(prefix string) ([]string, error)
 	// delete keys contain prefix
-	PrefixDel(prefix string) (int, error)
+	DelWith(prefix string) (int, error)
 }
 
 var _ Interface = new(redisStorage)
@@ -235,6 +237,11 @@ func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error
 	return err
 }
 
+// return a redis connections
+func (r *redisStorage) GetConn() redis.Conn {
+	return r.pool.Get()
+}
+
 // get keys start with prefix
 func (r *redisStorage) Keys(prefix string) ([]string, error) {
 	conn := r.pool.Get()
@@ -243,7 +250,7 @@ func (r *redisStorage) Keys(prefix string) ([]string, error) {
 }
 
 // delete keys contain prefix
-func (r *redisStorage) PrefixDel(prefix string) (int, error) {
+func (r *redisStorage) DelWith(prefix string) (int, error) {
 	keys, err := r.Keys(prefix)
 	if err != nil {
 		return 0, err
