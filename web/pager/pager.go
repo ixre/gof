@@ -32,7 +32,7 @@ const (
 )
 
 var (
-	GetterDefaultPager PagerGetter = new(defaultPagerGetter)
+	pagerGetter PagerGetter = new(defaultPagerGetter)
 )
 
 // 分页产生器
@@ -47,32 +47,32 @@ type defaultPagerGetter struct {
 	p *UrlPager
 }
 
-func (this *defaultPagerGetter) SetPager(v *UrlPager) error {
-	this.p = v
+func (d *defaultPagerGetter) SetPager(v *UrlPager) error {
+	d.p = v
 	return nil
 }
 
-func (this *defaultPagerGetter) Get(page, flag int) (url, text string) {
+func (d *defaultPagerGetter) Get(page, flag int) (url, text string) {
 	if flag&CONTROL != 0 {
 		if flag&PREVIOUS != 0 {
 			if page == 1 {
 				return "javascript:;", FirstPageText
 			}
-			return fmt.Sprintf(this.p.Query, page-1), PreviousPageText
+			return fmt.Sprintf(d.p.Query, page-1), PreviousPageText
 		}
 
 		if flag&NEXT != 0 {
-			if page == this.p.Pages {
+			if page == d.p.Pages {
 				return "javascript:;", LastPageText
 			}
-			return fmt.Sprintf(this.p.Query, page+1), NextPageText
+			return fmt.Sprintf(d.p.Query, page+1), NextPageText
 		}
 	}
 
 	if -page == 1 && len(FirstLinkFormat) != 0 {
-		return fmt.Sprintf(this.p.Query, 1), "1"
+		return fmt.Sprintf(d.p.Query, 1), "1"
 	}
-	return fmt.Sprintf(this.p.Query, page), strconv.Itoa(page)
+	return fmt.Sprintf(d.p.Query, page), strconv.Itoa(page)
 }
 
 type UrlPager struct {
@@ -110,34 +110,34 @@ type UrlPager struct {
 	PagingOnZero bool
 }
 
-func (this *UrlPager) check() {
-	if this.Index < 1 {
-		this.Index = 1
+func (u *UrlPager) check() {
+	if u.Index < 1 {
+		u.Index = 1
 	}
-	if len(strings.TrimSpace(this.Query)) == 0 {
-		this.Query = PagerLinkFormat
+	if len(strings.TrimSpace(u.Query)) == 0 {
+		u.Query = PagerLinkFormat
 	}
 }
 
-func (this *UrlPager) Pager() []byte {
+func (u *UrlPager) Pager() []byte {
 	var bys *bytes.Buffer
 	var cls string
 	var url, text string
 
 	//检查数据
-	this.check()
-	this.getter.SetPager(this)
+	u.check()
+	u.getter.SetPager(u)
 
 	//开始拼接html
 	bys = bytes.NewBufferString("<div class=\"pagination\">")
 
 	//输出上一页
-	if this.Index > 0 {
+	if u.Index > 0 {
 		cls = "btn previous"
-		url, text = this.getter.Get(this.Index, CONTROL|PREVIOUS)
+		url, text = u.getter.Get(u.Index, CONTROL|PREVIOUS)
 	} else {
 		cls = "btn disabled"
-		url, text = this.getter.Get(this.Index, CONTROL|PREVIOUS)
+		url, text = u.getter.Get(u.Index, CONTROL|PREVIOUS)
 	}
 	bys.WriteString(fmt.Sprintf(`<a class="%s" href="%s">%s</a>`, cls, url, text))
 
@@ -162,10 +162,10 @@ func (this *UrlPager) Pager() []byte {
 	//for (var i = 1, j = beginPage; i <= linkNumber && j < pageCount; i++) {
 	//j++;
 
-	linkNumber := this.Number //链接接数(默认10)
-	currIndex := this.Index   //当前页数
-	pageCount := this.Pages   //总页数
-	beginPage := currIndex    //开始页
+	linkNumber := u.Number //链接接数(默认10)
+	currIndex := u.Index   //当前页数
+	pageCount := u.Pages   //总页数
+	beginPage := currIndex //开始页
 
 	//计算开始页,将自动补全左右的链接
 	offset := linkNumber/2 + linkNumber%2
@@ -187,46 +187,46 @@ func (this *UrlPager) Pager() []byte {
 			bys.WriteString(fmt.Sprintf(`<a class="pn current">%d</a>`, j))
 		} else {
 			//页码不为当前页，则输出页码
-			u, t := this.getter.Get(j, 0)
+			u, t := u.getter.Get(j, 0)
 			bys.WriteString(fmt.Sprintf(`<a class="pn" href="%s">%s</a>`, u, t))
 		}
 	}
 
 	//输出下一页链接
-	if this.Index < this.Pages {
+	if u.Index < u.Pages {
 		cls = "btn next"
-		url, text = this.getter.Get(this.Index, CONTROL|NEXT)
+		url, text = u.getter.Get(u.Index, CONTROL|NEXT)
 	} else {
 		cls = "btn disabled"
-		url, text = this.getter.Get(this.Index, CONTROL|NEXT)
+		url, text = u.getter.Get(u.Index, CONTROL|NEXT)
 	}
 	bys.WriteString(fmt.Sprintf(`<a class="%s" href="%s">%s</a>`, cls, url, text))
 
 	//显示信息
 	const pagerStr string = "<span class=\"info\">&nbsp;第%d/%d页，共%d条。</span>"
-	if len(this.PagerTotal) == 0 {
-		this.PagerTotal = pagerStr
+	if len(u.PagerTotal) == 0 {
+		u.PagerTotal = pagerStr
 	}
-	bys.WriteString(fmt.Sprintf(this.PagerTotal, this.Index, this.Pages, this.Total))
+	bys.WriteString(fmt.Sprintf(u.PagerTotal, u.Index, u.Pages, u.Total))
 
 	bys.WriteString("</div>")
 	return bys.Bytes()
 }
 
-func (this *UrlPager) PagerString() string {
-	if !this.PagingOnZero && this.Pages == 1 {
+func (u *UrlPager) PagerString() string {
+	if !u.PagingOnZero && u.Pages == 1 {
 		return ""
 	}
-	return string(this.Pager())
+	return string(u.Pager())
 }
 
-func NewUrlPager(total int, size int, current int, query string) *UrlPager {
+func NewUrlPager(pages int, current int, query string) *UrlPager {
 	p := &UrlPager{}
-	p.Pages = MathPages(total, size)
+	p.Pages = pages
 	p.Index = current
 	p.Number = PagerLinkCount
 	p.Query = query
-	p.getter = GetterDefaultPager
+	p.getter = pagerGetter
 	p.getter.SetPager(p)
 	return p
 }

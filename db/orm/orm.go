@@ -2,6 +2,7 @@ package orm
 
 import (
 	"database/sql"
+	"github.com/jsix/gof/util"
 	"reflect"
 	"strconv"
 	"strings"
@@ -197,9 +198,9 @@ func SetField(field reflect.Value, d []byte) {
 				field.Set(reflect.ValueOf(int(val)))
 			}
 		case reflect.Int32:
-			val, err := strconv.ParseInt(string(d), 10, 32)
+			val, err := strconv.Atoi(string(d))
 			if err == nil {
-				field.Set(reflect.ValueOf(val))
+				field.Set(reflect.ValueOf(int32(val)))
 			}
 		case reflect.Int64:
 			val, err := strconv.ParseInt(string(d), 10, 64)
@@ -305,7 +306,12 @@ func Save(o Orm, entity interface{}, pk int) (int, error) {
 		_, _, err = o.Save(pk, entity)
 		return pk, err
 	}
-	var id64 int64
-	_, id64, err = o.Save(nil, entity)
-	return int(id64), err
+	var int64 int64
+	_, int64, err = o.Save(nil, entity)
+	return int(int64), err
+}
+
+// parse save result int to int32
+func I32(v int, err error) (int32, error) {
+	return util.I32Err(v, err)
 }

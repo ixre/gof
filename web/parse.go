@@ -25,7 +25,6 @@ func ParseFormToEntity(values map[string][]string, instance interface{}) {
 			switch field.Type().Kind() {
 			case reflect.String:
 				field.Set(reflect.ValueOf(strVal))
-				break
 
 			case reflect.Float32:
 				if v, err := strconv.ParseFloat(strVal, 32); err == nil && v != 0 {
@@ -35,16 +34,34 @@ func ParseFormToEntity(values map[string][]string, instance interface{}) {
 				if v, err := strconv.ParseFloat(strVal, 64); err == nil && v != 0 {
 					field.Set(reflect.ValueOf(v))
 				}
+			case reflect.Int8:
+				val, err := strconv.ParseUint(strVal, 10, 8)
+				if err == nil {
+					field.Set(reflect.ValueOf(int8(val)))
+				}
+			case reflect.Int16:
+				val, err := strconv.ParseUint(strVal, 10, 16)
+				if err == nil {
+					field.Set(reflect.ValueOf(int16(val)))
+				}
+			case reflect.Int32:
+				val, err := strconv.Atoi(strVal)
+				if err == nil {
+					field.Set(reflect.ValueOf(int32(val)))
+				}
+			case reflect.Int64:
+				val, err := strconv.Atoi(strVal)
+				if err == nil {
+					field.Set(reflect.ValueOf(int64(val)))
+				}
 			case reflect.Int:
 				val, err := strconv.Atoi(strVal)
 				if err == nil {
 					field.Set(reflect.ValueOf(val))
 				}
-				break
 			case reflect.Bool:
 				val := strings.ToLower(strVal) == "true" || strVal == "1" || strVal == "on"
 				field.Set(reflect.ValueOf(val))
-				break
 
 			case reflect.Struct:
 				v := field.Interface()
@@ -55,6 +72,8 @@ func ParseFormToEntity(values map[string][]string, instance interface{}) {
 						field.Set(reflect.ValueOf(t))
 					}
 				}
+			default:
+				panic("not support type:" + field.Type().Kind().String())
 			}
 
 			//接口类型

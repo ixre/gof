@@ -11,10 +11,8 @@ package orm
 import (
 	"database/sql"
 	"errors"
-	"github.com/jsix/gof/log"
 	"regexp"
 	"strings"
-	"time"
 )
 
 var _ Dialect = new(MySqlDialect)
@@ -48,8 +46,8 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	if desc == "" {
 		return nil, errors.New("not found table information")
 	}
-	log.Println("-- Result:" + desc)
-	time.Sleep(time.Second)
+	//log.Println("-- Result:" + desc)
+	//time.Sleep(time.Second)
 	i, j := strings.Index(desc, "(\n"), strings.Index(desc, "\n)")
 	//获取表名
 	tmp := desc[:i]

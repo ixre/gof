@@ -11,8 +11,6 @@ package orm
 import (
 	"bytes"
 	"database/sql"
-	"fmt"
-	"github.com/jsix/gof/log"
 	"strings"
 )
 
@@ -63,7 +61,7 @@ func (t *toolSession) Table2GoStruct(table string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println(fmt.Sprintf("%#v", tb))
+	//log.Println(fmt.Sprintf("%#v", tb))
 	buf := bytes.NewBufferString("")
 	buf.WriteString("// ")
 	buf.WriteString(tb.Comment)
