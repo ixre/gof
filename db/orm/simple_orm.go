@@ -160,7 +160,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	if err != nil {
 		return o.err(err)
 	}
-	return BindFields(meta, &val, rawBytes)
+	return assignValues(meta, &val, rawBytes)
 }
 
 func (o *simpleOrm) GetBy(entity interface{}, where string,
@@ -228,7 +228,7 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 		return o.err(err)
 	}
 
-	return BindFields(meta, &val, rawBytes)
+	return assignValues(meta, &val, rawBytes)
 }
 
 func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
@@ -281,7 +281,7 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 		return o.err(err)
 	}
 
-	return BindFields(meta, &val, rawBytes)
+	return assignValues(meta, &val, rawBytes)
 }
 
 //Select more than 1 entity list
@@ -382,7 +382,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		//	SetField(v.Field(fi), rawBytes[i])
 		//}
 
-		BindFields(meta, &v, rawBytes)
+		assignValues(meta, &v, rawBytes)
 		if eleIsPtr {
 			toArr = reflect.Append(toArr, e)
 		} else {

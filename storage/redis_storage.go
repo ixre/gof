@@ -146,7 +146,7 @@ func (r *redisStorage) getBytes(key string) ([]byte, error) {
 	return src, err
 }
 
-func (r *redisStorage) Get(key string, dst interface{}) error {
+func (r *redisStorage) decodeAssign(key string, dst interface{}) error {
 	if checkOutputValueType(dst) {
 		src, err := r.getBytes(key)
 		if err == nil {
@@ -155,6 +155,10 @@ func (r *redisStorage) Get(key string, dst interface{}) error {
 		return err
 	}
 	return errors.New("dst must be struct")
+}
+
+func (r *redisStorage) Get(key string, dst interface{}) error {
+	return r.decodeAssign(key, dst)
 }
 
 func (r *redisStorage) GetBool(key string) (bool, error) {
@@ -207,25 +211,13 @@ func (r *redisStorage) Exists(key string) bool {
 	return err != nil && i == 1
 }
 
-func (r *redisStorage) Set(key string, v interface{}) error {
-	var err error
-	var redisValue interface{} = v
-	if checkInputValueType(v) {
-		redisValue, err = r.encodeBytes(v)
-	}
-	conn := r.pool.Get()
-	defer conn.Close()
-	_, err = conn.Do("SET", key, redisValue)
-	return err
-}
-
 func (r *redisStorage) Del(key string) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	conn.Do("DEL", key)
 }
 
-func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
+func (r *redisStorage) binarySet(key string, v interface{}, seconds int64) error {
 	var err error
 	var redisValue interface{} = v
 	if checkInputValueType(v) {
@@ -233,8 +225,54 @@ func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error
 	}
 	conn := r.pool.Get()
 	defer conn.Close()
-	_, err = conn.Do("SETEX", key, seconds, redisValue)
+	err = conn.Send("SET", key, redisValue)
+	if seconds > 0 && err == nil {
+		conn.Send("EXPIRE", key, seconds)
+	}
+	conn.Flush()
 	return err
+}
+
+func (r *redisStorage) hashSet(key string, v interface{}, seconds int) (err error) {
+	if v == nil {
+		return errors.New("nil value")
+	}
+	conn := r.pool.Get()
+	defer conn.Close()
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Map, reflect.Struct:
+		err = conn.Send("HMSET", redis.Args{key}.AddFlat(v)...)
+		if seconds > 0 && err == nil {
+			err = conn.Send("EXPIRE", key, seconds)
+		}
+		if err == nil {
+			err = conn.Flush()
+		}
+		return err
+	}
+	err = conn.Send("SET", key, v)
+	if seconds > 0 && err == nil {
+		conn.Send("EXPIRE", key, seconds)
+	}
+	conn.Flush()
+	return err
+}
+
+func (r *redisStorage) set(key string, v interface{}, seconds int64) (err error) {
+	return r.binarySet(key, v, seconds)
+
+}
+
+func (r *redisStorage) Set(key string, v interface{}) error {
+	return r.set(key, v, -1)
+}
+
+func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
+	return r.set(key, v, seconds)
 }
 
 // return a redis connections

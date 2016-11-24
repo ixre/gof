@@ -2,6 +2,8 @@ package orm
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"github.com/jsix/gof/util"
 	"reflect"
 	"strconv"
@@ -177,68 +179,42 @@ func checkMysqlInternalKeys(field *string) {
 	}
 }
 
-func BindFields(meta *TableMapMeta, dst *reflect.Value, rawBytes [][]byte) error {
+func assignValues(meta *TableMapMeta, dst *reflect.Value, rawBytes [][]byte) error {
 	for i, fi := range meta.FieldsIndex {
-		SetField(dst.Field(fi), rawBytes[i])
+		assignValue(dst.Field(fi), rawBytes[i])
 	}
 	return nil
 }
 
-func SetField(field reflect.Value, d []byte) {
-	if field.IsValid() {
-		//fmt.Println(field.String(), "==>", field.Type().Kind())
-		switch field.Type().Kind() {
-		case reflect.String:
-			field.Set(reflect.ValueOf(string(d)))
-			return
-
-		case reflect.Int:
-			val, err := strconv.ParseInt(string(d), 10, 0)
-			if err == nil {
-				field.Set(reflect.ValueOf(int(val)))
-			}
-		case reflect.Int32:
-			val, err := strconv.Atoi(string(d))
-			if err == nil {
-				field.Set(reflect.ValueOf(int32(val)))
-			}
-		case reflect.Int64:
-			val, err := strconv.ParseInt(string(d), 10, 64)
-			if err == nil {
-				field.Set(reflect.ValueOf(val))
-			}
-
-		case reflect.Float32:
-			val, err := strconv.ParseFloat(string(d), 32)
-			if err == nil {
-				field.Set(reflect.ValueOf(float32(val)))
-			}
-
-		case reflect.Float64:
-			val, err := strconv.ParseFloat(string(d), 64)
-			if err == nil {
-				field.Set(reflect.ValueOf(val))
-			}
-
-		case reflect.Bool:
-			strVal := string(d)
-			val := strings.ToLower(strVal) == "true" || strVal == "1"
-			field.Set(reflect.ValueOf(val))
-			return
-
-		//接口类型
-		case reflect.Struct:
-			//fmt.Println(reflect.TypeOf(time.Now()), field.Type())
-			if reflect.TypeOf(time.Now()) == field.Type() {
-				t, err := time.Parse("2006-01-02 15:04:05", string(d))
-				if err == nil {
-					field.Set(reflect.ValueOf(t.Local()))
-				}
-			}
-			return
+func assignValue(d reflect.Value, s []byte) (err error) {
+	switch d.Type().Kind() {
+	case reflect.Float32, reflect.Float64:
+		var x float64
+		x, err = strconv.ParseFloat(string(s), d.Type().Bits())
+		d.SetFloat(x)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		var x int64
+		x, err = strconv.ParseInt(string(s), 10, d.Type().Bits())
+		d.SetInt(x)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		var x uint64
+		x, err = strconv.ParseUint(string(s), 10, d.Type().Bits())
+		d.SetUint(x)
+	case reflect.Bool:
+		var x bool
+		x, err = strconv.ParseBool(string(s))
+		d.SetBool(x)
+	case reflect.String:
+		d.SetString(string(s))
+	case reflect.Slice:
+		if d.Type().Elem().Kind() != reflect.Uint8 {
+			err = errors.New(fmt.Sprintf("can't covert %s to slice!",
+				reflect.TypeOf(s).String()))
+		} else {
+			d.SetBytes(s)
 		}
-
 	}
+	return err
 }
 
 //遍历所有列，并得到参数及列名

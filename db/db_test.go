@@ -33,15 +33,8 @@ type User struct {
 	Host string `db:"host"`
 }
 
-func query() {
-	println("==== testing query =====")
-	_connector.Query("SELECT user,host FROM mysql.user", func(rows *sql.Rows) {
-		//println(RowsToMarshalMap(rows))
-		rows.Close()
-	})
-}
-
 func model() {
+	initTest()
 	println("===== testing model =======")
 	var usr User
 	_orm.Get(&usr, "root")
@@ -51,6 +44,7 @@ func model() {
 }
 
 func sel() {
+	initTest()
 	println("===== testing select model =======")
 	for i := 0; i < 3; i++ {
 		var usrs []User
@@ -61,8 +55,35 @@ func sel() {
 	}
 }
 
+func query(t *testing.T) {
+
+	println("==== testing query =====")
+	values := make([]interface{}, 3)
+	scanValues := make([]interface{}, 3)
+	for i, v := range values {
+		scanValues[i] = &v
+	}
+	_connector.Query("SELECT id,usr,pwd FROM mm_member limit 0,10", func(rows *sql.Rows) {
+		for rows.Next() {
+			rows.Scan(scanValues...)
+
+			s1 := scanValues[0].(*interface{})
+			v, ok := (*s1).([]byte)
+			t.Log("------", *s1)
+			t.Log(v, "=>", ok)
+			v2, ok2 := scanValues[1].(string)
+			t.Log(v2, "=>", ok2)
+		}
+		//println(RowsToMarshalMap(rows))
+		rows.Close()
+	})
+}
+
 func Test_to(t *testing.T) {
-	repeatRun(query, 10000)
+	initTest()
+	repeatRun(func() {
+		query(t)
+	}, 1)
 }
 
 //func Test_model(t *testing.T) {
@@ -111,10 +132,10 @@ func Test_to(t *testing.T) {
 //	}
 //}
 
-func init() {
+func initTest() {
 	log.SetOutput(os.Stdout)
 	_connector = NewSimpleConnector("mysql",
-		"root:@tcp(localhost:3306)/mysql?charset=utf8", nil, -1)
+		"root:@tcp(172.16.69.128:3306)/go2o?charset=utf8", nil, -1, false)
 	_orm = _connector.GetOrm()
 	_orm.SetTrace(!true)
 	_orm.Mapping(User{}, "user")
