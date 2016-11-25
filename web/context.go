@@ -13,6 +13,7 @@ import (
 	"github.com/jsix/gof"
 	"github.com/jsix/gof/web/session"
 	"net/http"
+	"strings"
 )
 
 type Context struct {
@@ -36,17 +37,26 @@ func NewContext(app gof.App, rsp http.ResponseWriter, req *http.Request) *Contex
 	}
 }
 
-func (this *Context) Session() *session.Session {
-	if this._session == nil {
-		this._session = session.Default(this.Response, this.Request)
+func (c *Context) Session() *session.Session {
+	if c._session == nil {
+		c._session = session.Default(c.Response, c.Request)
 	}
-	return this._session
+	return c._session
 }
 
 // 获取数据项
-func (this *Context) GetItem(key string) interface{} {
-	if v, e := this.Items[key]; e {
+func (c *Context) GetItem(key string) interface{} {
+	if v, e := c.Items[key]; e {
 		return v
 	}
 	return nil
+}
+
+// 获取请求完整的地址
+func RequestRawURI(r *http.Request) string {
+	scheme := "http://"
+	if r.TLS != nil {
+		scheme = "htts://"
+	}
+	return strings.Join([]string{scheme, r.Host, r.RequestURI}, "")
 }

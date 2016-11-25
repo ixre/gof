@@ -117,6 +117,7 @@ func (h *hashStorage) Del(key string) {
 	delete(h.storage, key)
 }
 
+// equal of h.Set(key,value)
 func (h *hashStorage) SetExpire(key string, v interface{}, seconds int64) error {
-	panic(errors.New("HashStorage not support method \"SetExpire\"!"))
+	return h.Set(key, v)
 }
