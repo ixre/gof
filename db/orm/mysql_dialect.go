@@ -46,7 +46,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	if desc == "" {
 		return nil, errors.New("not found table information")
 	}
-	//log.Println("-- Result:" + desc)
+	//log.Println("-- Result:" + desc+"\n\n")
 	//time.Sleep(time.Second)
 	i, j := strings.Index(desc, "(\n"), strings.Index(desc, "\n)")
 	//获取表名
@@ -71,7 +71,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	}
 	//获取列信息
 	colReg := regexp.MustCompile("`([^`]+)`\\s+([^\\s]+)\\s")
-	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^\\\\]+)\\\\*'")
+	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^']+)'")
 	colArr := strings.Split(desc[i+3:j], "\n")
 	//获取主键
 	pkField := ""
@@ -94,7 +94,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 			}
 			comMatch := commReg.FindStringSubmatch(str)
 			if comMatch != nil {
-				col.Comment = comMatch[1]
+				col.Comment = strings.Replace(comMatch[1], "\\n", "", -1)
 			}
 			table.Columns = append(table.Columns, col)
 		}

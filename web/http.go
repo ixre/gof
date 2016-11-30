@@ -15,13 +15,12 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
-	"strings"
 	"time"
 )
 
 type (
 	// 一个针对多个子域的HTTP处理程序
-	MultiHttpHandler interface {
+	MultiServe interface {
 		// 设置默认的处理程序
 		Default(handler http.Handler)
 		// 添加子域的处理程序
@@ -33,13 +32,25 @@ type (
 		// 监听端口,并启动
 		ListenAndServe(addr string) error
 	}
-
-	HttpHostsHandler map[string]http.Handler
 )
 
-var _ MultiHttpHandler = new(HttpHostsHandler)
+var _ MultiServe = new(MultiServeHandler)
 
-func (h HttpHostsHandler) ListenAndServe(addr string) error {
+type MultiServeHandler struct {
+	domain   string
+	dLen     int
+	handlers map[string]http.Handler
+}
+
+func NewMultiServe(domain string) MultiServeHandler {
+	return MultiServeHandler{
+		domain:   domain,
+		dLen:     len(domain),
+		handlers: make(map[string]http.Handler),
+	}
+}
+
+func (h MultiServeHandler) ListenAndServe(addr string) error {
 	log.Println("** server running on", addr)
 	err := http.ListenAndServe(addr, h)
 	if err != nil {
@@ -48,32 +59,33 @@ func (h HttpHostsHandler) ListenAndServe(addr string) error {
 	return err
 }
 
-func (h HttpHostsHandler) Default(handler http.Handler) {
-	h["*"] = handler
+func (h MultiServeHandler) Default(handler http.Handler) {
+	h.handlers["*"] = handler
 }
 
 // 获取处理程序
-func (h HttpHostsHandler) Get(subName string) http.Handler {
-	return h[subName]
+func (h MultiServeHandler) Get(sub string) http.Handler {
+	return h.handlers[sub]
 }
 
-func (h HttpHostsHandler) Set(subName string, handler http.Handler) {
-	h[subName] = handler
+func (h MultiServeHandler) Set(sub string, handler http.Handler) {
+	h.handlers[sub] = handler
 }
 
-func (h HttpHostsHandler) GetSubName(r *http.Request) string {
-	return r.Host[:strings.Index(r.Host, ".")+1]
+func (h MultiServeHandler) SubName(r *http.Request) string {
+	return r.Host[:len(r.Host)-h.dLen]
 }
 
-func (h HttpHostsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	hh, ok := h[h.GetSubName(r)] //根据主机头返回响应内容
-	if !ok {
-		hh, _ = h["*"] //获取通用的serve
+func (h MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	hh := h.Get(h.SubName(r)) //根据主机头返回响应内容
+	if hh == nil {
+		hh = h.Get("*") //获取通用的serve
 	}
 	if hh != nil {
 		hh.ServeHTTP(w, r)
 	} else {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(w, http.StatusText(http.StatusNotFound),
+			http.StatusNotFound)
 	}
 }
 
