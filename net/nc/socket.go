@@ -150,6 +150,7 @@ func (s *SocketServer) Auth(conn net.Conn, f AuthFunc) error {
 	return err
 }
 
+// 用户验证
 func (s *SocketServer) UAuth(conn net.Conn, f AuthFunc) error {
 	var uid int
 	var err error

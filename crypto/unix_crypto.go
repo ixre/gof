@@ -29,7 +29,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -41,15 +40,22 @@ const (
 	unixLen = 10 //unix time长度为10
 )
 
-func getPos(token string) int {
-	return len(token)/2 + 1
-}
-func getUnix() string {
-	ux := time.Now().Unix()
-	return strconv.FormatInt(ux, 10)
+// Unix时间戳加密
+type UnixCrypto struct {
+	pos      int
+	md5Bytes []byte
+	//buf      *bytes.Buffer
+	//mux      sync.Mutex
 }
 
-func getMd5(token, offset string) []byte {
+func NewUnixCrypto(token, offset string) *UnixCrypto {
+	u := &UnixCrypto{}
+	u.pos = len(token)/2 + 1
+	u.md5Bytes = u.getMd5(token, offset)
+	return u
+}
+
+func (u *UnixCrypto) getMd5(token, offset string) []byte {
 	d5.Reset()
 	d5.Write([]byte(token))
 	src := d5.Sum([]byte(offset))
@@ -58,19 +64,10 @@ func getMd5(token, offset string) []byte {
 	return dst
 }
 
-type UnixCrypto struct {
-	pos      int
-	md5Bytes []byte
-	buf      *bytes.Buffer
-	mux      sync.Mutex
-}
-
-func NewUnixCrypto(token, offset string) *UnixCrypto {
-	return &UnixCrypto{
-		pos:      len(token)/2 + 1,
-		md5Bytes: getMd5(token, offset),
-		buf:      bytes.NewBufferString(""),
-	}
+// 获取UNIX时间戳字符串
+func (u *UnixCrypto) getUnix() string {
+	ux := time.Now().Unix()
+	return strconv.FormatInt(ux, 10)
 }
 
 // return md5 bytes
@@ -78,57 +75,52 @@ func (u *UnixCrypto) GetBytes() []byte {
 	return u.md5Bytes
 }
 
-func (uc *UnixCrypto) Encode() []byte {
-	unx := getUnix()
-	l := uc.pos
-
-	uc.mux.Lock()
-	defer func() {
-		uc.buf.Reset()
-		uc.mux.Unlock()
-	}()
-
-	uc.buf.Write(uc.md5Bytes[:l])
-
+// 编码
+func (u *UnixCrypto) Encode() []byte {
+	unixStr := u.getUnix()
+	l := u.pos
+	buf := bytes.NewBuffer(nil)
+	buf.Write(u.md5Bytes[:l])
+	//前10位，unix和md5交叉
 	for i := 0; i < 10; i++ {
-		uc.buf.WriteString(unx[i : i+1])
-		uc.buf.Write(uc.md5Bytes[l+i : l+i+1])
+		buf.WriteString(unixStr[i : i+1])
+		buf.Write(u.md5Bytes[l+i : l+i+1])
 	}
-
-	uc.buf.Write(uc.md5Bytes[10+l:])
-	return uc.buf.Bytes()
+	//拼接md5，10位以后的字付号
+	buf.Write(u.md5Bytes[10+l:])
+	return buf.Bytes()
 }
 
-func (u *UnixCrypto) Decode(s string) ([]byte, int64) {
-	smd := make([]byte, len(u.md5Bytes))
-	unx := make([]byte, unixLen)
-
-	if len(s) < len(smd) {
+// 解码，返回Token及Unix时间
+func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64) {
+	var err error
+	//解码得到的token
+	token = make([]byte, len(u.md5Bytes))
+	unixArr := make([]byte, unixLen)
+	if len(result) < len(token) {
 		return nil, 0
 	}
-
-	copy(smd, s[:u.pos])
-	for i, v := range s[u.pos+unixLen*2:] {
-		smd[u.pos+unixLen+i] = byte(v)
+	copy(token, result[:u.pos])
+	for i, v := range result[u.pos+unixLen*2:] {
+		token[u.pos+unixLen+i] = byte(v)
 	}
-
 	for i := 0; i < unixLen*2; i++ {
-		v := s[u.pos+i]
+		v := result[u.pos+i]
 		if i%2 == 0 {
-			unx[i/2] = v
+			unixArr[i/2] = v
 		} else {
-			smd[u.pos+i/2] = v
+			token[u.pos+i/2] = v
 		}
 	}
-
-	unix, err := strconv.ParseInt(string(unx), 10, 32)
+	unix, err = strconv.ParseInt(string(unixArr), 10, 32)
 	if err != nil {
 		unix = 0
 	}
-	return smd, unix
+	return token, unix
 }
 
-func (uc *UnixCrypto) Compare(s string) (bool, []byte, int64) {
-	b, u := uc.Decode(s)
-	return bytes.Compare(b, uc.md5Bytes) == 0, b, u
+func (uc *UnixCrypto) Compare(result []byte) (b bool, token []byte, unix int64) {
+	token, unix = uc.Decode(result)
+	b = bytes.Compare(token, uc.md5Bytes) == 0
+	return b, token, unix
 }
