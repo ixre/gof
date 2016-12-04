@@ -51,7 +51,8 @@ func getSession(w http.ResponseWriter, s storage.Interface,
 	return ns
 }
 
-func newSession(w http.ResponseWriter, s storage.Interface, cookieName string) *Session {
+func newSession(w http.ResponseWriter, s storage.Interface,
+	cookieName string) *Session {
 	id := newSessionId(s)
 	return &Session{
 		_sessionId: id,
@@ -120,7 +121,8 @@ func (s *Session) Save() error {
 	if s._data == nil {
 		return nil
 	}
-	err := s._storage.SetExpire(GetStorageKey(s._sessionId), &s._data, s._maxAge)
+	err := s._storage.SetExpire(GetStorageKey(s._sessionId),
+		&s._data, s._maxAge)
 	if err == nil {
 		s.flushToClient()
 	}
