@@ -11,7 +11,9 @@ package orm
 import (
 	"bytes"
 	"database/sql"
+	"log"
 	"strings"
+	"text/template"
 )
 
 type toolSession struct {
@@ -56,10 +58,14 @@ func (t *toolSession) goType(dbType string) string {
 	return "interface{}"
 }
 
-func (t *toolSession) Table2GoStruct(table string) (string, error) {
-	tb, err := t.dialect.TableStruct(t.conn, table)
-	if err != nil {
-		return "", err
+func (t *toolSession) Table(table string) (*Table, error) {
+	return t.dialect.TableStruct(t.conn, table)
+}
+
+// 表生成结构
+func (t *toolSession) TableToGoStruct(tb *Table) string {
+	if tb == nil {
+		return ""
 	}
 	//log.Println(fmt.Sprintf("%#v", tb))
 	buf := bytes.NewBufferString("")
@@ -94,5 +100,51 @@ func (t *toolSession) Table2GoStruct(table string) (string, error) {
 	}
 
 	buf.WriteString("}")
-	return buf.String(), err
+	return buf.String()
+}
+
+// 表生成仓储类,sign:函数后是否带签名，ePrefix:实体是否带前缀
+func (ts *toolSession) TableToGoRep(tb *Table,
+	sign bool, ePrefix string) string {
+	if tb == nil {
+		return ""
+	}
+	var err error
+	t := &template.Template{}
+	t, err = t.Parse(string(TPL_ENTITY_REP))
+	if err == nil {
+		pk := "<PK>"
+		for i, v := range tb.Columns {
+			if i == 0 {
+				pk = v.Name
+			}
+			if v.Pk {
+				pk = v.Name
+				break
+			}
+		}
+		n := ts.title(tb.Name)
+		en := n
+		r2 := ""
+		if sign {
+			r2 = n
+		}
+		if ePrefix != "" {
+			en = ePrefix + en
+		}
+		mp := map[string]interface{}{
+			"R":  n + "Rep",
+			"R2": r2,
+			"E":  en,
+			"T":  strings.ToLower(tb.Name[:1]),
+			"PK": ts.title(pk),
+		}
+		buf := bytes.NewBuffer(nil)
+		err = t.Execute(buf, mp)
+		if err == nil {
+			return buf.String()
+		}
+	}
+	log.Println("execute template error:", err.Error())
+	return ""
 }

@@ -33,10 +33,13 @@ func getDb() *sql.DB {
 func TestToolSession_Table2Struct(t *testing.T) {
 	d := &MySqlDialect{}
 	tool := NewTool(getDb(), d)
-	str, err := tool.Table2GoStruct("user")
-	if err == nil {
-		t.Log("生成的结构代码为：\n" + str)
-	} else {
+	tb, err := tool.Table("user")
+	if err != nil {
 		t.Error(err)
 	}
+	str := tool.TableToGoStruct(tb)
+	t.Log("//生成的结构代码为：\n" + str + "\n")
+
+	str = tool.TableToGoRep(tb, true, "model.")
+	t.Log("//生成的REP代码为：\n" + str + "\n")
 }
