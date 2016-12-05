@@ -1,0 +1,18 @@
+id=test
+label=测试表单
+field{
+    id=Id
+    label=编号
+    element=input
+    class=t
+    enabled=0
+    type=hidden
+    readonly=readonly
+}
+field{
+    id=Age
+    label=年龄
+    element=input
+    class=
+    number=true
+}

@@ -103,47 +103,91 @@ func (t *toolSession) TableToGoStruct(tb *Table) string {
 	return buf.String()
 }
 
+// 表结构生成表单
+func (t *toolSession) TableToHtmlForm(tb *Table) string {
+	if tb == nil {
+		return ""
+	}
+	//log.Println(fmt.Sprintf("%#v", tb))
+	buf := bytes.NewBufferString("")
+	buf.WriteString("// ")
+	buf.WriteString(tb.Comment)
+	buf.WriteString("\ntype ")
+	buf.WriteString(t.title(tb.Name))
+	buf.WriteString(" struct{\n")
+
+	for _, col := range tb.Columns {
+		if col.Comment != "" {
+			buf.WriteString("    // ")
+			buf.WriteString(col.Comment)
+			buf.WriteString("\n")
+		}
+		buf.WriteString("    ")
+		buf.WriteString(t.title(col.Name))
+		buf.WriteString(" ")
+		buf.WriteString(t.goType(col.Type))
+		buf.WriteString(" `")
+		buf.WriteString("db:\"")
+		buf.WriteString(col.Name)
+		buf.WriteString("\"")
+		if col.Pk {
+			buf.WriteString(" pk:\"yes\"")
+		}
+		if col.Auto {
+			buf.WriteString(" auto:\"yes\"")
+		}
+		buf.WriteString("`")
+		buf.WriteString("\n")
+	}
+
+	buf.WriteString("}")
+	return buf.String()
+}
+
 // 表生成仓储类,sign:函数后是否带签名，ePrefix:实体是否带前缀
 func (ts *toolSession) TableToGoRep(tb *Table,
 	sign bool, ePrefix string) string {
 	if tb == nil {
 		return ""
 	}
+
 	var err error
 	t := &template.Template{}
 	t, err = t.Parse(string(TPL_ENTITY_REP))
+	if err != nil {
+		panic(err)
+	}
+
+	pk := "<PK>"
+	for i, v := range tb.Columns {
+		if i == 0 {
+			pk = v.Name
+		}
+		if v.Pk {
+			pk = v.Name
+			break
+		}
+	}
+	n := ts.title(tb.Name)
+	en := n
+	r2 := ""
+	if sign {
+		r2 = n
+	}
+	if ePrefix != "" {
+		en = ePrefix + en
+	}
+	mp := map[string]interface{}{
+		"R":  n + "Rep",
+		"R2": r2,
+		"E":  en,
+		"T":  strings.ToLower(tb.Name[:1]),
+		"PK": ts.title(pk),
+	}
+	buf := bytes.NewBuffer(nil)
+	err = t.Execute(buf, mp)
 	if err == nil {
-		pk := "<PK>"
-		for i, v := range tb.Columns {
-			if i == 0 {
-				pk = v.Name
-			}
-			if v.Pk {
-				pk = v.Name
-				break
-			}
-		}
-		n := ts.title(tb.Name)
-		en := n
-		r2 := ""
-		if sign {
-			r2 = n
-		}
-		if ePrefix != "" {
-			en = ePrefix + en
-		}
-		mp := map[string]interface{}{
-			"R":  n + "Rep",
-			"R2": r2,
-			"E":  en,
-			"T":  strings.ToLower(tb.Name[:1]),
-			"PK": ts.title(pk),
-		}
-		buf := bytes.NewBuffer(nil)
-		err = t.Execute(buf, mp)
-		if err == nil {
-			return buf.String()
-		}
+		return buf.String()
 	}
 	log.Println("execute template error:", err.Error())
 	return ""
