@@ -85,8 +85,10 @@ type (
 	Dialect interface {
 		// 数据库方言名称
 		Name() string
+		// 获取所有的表
+		Tables(db *sql.DB, dbName string) ([]*Table, error)
 		// 获取表结构
-		TableStruct(db *sql.DB, table string) (*Table, error)
+		Table(db *sql.DB, table string) (*Table, error)
 	}
 )
 

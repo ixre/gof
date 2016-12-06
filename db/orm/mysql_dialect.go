@@ -24,8 +24,36 @@ func (m *MySqlDialect) Name() string {
 	return "MySQLDialect"
 }
 
+// 获取所有的表
+func (m *MySqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+	s := "SHOW TABLES "
+	if dbName != "" {
+		s += " FROM " + dbName
+	}
+	list := []string{}
+	tb := ""
+	stmt, err := db.Prepare(s)
+	if err == nil {
+		rows, err := stmt.Query()
+		for rows.Next() {
+			if err = rows.Scan(&tb); err == nil {
+				list = append(list, tb)
+			}
+		}
+		stmt.Close()
+		tList := make([]*Table, len(list))
+		for i, v := range list {
+			if tList[i], err = m.Table(db, v); err != nil {
+				return nil, err
+			}
+		}
+		return tList, nil
+	}
+	return nil, err
+}
+
 // 获取表结构
-func (m *MySqlDialect) TableStruct(db *sql.DB, table string) (*Table, error) {
+func (m *MySqlDialect) Table(db *sql.DB, table string) (*Table, error) {
 	stmt, err := db.Prepare("SHOW CREATE TABLE " + table)
 	if err == nil {
 		row := stmt.QueryRow()

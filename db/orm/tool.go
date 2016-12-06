@@ -11,6 +11,7 @@ package orm
 import (
 	"bytes"
 	"database/sql"
+	"github.com/jsix/gof/util"
 	"log"
 	"strings"
 	"text/template"
@@ -58,8 +59,19 @@ func (t *toolSession) goType(dbType string) string {
 	return "interface{}"
 }
 
+// 获取所有的表
+func (t *toolSession) Tables(db string) ([]*Table, error) {
+	return t.dialect.Tables(t.conn, db)
+}
+
+// 获取表结构
 func (t *toolSession) Table(table string) (*Table, error) {
-	return t.dialect.TableStruct(t.conn, table)
+	return t.dialect.Table(t.conn, table)
+}
+
+// 保存到文件
+func (t *toolSession) SaveFile(s string, path string) error {
+	return util.BytesToFile([]byte(s), path)
 }
 
 // 表生成结构
@@ -169,18 +181,15 @@ func (ts *toolSession) TableToGoRep(tb *Table,
 		}
 	}
 	n := ts.title(tb.Name)
-	en := n
 	r2 := ""
 	if sign {
 		r2 = n
 	}
-	if ePrefix != "" {
-		en = ePrefix + en
-	}
 	mp := map[string]interface{}{
 		"R":  n + "Rep",
 		"R2": r2,
-		"E":  en,
+		"E":  n,
+		"E2": ePrefix + n,
 		"T":  strings.ToLower(tb.Name[:1]),
 		"PK": ts.title(pk),
 	}

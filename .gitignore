@@ -6,7 +6,7 @@
 # Folders
 _obj
 _test
-
+gen
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out

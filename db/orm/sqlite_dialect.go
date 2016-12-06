@@ -19,7 +19,12 @@ func (s *SqLiteDialect) Name() string {
 	return "SQLiteDialect"
 }
 
+// 获取所有的表
+func (s *SqLiteDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+	panic("not implement")
+}
+
 // 获取表结构
-func (m *SqLiteDialect) TableStruct(db *sql.DB, table string) (*Table, error) {
+func (s *SqLiteDialect) Table(db *sql.DB, table string) (*Table, error) {
 	panic("not implement")
 }

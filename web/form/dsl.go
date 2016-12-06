@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/jsix/gof/db/orm"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -73,7 +72,6 @@ func (e *Engine) Parse(dsl string) (*Form, error) {
 	fMcs := fieldRegex.FindAllString(p2Str, -1)
 	f.Fields = make([]*Field, len(fMcs))
 	for i, mc := range fMcs {
-		log.Println(mc + "\n")
 		fd := &Field{Attrs: make(map[string]string)}
 		mcs = attrRegex.FindAllStringSubmatch(mc, -1)
 		for _, v := range mcs {

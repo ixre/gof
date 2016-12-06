@@ -19,7 +19,12 @@ func (m *MsSqlDialect) Name() string {
 	return "MSSQLDialect"
 }
 
+// 获取所有的表
+func (m *MsSqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+	panic("not implement")
+}
+
 // 获取表结构
-func (m *MsSqlDialect) TableStruct(db *sql.DB, table string) (*Table, error) {
+func (m *MsSqlDialect) Table(db *sql.DB, table string) (*Table, error) {
 	panic("not implement")
 }
