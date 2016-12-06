@@ -13,20 +13,50 @@ import (
 	"database/sql"
 	"github.com/jsix/gof/util"
 	"log"
+	"regexp"
 	"strings"
 	"text/template"
+)
+
+var (
+	emptyReg = regexp.MustCompile("\\s+\"\\s*\"\\s*\\n")
+)
+
+const (
+	//模型包名
+	V_ModelPkgName = "ModelPkgName"
+	//仓储结构包名
+	V_RepPkgName = "RepPkgName"
+	//仓储接口包名
+	V_IRepPkgName = "IRepPkgName"
+	//仓储结构引用模型包路径
+	V_ModelPkg = "ModelPkg"
+	//仓储接口引用模型包路径
+	V_ModelPkgIRep = "ModelPkgIRep"
 )
 
 type toolSession struct {
 	conn    *sql.DB
 	dialect Dialect
+	//生成代码变量
+	codeVars map[string]interface{}
 }
 
 func NewTool(conn *sql.DB, dialect Dialect) *toolSession {
-	return &toolSession{
-		conn:    conn,
-		dialect: dialect,
-	}
+	return (&toolSession{
+		conn:     conn,
+		dialect:  dialect,
+		codeVars: make(map[string]interface{}),
+	}).init()
+}
+
+func (t *toolSession) init() *toolSession {
+	t.Var(V_ModelPkgName, "model")
+	t.Var(V_RepPkgName, "rep")
+	t.Var(V_IRepPkgName, "rep")
+	t.Var(V_ModelPkg, "")
+	t.Var(V_ModelPkgIRep, "")
+	return t
 }
 
 func (t *toolSession) title(str string) string {
@@ -79,9 +109,19 @@ func (t *toolSession) TableToGoStruct(tb *Table) string {
 	if tb == nil {
 		return ""
 	}
+	pkgName := ""
+	if p, ok := t.codeVars[V_ModelPkgName]; ok {
+		pkgName = p.(string)
+	} else {
+		pkgName = "model"
+	}
+
 	//log.Println(fmt.Sprintf("%#v", tb))
 	buf := bytes.NewBufferString("")
-	buf.WriteString("// ")
+	buf.WriteString("package ")
+	buf.WriteString(pkgName)
+
+	buf.WriteString("\n// ")
 	buf.WriteString(tb.Comment)
 	buf.WriteString("\ntype ")
 	buf.WriteString(t.title(tb.Name))
@@ -115,49 +155,23 @@ func (t *toolSession) TableToGoStruct(tb *Table) string {
 	return buf.String()
 }
 
-// 表结构生成表单
-func (t *toolSession) TableToHtmlForm(tb *Table) string {
-	if tb == nil {
-		return ""
-	}
-	//log.Println(fmt.Sprintf("%#v", tb))
-	buf := bytes.NewBufferString("")
-	buf.WriteString("// ")
-	buf.WriteString(tb.Comment)
-	buf.WriteString("\ntype ")
-	buf.WriteString(t.title(tb.Name))
-	buf.WriteString(" struct{\n")
-
-	for _, col := range tb.Columns {
-		if col.Comment != "" {
-			buf.WriteString("    // ")
-			buf.WriteString(col.Comment)
-			buf.WriteString("\n")
-		}
-		buf.WriteString("    ")
-		buf.WriteString(t.title(col.Name))
-		buf.WriteString(" ")
-		buf.WriteString(t.goType(col.Type))
-		buf.WriteString(" `")
-		buf.WriteString("db:\"")
-		buf.WriteString(col.Name)
-		buf.WriteString("\"")
-		if col.Pk {
-			buf.WriteString(" pk:\"yes\"")
-		}
-		if col.Auto {
-			buf.WriteString(" auto:\"yes\"")
-		}
-		buf.WriteString("`")
-		buf.WriteString("\n")
-	}
-
-	buf.WriteString("}")
-	return buf.String()
+// 解析模板
+func (ts *toolSession) Resolve(t CodeTemplate) CodeTemplate {
+	t = resolveRepTag(t)
+	return t
 }
 
-// 表生成仓储类,sign:函数后是否带签名，ePrefix:实体是否带前缀
-func (ts *toolSession) TableToGoRep(tb *Table,
+// 定义变量或修改变量
+func (ts *toolSession) Var(key string, v interface{}) {
+	if v == nil {
+		delete(ts.codeVars, key)
+		return
+	}
+	ts.codeVars[key] = v
+}
+
+// 生成代码
+func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 	sign bool, ePrefix string) string {
 	if tb == nil {
 		return ""
@@ -165,7 +179,7 @@ func (ts *toolSession) TableToGoRep(tb *Table,
 
 	var err error
 	t := &template.Template{}
-	t, err = t.Parse(string(TPL_ENTITY_REP))
+	t, err = t.Parse(string(tpl))
 	if err != nil {
 		panic(err)
 	}
@@ -186,18 +200,32 @@ func (ts *toolSession) TableToGoRep(tb *Table,
 		r2 = n
 	}
 	mp := map[string]interface{}{
-		"R":  n + "Rep",
-		"R2": r2,
-		"E":  n,
-		"E2": ePrefix + n,
-		"T":  strings.ToLower(tb.Name[:1]),
-		"PK": ts.title(pk),
+		"VAR": ts.codeVars,
+		"R":   n + "Rep",
+		"R2":  r2,
+		"E":   n,
+		"E2":  ePrefix + n,
+		"T":   strings.ToLower(tb.Name[:1]),
+		"PK":  ts.title(pk),
 	}
 	buf := bytes.NewBuffer(nil)
 	err = t.Execute(buf, mp)
 	if err == nil {
-		return buf.String()
+		//如果不包含模型，则可能为引用空的包
+		return emptyReg.ReplaceAllString(buf.String(), "")
 	}
 	log.Println("execute template error:", err.Error())
 	return ""
+}
+
+// 表生成仓储结构,sign:函数后是否带签名，ePrefix:实体是否带前缀
+func (ts *toolSession) TableToGoRep(tb *Table,
+	sign bool, ePrefix string) string {
+	return ts.generateCode(tb, TPL_ENTITY_REP, sign, ePrefix)
+}
+
+// 表生成仓库仓储接口
+func (ts *toolSession) TableToGoIRep(tb *Table,
+	sign bool, ePrefix string) string {
+	return ts.generateCode(tb, TPL_ENTITY_REP_INTERFACE, sign, ePrefix)
 }

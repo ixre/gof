@@ -17,23 +17,35 @@ var (
 
 // 生成数据库所有的代码文件
 func TestGenAll(t *testing.T) {
+	// 初始化工具
 	d := &orm.MySqlDialect{}
 	tool := orm.NewTool(getDb(), d)
+	// 设置变量
+	modelPkg := "github.com/jsix/gof/example/gen/model"
+	modelPkgName := "model"
+	tool.Var(orm.V_ModelPkgName, modelPkgName)
+	tool.Var(orm.V_ModelPkg, modelPkg)
+	tool.Var(orm.V_ModelPkgIRep, modelPkg)
+
+	// 获取所有表哥
 	tables, err := tool.Tables("")
 	if err == nil {
 		fe := &form.Engine{}
 		for _, tb := range tables {
-			str := tool.TableToGoStruct(tb)
-			modPkg := "model"
-			entityPath := genDir + modPkg + "/" + tb.Name + ".go"
+			entityPath := genDir + modelPkgName + "/" + tb.Name + ".go"
+			iRepPath := genDir + "rep/i_" + tb.Name + "_rep.go"
 			repPath := genDir + "rep/" + tb.Name + "_rep.go"
 			dslPath := genDir + "form/" + tb.Name + ".form"
 			htmPath := genDir + "html/" + tb.Name + ".html"
 			//生成实体
-			tool.SaveFile("package "+modPkg+"\n"+str, entityPath)
-			//生成仓储类
-			str = tool.TableToGoRep(tb, true, modPkg+".")
+			str := tool.TableToGoStruct(tb)
+			tool.SaveFile(str, entityPath)
+			//生成仓储结构
+			str = tool.TableToGoRep(tb, true, modelPkgName+".")
 			tool.SaveFile(str, repPath)
+			//生成仓储接口
+			str = tool.TableToGoIRep(tb, true, modelPkgName+".")
+			tool.SaveFile(str, iRepPath)
 			//生成表单DSL
 			f := fe.TableToForm(tb)
 			err = fe.SaveDSL(f, dslPath)
