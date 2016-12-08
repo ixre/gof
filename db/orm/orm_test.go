@@ -40,6 +40,6 @@ func TestToolSession_Table2Struct(t *testing.T) {
 	str := tool.TableToGoStruct(tb)
 	t.Log("//生成的结构代码为：\n" + str + "\n")
 
-	str = tool.TableToGoRep(tb, true, "model.")
+	str = tool.TableToGoRepo(tb, true, "model.")
 	t.Log("//生成的REP代码为：\n" + str + "\n")
 }

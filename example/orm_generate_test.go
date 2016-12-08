@@ -25,26 +25,26 @@ func TestGenAll(t *testing.T) {
 	modelPkgName := "model"
 	tool.Var(orm.V_ModelPkgName, modelPkgName)
 	tool.Var(orm.V_ModelPkg, modelPkg)
-	tool.Var(orm.V_ModelPkgIRep, modelPkg)
+	tool.Var(orm.V_ModelPkgIRepo, modelPkg)
 
-	// 获取所有表哥
+	// 获取所有表格
 	tables, err := tool.Tables("")
 	if err == nil {
 		fe := &form.Engine{}
 		for _, tb := range tables {
 			entityPath := genDir + modelPkgName + "/" + tb.Name + ".go"
-			iRepPath := genDir + "rep/i_" + tb.Name + "_rep.go"
-			repPath := genDir + "rep/" + tb.Name + "_rep.go"
+			iRepPath := genDir + "repo/i_" + tb.Name + "_repo.go"
+			repPath := genDir + "repo/" + tb.Name + "_repo.go"
 			dslPath := genDir + "form/" + tb.Name + ".form"
 			htmPath := genDir + "html/" + tb.Name + ".html"
 			//生成实体
 			str := tool.TableToGoStruct(tb)
 			tool.SaveFile(str, entityPath)
 			//生成仓储结构
-			str = tool.TableToGoRep(tb, true, modelPkgName+".")
+			str = tool.TableToGoRepo(tb, true, modelPkgName+".")
 			tool.SaveFile(str, repPath)
 			//生成仓储接口
-			str = tool.TableToGoIRep(tb, true, modelPkgName+".")
+			str = tool.TableToGoIRepo(tb, true, modelPkgName+".")
 			tool.SaveFile(str, iRepPath)
 			//生成表单DSL
 			f := fe.TableToForm(tb)

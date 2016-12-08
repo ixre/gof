@@ -27,13 +27,13 @@ const (
 	//模型包名
 	V_ModelPkgName = "ModelPkgName"
 	//仓储结构包名
-	V_RepPkgName = "RepPkgName"
+	V_RepoPkgName = "RepoPkgName"
 	//仓储接口包名
-	V_IRepPkgName = "IRepPkgName"
+	V_IRepoPkgName = "IRepoPkgName"
 	//仓储结构引用模型包路径
 	V_ModelPkg = "ModelPkg"
 	//仓储接口引用模型包路径
-	V_ModelPkgIRep = "ModelPkgIRep"
+	V_ModelPkgIRepo = "ModelPkgIRepo"
 )
 
 type toolSession struct {
@@ -53,10 +53,10 @@ func NewTool(conn *sql.DB, dialect Dialect) *toolSession {
 
 func (t *toolSession) init() *toolSession {
 	t.Var(V_ModelPkgName, "model")
-	t.Var(V_RepPkgName, "rep")
-	t.Var(V_IRepPkgName, "rep")
+	t.Var(V_RepoPkgName, "repo")
+	t.Var(V_IRepoPkgName, "repo")
 	t.Var(V_ModelPkg, "")
-	t.Var(V_ModelPkgIRep, "")
+	t.Var(V_ModelPkgIRepo, "")
 	return t
 }
 
@@ -239,13 +239,13 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 }
 
 // 表生成仓储结构,sign:函数后是否带签名，ePrefix:实体是否带前缀
-func (ts *toolSession) TableToGoRep(tb *Table,
+func (ts *toolSession) TableToGoRepo(tb *Table,
 	sign bool, ePrefix string) string {
 	return ts.generateCode(tb, TPL_ENTITY_REP, sign, ePrefix)
 }
 
 // 表生成仓库仓储接口
-func (ts *toolSession) TableToGoIRep(tb *Table,
+func (ts *toolSession) TableToGoIRepo(tb *Table,
 	sign bool, ePrefix string) string {
 	return ts.generateCode(tb, TPL_ENTITY_REP_INTERFACE, sign, ePrefix)
 }

@@ -8,10 +8,10 @@ var (
 	// 实体仓储接口模板
 	TPL_ENTITY_REP_INTERFACE = CodeTemplate(
 		`// auto generate by gof (http://github.com/jsix/gof)
-        package {{.VAR.IRepPkgName}}
+        package {{.VAR.IRepoPkgName}}
 
         import(
-            "{{.VAR.ModelPkgIRep}}"
+            "{{.VAR.ModelPkgIRepo}}"
         )
 
         type I<R> interface{
@@ -32,7 +32,7 @@ var (
 	// <T> : 仓库类对象引用
 	TPL_ENTITY_REP = CodeTemplate(
 		`// auto generate by gof (http://github.com/jsix/gof)
-            package {{.VAR.RepPkgName}}
+            package {{.VAR.RepoPkgName}}
             import(
                 "log"
                 "{{.VAR.ModelPkg}}"
