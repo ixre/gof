@@ -188,7 +188,7 @@ func (ts *toolSession) Var(key string, v interface{}) {
 
 // 生成代码
 func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
-	sign bool, ePrefix string) string {
+	structSuffix string, sign bool, ePrefix string) string {
 	if tb == nil {
 		return ""
 	}
@@ -217,7 +217,7 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 	}
 	mp := map[string]interface{}{
 		"VAR": ts.codeVars,
-		"R":   n + "Rep",
+		"R":   n + structSuffix,
 		"R2":  r2,
 		"E":   n,
 		"E2":  ePrefix + n,
@@ -241,11 +241,13 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 // 表生成仓储结构,sign:函数后是否带签名，ePrefix:实体是否带前缀
 func (ts *toolSession) TableToGoRepo(tb *Table,
 	sign bool, ePrefix string) string {
-	return ts.generateCode(tb, TPL_ENTITY_REP, sign, ePrefix)
+	return ts.generateCode(tb, TPL_ENTITY_REP,
+		"Repo", sign, ePrefix)
 }
 
 // 表生成仓库仓储接口
 func (ts *toolSession) TableToGoIRepo(tb *Table,
 	sign bool, ePrefix string) string {
-	return ts.generateCode(tb, TPL_ENTITY_REP_INTERFACE, sign, ePrefix)
+	return ts.generateCode(tb, TPL_ENTITY_REP_INTERFACE,
+		"Repo", sign, ePrefix)
 }
