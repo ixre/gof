@@ -19,7 +19,8 @@ import (
 )
 
 var (
-	emptyReg = regexp.MustCompile("\\s+\"\\s*\"\\s*\\n")
+	emptyReg       = regexp.MustCompile("\\s+\"\\s*\"\\s*\\n")
+	emptyImportReg = regexp.MustCompile("import\\s*\\(([\\n\\s\"]+)\\)")
 )
 
 const (
@@ -92,6 +93,21 @@ func (t *toolSession) goType(dbType string) string {
 // 获取所有的表
 func (t *toolSession) Tables(db string) ([]*Table, error) {
 	return t.dialect.Tables(t.conn, db)
+}
+
+// 获取所有的表
+func (t *toolSession) TablesByPrefix(db string, prefix string) ([]*Table, error) {
+	list, err := t.dialect.Tables(t.conn, db)
+	if err == nil {
+		l := []*Table{}
+		for _, v := range list {
+			if strings.HasPrefix(v.Name, prefix) {
+				l = append(l, v)
+			}
+		}
+		return l, nil
+	}
+	return nil, err
 }
 
 // 获取表结构
@@ -211,8 +227,12 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 	buf := bytes.NewBuffer(nil)
 	err = t.Execute(buf, mp)
 	if err == nil {
+		code := buf.String()
+		//去除空引用
+		code = emptyImportReg.ReplaceAllString(code, "")
 		//如果不包含模型，则可能为引用空的包
-		return emptyReg.ReplaceAllString(buf.String(), "")
+		code = emptyReg.ReplaceAllString(code, "")
+		return code
 	}
 	log.Println("execute template error:", err.Error())
 	return ""
