@@ -57,7 +57,7 @@ type (
 		// 表名
 		Name string
 		// 表名首字大写
-		TName   string
+		Title   string
 		Pk      bool
 		Auto    bool
 		NotNull bool
@@ -152,7 +152,7 @@ func (t *toolSession) ParseTable(tb *orm.Table) *Table {
 	for i, v := range tb.Columns {
 		n.Columns[i] = &Column{
 			Name:    v.Name,
-			TName:   t.title(v.Name),
+			Title:   t.title(v.Name),
 			Pk:      v.Pk,
 			Auto:    v.Auto,
 			NotNull: v.NotNull,

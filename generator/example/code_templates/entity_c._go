@@ -1,0 +1,69 @@
+package c
+
+import (
+    "github.com/jsix/goex/echox"
+    "github.com/jsix/gof"
+    "strconv"
+    "github.com/jsix/gof/web/form"
+)
+
+type {{.T.Title}}C struct{
+}
+
+/** {{.T.Comment }} - {{.T.Title}} **/
+
+// {{.T.Comment}}列表
+func ({{.Ptr}} *{{.T.Title}}C) {{.T.Title}}List(c *echox.Context) error {
+    d := c.NewData()
+    return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_list.html", d)
+}
+
+// 创建{{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Create{{.T.Title}}(c *echox.Context) error {
+    e := &model.{{.T.Title}}{
+        Enabled: 1,
+        Opened:  1,
+    }
+    d := c.NewData()
+    d.Map["Entity"] = format.MustHtmlJson(e)
+    return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_edit.html", d)
+}
+
+// 修改{{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Edit{{.T.Title}}(c *echox.Context) error {
+    id, err := util.I32Err(strconv.Atoi(c.QueryParam("id")))
+    if err == nil {
+        return nil
+    }
+    e := Get{{.T.Title}}ById(id)
+    d := c.NewData()
+    d.Map["Entity"] = format.MustHtmlJson(e)
+    return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_edit.html", d)
+}
+
+// 保存{{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}(c *echox.Context) error {
+    if !c.IsPost(){
+        return nil
+    }
+    result := gof.Message{}
+    e := model.{{.T.Title}}{}
+    form.ParseEntity(c.Request().Form, &e)
+    id, err := SaveAd{{.T.Title}}(&e)
+    result.Data = id
+    return c.JSON(http.StatusOK, result.Error(err))
+}
+
+// 删除{{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Del{{.T.Title}}(c *echox.Context) error {
+    if !c.IsPost(){
+        return nil
+    }
+    result := gof.Message{}
+    id, err := util.I32Err(strconv.Atoi(c.FormValue("id")))
+    if err == nil {
+        err = Del{{.T.Title}}ById(id)
+    }
+    return c.JSON(http.StatusOK, result.Error(err))
+}
+
