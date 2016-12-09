@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"database/sql"
 	"github.com/jsix/gof/util"
+	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
@@ -186,8 +187,17 @@ func (ts *toolSession) Var(key string, v interface{}) {
 	ts.codeVars[key] = v
 }
 
+// 转换成为模板
+func (ts *toolSession) ParseTemplate(file string) (CodeTemplate, error) {
+	data, err := ioutil.ReadFile(file)
+	if err == nil {
+		return CodeTemplate(string(data)), nil
+	}
+	return CodeTemplate(""), err
+}
+
 // 生成代码
-func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
+func (ts *toolSession) GenerateCode(tb *Table, tpl CodeTemplate,
 	structSuffix string, sign bool, ePrefix string) string {
 	if tb == nil {
 		return ""
@@ -216,13 +226,15 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 		r2 = n
 	}
 	mp := map[string]interface{}{
-		"VAR": ts.codeVars,
-		"R":   n + structSuffix,
-		"R2":  r2,
-		"E":   n,
-		"E2":  ePrefix + n,
-		"T":   strings.ToLower(tb.Name[:1]),
-		"PK":  ts.title(pk),
+		"VAR":   ts.codeVars,
+		"T":     tb,
+		"Table": tb,
+		"R":     n + structSuffix,
+		"R2":    r2,
+		"E":     n,
+		"E2":    ePrefix + n,
+		"Ptr":   strings.ToLower(tb.Name[:1]),
+		"PK":    ts.title(pk),
 	}
 	buf := bytes.NewBuffer(nil)
 	err = t.Execute(buf, mp)
@@ -241,13 +253,13 @@ func (ts *toolSession) generateCode(tb *Table, tpl CodeTemplate,
 // 表生成仓储结构,sign:函数后是否带签名，ePrefix:实体是否带前缀
 func (ts *toolSession) TableToGoRepo(tb *Table,
 	sign bool, ePrefix string) string {
-	return ts.generateCode(tb, TPL_ENTITY_REP,
+	return ts.GenerateCode(tb, TPL_ENTITY_REP,
 		"Repo", sign, ePrefix)
 }
 
 // 表生成仓库仓储接口
 func (ts *toolSession) TableToGoIRepo(tb *Table,
 	sign bool, ePrefix string) string {
-	return ts.generateCode(tb, TPL_ENTITY_REP_INTERFACE,
+	return ts.GenerateCode(tb, TPL_ENTITY_REP_INTERFACE,
 		"Repo", sign, ePrefix)
 }

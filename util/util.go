@@ -15,10 +15,15 @@ import (
 	"golang.org/x/text/encoding/traditionalchinese"
 	"math"
 	mr "math/rand"
+	"regexp"
 	"time"
 )
 
 const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+var (
+	revertRegexp = regexp.MustCompile("\\$\\{([^\\}]+)\\}")
+)
 
 //随机字符号串
 func RandString(n int) string {
@@ -59,4 +64,9 @@ func EncodingTransform(src []byte, enc string) ([]byte, error) {
 	dst := make([]byte, len(src)*2)
 	n, _, err := ec.NewEncoder().Transform(dst, src, true)
 	return dst[:n], err
+}
+
+// 还原模板的标签: ${...} -> {{...}}
+func RevertTPVariable(str string) string {
+	return revertRegexp.ReplaceAllString(str, "{{$1}}")
 }
