@@ -6,17 +6,17 @@
  * description :
  * history :
  */
-package orm
+package generator
 
 import (
 	"bytes"
-	"database/sql"
-	"github.com/jsix/gof/util"
+	"github.com/jsix/gof/db/orm"
 	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
 	"text/template"
+	"unicode"
 )
 
 var (
@@ -37,17 +37,42 @@ const (
 	V_ModelPkgIRepo = "ModelPkgIRepo"
 )
 
+type (
+	// 表
+	Table struct {
+		// 表名
+		Name string
+		// 表前缀
+		Prefix string
+		// 表名首字大写
+		Title   string
+		Comment string
+		Engine  string
+		Charset string
+		Raw     *orm.Table
+		Columns []*Column
+	}
+	// 列
+	Column struct {
+		// 表名
+		Name string
+		// 表名首字大写
+		TName   string
+		Pk      bool
+		Auto    bool
+		NotNull bool
+		Type    string
+		Comment string
+	}
+)
 type toolSession struct {
-	conn    *sql.DB
-	dialect Dialect
 	//生成代码变量
 	codeVars map[string]interface{}
 }
 
-func NewTool(conn *sql.DB, dialect Dialect) *toolSession {
+// 数据库代码生成器
+func DBCodeGenerator() *toolSession {
 	return (&toolSession{
-		conn:     conn,
-		dialect:  dialect,
 		codeVars: make(map[string]interface{}),
 	}).init()
 }
@@ -67,6 +92,18 @@ func (t *toolSession) title(str string) string {
 		arr[i] = strings.Title(v)
 	}
 	return strings.Join(arr, "")
+}
+
+func (t *toolSession) prefix(str string) string {
+	if i := strings.Index(str, "_"); i != -1 {
+		return str[:i+1]
+	}
+	for i, l := 1, len(str); i < l-1; i++ {
+		if unicode.IsUpper(rune(str[i])) {
+			return strings.ToLower(str[:i])
+		}
+	}
+	return ""
 }
 
 func (t *toolSession) goType(dbType string) string {
@@ -92,33 +129,38 @@ func (t *toolSession) goType(dbType string) string {
 }
 
 // 获取所有的表
-func (t *toolSession) Tables(db string) ([]*Table, error) {
-	return t.dialect.Tables(t.conn, db)
-}
-
-// 获取所有的表
-func (t *toolSession) TablesByPrefix(db string, prefix string) ([]*Table, error) {
-	list, err := t.dialect.Tables(t.conn, db)
-	if err == nil {
-		l := []*Table{}
-		for _, v := range list {
-			if strings.HasPrefix(v.Name, prefix) {
-				l = append(l, v)
-			}
-		}
-		return l, nil
+func (t *toolSession) ParseTables(tbs []*orm.Table, err error) ([]*Table, error) {
+	n := make([]*Table, len(tbs))
+	for i, tb := range tbs {
+		n[i] = t.ParseTable(tb)
 	}
-	return nil, err
+	return n, err
 }
 
 // 获取表结构
-func (t *toolSession) Table(table string) (*Table, error) {
-	return t.dialect.Table(t.conn, table)
-}
-
-// 保存到文件
-func (t *toolSession) SaveFile(s string, path string) error {
-	return util.BytesToFile([]byte(s), path)
+func (t *toolSession) ParseTable(tb *orm.Table) *Table {
+	n := &Table{
+		Name:    tb.Name,
+		Prefix:  t.prefix(tb.Name),
+		Title:   t.title(tb.Name),
+		Comment: tb.Comment,
+		Engine:  tb.Engine,
+		Charset: tb.Charset,
+		Raw:     tb,
+		Columns: make([]*Column, len(tb.Columns)),
+	}
+	for i, v := range tb.Columns {
+		n.Columns[i] = &Column{
+			Name:    v.Name,
+			TName:   t.title(v.Name),
+			Pk:      v.Pk,
+			Auto:    v.Auto,
+			NotNull: v.NotNull,
+			Type:    v.Type,
+			Comment: v.Comment,
+		}
+	}
+	return n
 }
 
 // 表生成结构
@@ -226,15 +268,14 @@ func (ts *toolSession) GenerateCode(tb *Table, tpl CodeTemplate,
 		r2 = n
 	}
 	mp := map[string]interface{}{
-		"VAR":   ts.codeVars,
-		"T":     tb,
-		"Table": tb,
-		"R":     n + structSuffix,
-		"R2":    r2,
-		"E":     n,
-		"E2":    ePrefix + n,
-		"Ptr":   strings.ToLower(tb.Name[:1]),
-		"PK":    ts.title(pk),
+		"VAR": ts.codeVars,
+		"T":   tb,
+		"R":   n + structSuffix,
+		"R2":  r2,
+		"E":   n,
+		"E2":  ePrefix + n,
+		"Ptr": strings.ToLower(tb.Name[:1]),
+		"PK":  ts.title(pk),
 	}
 	buf := bytes.NewBuffer(nil)
 	err = t.Execute(buf, mp)

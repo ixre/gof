@@ -1,4 +1,4 @@
-package orm
+package generator
 
 import "strings"
 
@@ -94,7 +94,7 @@ var (
                 return err
             }
 
-			// Batch Delete <E>
+            // Batch Delete <E>
             func (<Ptr> *<R>) BatchDelete<R2>(where string,v ...interface{})(int64,error) {
                 r,err := <Ptr>._orm.Delete(<E2>{},where,v...)
                 if err != nil && err != sql.ErrNoRows{

@@ -29,12 +29,13 @@ func TestGenAll(t *testing.T) {
 		return
 	}
 	// 设置变量
-	modelPkg := "github.com/jsix/gof/example/gen/model"
+	modelPkg := "github.com/jsix/gof/generator/test/gen/model"
 	modelPkgName := "model"
 	dg.Var(generator.V_ModelPkgName, modelPkgName)
 	dg.Var(generator.V_ModelPkg, modelPkg)
 	dg.Var(generator.V_ModelPkgIRepo, modelPkg)
-
+	// 读取自定义模板
+	listTP, _ := dg.ParseTemplate("code_templates/grid_list.html")
 	// 初始化表单引擎
 	fe := &form.Engine{}
 	for _, tb := range tables {
@@ -59,6 +60,11 @@ func TestGenAll(t *testing.T) {
 		if err == nil {
 			_, err = fe.SaveHtmlForm(f, form.TDefaultFormHtml, htmPath)
 		}
+		//生成列表文件
+		str = dg.GenerateCode(tb, listTP, "", true, "")
+		str = generator.RevertTPVariable(str)
+		err = generator.SaveFile(str, genDir+"html_list/"+tb.Name+"_list.html")
+
 	}
 	//格式化代码
 	shell.Run("gofmt -w gen/")

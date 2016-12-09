@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<head>
+    <title>{{.T.Comment}}列表</title>
+    ${.Var.Header}
+</head>
+<body>
+
+    <div id="dg"></div>
+    <div class="toolBar">
+        <div class="search_bar padding2" id="search_bar">
+            <ul>
+                <li>
+                    <a class="easyui-linkbutton" iconcls="icon-add" id="btnAdd">
+                        <span class="icon"></span>创建{{.T.Comment}}</a>
+                </li>
+
+                <li>
+                    <span class="title">关键字：</span>
+                    <input type="text" field="keyword" />
+                </li>
+
+                <li>
+                    <a class="easyui-linkbutton" data-options="iconCls:'icon-search'" id="btnSearch">
+                        <span class="icon"></span>搜索</a>
+                </li>
+
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+<script type="text/template" id="tpl_op">
+    <a href="javascript:;" class="btn btn-short" onclick="editRec('{id}')">编辑</a>
+    <a href="javascript:;" class="btn btn-short" onclick="showList('{id}')">广告位</a>
+    <a href="javascript:;" class="btn btn-short" onclick="delRec('{id}')">删除</a>
+</script>
+
+<script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?spam=${.Var.Spam}"></script>
+<script type="text/javascript">
+
+    var $B = {}; //Base对象,包含了页面常用的方法
+    var baseJsUrl = '${.Var.StaticServe}'; //设置JS文件的路径
+    require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function (){
+        require(['base','jquery.easyui.zh', 'jr/export'], pageLoad);
+    });
+
+    function pageLoad(b) {
+        $B = b;
+        expr.portal = 'master/{{.T.Prefix}}/{{.T.Title}}List';
+        var opHtml = $B.html('tpl_op');
+        $('#dg').datagrid({
+            toolbar: '.toolBar',
+            singleSelect: !false,
+            pagination: true,
+            rowNumbers: true,
+            fitColumns: true,
+            url: expr.getDataUrl(),
+            columns: [
+                [
+
+        {{range $i,$c := .T.Columns}}
+                {field: '{{$c.Name}}', title: '{{$c.Comment}}', align: 'center', width: 100},
+        {{end}}
+
+
+                ]
+            ]
+        });
+        $B.$('btnSearch').onclick = function () {expr.search('dg');};
+        $B.$('btnAdd').onclick=  function () {
+            $B.tab.open('创建广告组', '/ad/CreateGroup', true);
+        };
+    }
+
+
+    function editRec(id){
+        $B.tab.open('编辑广告组', '/ad/EditGroup?id='+id, true);
+    }
+
+    function showList(id){
+        $B.tab.open('广告位', '/ad/PositionList?group_id='+id, true);
+    }
+
+    function delRec(id) {
+        $B.confirm('删除后不可恢复，您确定要继续吗？', function(result) {
+            if (result) {
+                $B.xhr.jsonPost('/ad/DelGroup', { id: id }, function(json) {
+                    if (json.result) {
+                        window.refresh()
+                    }else{
+                        $B.dialog.alert(json.message);
+                    }
+                });
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

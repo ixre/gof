@@ -32,7 +32,7 @@ func getDb() *sql.DB {
 
 func TestToolSession_Table2Struct(t *testing.T) {
 	d := &MySqlDialect{}
-	tool := NewTool(getDb(), d)
+	tool := DialectSession(getDb(), d)
 	tb, err := tool.Table("user")
 	if err != nil {
 		t.Error(err)
