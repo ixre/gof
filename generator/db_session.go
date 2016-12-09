@@ -96,7 +96,7 @@ func (t *toolSession) title(str string) string {
 
 func (t *toolSession) prefix(str string) string {
 	if i := strings.Index(str, "_"); i != -1 {
-		return str[:i+1]
+		return str[:i]
 	}
 	for i, l := 1, len(str); i < l-1; i++ {
 		if unicode.IsUpper(rune(str[i])) {

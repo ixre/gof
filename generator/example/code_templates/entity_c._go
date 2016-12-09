@@ -4,7 +4,10 @@ import (
     "github.com/jsix/goex/echox"
     "github.com/jsix/gof"
     "strconv"
+    "errors"
+    "net/http"
     "github.com/jsix/gof/web/form"
+    "github.com/jsix/gof/util"
 )
 
 type {{.T.Title}}C struct{
@@ -25,45 +28,65 @@ func ({{.Ptr}} *{{.T.Title}}C) Create{{.T.Title}}(c *echox.Context) error {
         Opened:  1,
     }
     d := c.NewData()
-    d.Map["Entity"] = format.MustHtmlJson(e)
+    d.Map["Entity"] = util.MustHtmlJson(e)
     return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_edit.html", d)
 }
 
 // 修改{{.T.Comment}}
 func ({{.Ptr}} *{{.T.Title}}C) Edit{{.T.Title}}(c *echox.Context) error {
     id, err := util.I32Err(strconv.Atoi(c.QueryParam("id")))
-    if err == nil {
+    if err != nil {
         return nil
     }
-    e := Get{{.T.Title}}ById(id)
+    e := {{.Ptr}}.Get{{.T.Title}}_(id)
     d := c.NewData()
-    d.Map["Entity"] = format.MustHtmlJson(e)
+    d.Map["Entity"] = util.MustHtmlJson(e)
     return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_edit.html", d)
 }
 
 // 保存{{.T.Comment}}
-func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}(c *echox.Context) error {
+func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}(c *echox.Context)(err error){
     if !c.IsPost(){
         return nil
     }
-    result := gof.Message{}
+    rst := gof.Message{}
     e := model.{{.T.Title}}{}
     form.ParseEntity(c.Request().Form, &e)
-    id, err := SaveAd{{.T.Title}}(&e)
-    result.Data = id
-    return c.JSON(http.StatusOK, result.Error(err))
+    if r, _ := {{.Ptr}}.Save{{.T.Title}}_(&e);r.Result_{
+       rst.Data = r.ID;
+    }else{
+       err = errors.New(r.Message)
+    }
+    return c.JSON(http.StatusOK, rst.Error(err))
 }
 
 // 删除{{.T.Comment}}
-func ({{.Ptr}} *{{.T.Title}}C) Del{{.T.Title}}(c *echox.Context) error {
+func ({{.Ptr}} *{{.T.Title}}C) Del{{.T.Title}}(c *echox.Context)(err error) {
     if !c.IsPost(){
-        return nil
+       return nil
     }
-    result := gof.Message{}
+    rst := gof.Message{}
     id, err := util.I32Err(strconv.Atoi(c.FormValue("id")))
-    if err == nil {
-        err = Del{{.T.Title}}ById(id)
+    if err == nil{
+        if r,_ := {{.Ptr}}.Delete{{.T.Title}}_(id);!r.Result_{
+            err = errors.New(r.Message)
+        }
     }
-    return c.JSON(http.StatusOK, result.Error(err))
+    return c.JSON(http.StatusOK, rst.Error(err))
 }
 
+
+// Get {{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Get{{.T.Title}}_(id int32)(*model.{{.T.Title}}){
+   return nil
+}
+
+// Save {{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}_(v *model.{{.T.Title}})(*define.Result_, error){
+   return nil,nil
+}
+
+// Delete {{.T.Comment}}
+func ({{.Ptr}} *{{.T.Title}}C) Delete{{.T.Title}}_(id int32)(*define.Result_, error){
+   return nil,nil
+}

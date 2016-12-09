@@ -16,6 +16,9 @@ import (
 	"math"
 	mr "math/rand"
 	"time"
+	"encoding/json"
+	"html/template"
+	"log"
 )
 
 const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -59,4 +62,13 @@ func EncodingTransform(src []byte, enc string) ([]byte, error) {
 	dst := make([]byte, len(src)*2)
 	n, _, err := ec.NewEncoder().Transform(dst, src, true)
 	return dst[:n], err
+}
+
+// 强制序列化为可用于HTML的JSON
+func MustHtmlJson(v interface{}) template.JS {
+	d, err := json.Marshal(v)
+	if err != nil {
+		log.Println("[ Json][ Mashal]: ", err.Error())
+	}
+	return template.JS(d)
 }
