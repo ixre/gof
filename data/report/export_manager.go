@@ -48,7 +48,8 @@ func (portal *ExportItem) GetSchemaAndData(ht map[string]string) (rows []map[str
 	if portal.sqlConfig == nil {
 		dir, _ := os.Getwd()
 		portal.sqlConfig, err = LoadExportConfigFromXml(
-			strings.Join([]string{dir, "/conf/query/", portal.PortalKey, ".xml"}, ""))
+			strings.Join([]string{dir, portal.ItemManager.RootPath,
+				portal.PortalKey, ".xml"}, ""))
 		if err != nil {
 			portal.sqlConfig = nil
 			return nil, 0, err
@@ -173,9 +174,8 @@ func (manager *ExportItemManager) GetExportItem(portalKey string) IDataExportPor
 		return &item
 	} else {
 		dir, _ := os.Getwd()
-		filePath := strings.Join(
-			[]string{dir, manager.RootPath, portalKey, manager.CfgFileExt},
-			"")
+		filePath := strings.Join([]string{dir, manager.RootPath,
+			portalKey, manager.CfgFileExt}, "")
 		if f, err := os.Stat(filePath); err == nil && f.IsDir() == false {
 			item := &ExportItem{
 				PortalKey:   portalKey,

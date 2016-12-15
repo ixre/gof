@@ -415,7 +415,7 @@ func (o *simpleOrm) Delete(entity interface{}, where string,
 	)
 
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%#v", sql, args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, args))
 	}
 
 	/* query */
@@ -452,7 +452,7 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	)
 
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s", sql, primary))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primary))
 	}
 
 	/* query */

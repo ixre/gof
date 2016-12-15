@@ -10,11 +10,12 @@ package session
 
 import (
 	"encoding/gob"
-	"fmt"
+	"github.com/jsix/gof/crypto"
 	"github.com/jsix/gof/storage"
 	"github.com/jsix/gof/util"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -46,7 +47,7 @@ func getSession(w http.ResponseWriter, s storage.Interface,
 		_maxAge:    defaultSessionMaxAge,
 		_keyName:   cookieName,
 	}
-	ns._storage.Get(GetStorageKey(ns._sessionId),
+	ns._storage.Get(getStorageKey(ns._sessionId),
 		&ns._data)
 	return ns
 }
@@ -105,13 +106,13 @@ func (s *Session) Remove(key string) bool {
 // 使用指定的会话代替当前会话
 func (s *Session) UseInstead(sessionId string) {
 	s._sessionId = sessionId
-	s._storage.Get(GetStorageKey(s._sessionId), &s._data)
+	s._storage.Get(getStorageKey(s._sessionId), &s._data)
 	s.flushToClient()
 }
 
 // 销毁会话
 func (s *Session) Destroy() {
-	s._storage.Del(GetStorageKey(s._sessionId))
+	s._storage.Del(getStorageKey(s._sessionId))
 	s.setMaxAge(-1e9)
 	s.flushToClient()
 }
@@ -121,7 +122,7 @@ func (s *Session) Save() error {
 	if s._data == nil {
 		return nil
 	}
-	err := s._storage.SetExpire(GetStorageKey(s._sessionId),
+	err := s._storage.SetExpire(getStorageKey(s._sessionId),
 		&s._data, s._maxAge)
 	if err == nil {
 		s.flushToClient()
@@ -159,22 +160,20 @@ func init() {
 }
 
 // 获取Session存储的键
-func GetStorageKey(sessionId string) string {
+func getStorageKey(sessionId string) string {
 	return "gof:ss:" + sessionId
 }
 
 func newSessionId(s storage.Interface) string {
-	var rdStr string
+	var key string
 	for {
-		dt := time.Now()
-		randStr := util.RandString(6)
-		rdStr = fmt.Sprintf("%s%d", randStr, dt.Second())
-		if !s.Exists(GetStorageKey(rdStr)) {
-			//check session id exists
+		key = strconv.Itoa(int(time.Now().Unix())) + util.RandString(8)
+		key = crypto.Md5([]byte(key))[8:24]
+		if !s.Exists(getStorageKey(key)) {
 			break
 		}
 	}
-	return rdStr
+	return key
 }
 
 // Set global session storage and name

@@ -29,7 +29,7 @@ func TestGenAll(t *testing.T) {
 		return
 	}
 	// 设置变量
-	modelPkg := "github.com/jsix/gof/generator/test/gen/model"
+	modelPkg := "github.com/jsix/gof/generator/example/" + genDir + "model"
 	modelPkgName := "model"
 	dg.Var(generator.V_ModelPkgName, modelPkgName)
 	dg.Var(generator.V_ModelPkg, modelPkg)
@@ -76,7 +76,7 @@ func TestGenAll(t *testing.T) {
 		generator.SaveFile(str, genDir+"c/"+tb.Name+"_c.go")
 	}
 	//格式化代码
-	shell.Run("gofmt -w gen/")
+	shell.Run("gofmt -w " + genDir)
 	t.Log("生成成功")
 }
 

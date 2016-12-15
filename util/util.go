@@ -10,15 +10,15 @@ package util
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/encoding/traditionalchinese"
+	"html/template"
+	"log"
 	"math"
 	mr "math/rand"
 	"time"
-	"encoding/json"
-	"html/template"
-	"log"
 )
 
 const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

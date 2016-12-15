@@ -10,11 +10,11 @@
     {{range $i,$c := .T.Columns}}{{if $c.Pk}}
     <input type="hidden" field="{{$c.Title}}" name="{{$c.Title}}" value="0"/>{{else}}
     <div class="form-row">{{if $c.NotNull}}
-        <label><span class="red">*&nbsp;</span>：{{$c.Comment}}</label>
+        <label><span class="red">*&nbsp;</span>{{$c.Comment}}：</label>
         <div class="t">
             <input type="text" field="{{$c.Title}}" name="{{$c.Title}}" class="ui-validate" required="true"/>
         </div>{{else}}
-        <label>{{$c.Comment}}</label>
+        <label>{{$c.Comment}}：</label>
         <div class="t">
             <input type="text" field="{{$c.Title}}" name="{{$c.Title}}" class="ui-validate"/>
         </div>{{end}}
@@ -26,10 +26,10 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <div class="t">
-            <div class="button btn btb-primary" id="btn_submit">
+            <div class="button btn btn-primary inline" id="btn_submit">
                 提交
             </div>
-            <div class="button btn" id="btn_reset" onclick="document.forms[0].reset()">
+            <div class="button btn btn-reset inline" id="btn_reset" onclick="document.forms[0].reset()">
                 重置
             </div>
         </div>
@@ -37,9 +37,9 @@
 
 </form>
 
-<script type="text/javascript" src="{{.Var.StaticServe}}/assets/js/base.js?spam=${.Var.Spam}"></script>
+<script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?spam=${.Var.Spam}"></script>
 <script type="text/javascript">
-    var entity = {{.Map.Entity}} || {};
+    var entity = ${.Map.Entity} || {};
     var formId = 'form1';
     var baseJsUrl = '${.Var.StaticServe}';
     require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function () {

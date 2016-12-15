@@ -6,6 +6,7 @@ import (
     "strconv"
     "errors"
     "net/http"
+    "{{.VAR.ModelPkg}}"
     "github.com/jsix/gof/web/form"
     "github.com/jsix/gof/util"
 )
@@ -23,10 +24,7 @@ func ({{.Ptr}} *{{.T.Title}}C) {{.T.Title}}List(c *echox.Context) error {
 
 // 创建{{.T.Comment}}
 func ({{.Ptr}} *{{.T.Title}}C) Create{{.T.Title}}(c *echox.Context) error {
-    e := &model.{{.T.Title}}{
-        Enabled: 1,
-        Opened:  1,
-    }
+    e := &model.{{.T.Title}}{}
     d := c.NewData()
     d.Map["Entity"] = util.MustHtmlJson(e)
     return c.RenderOK("{{.T.Prefix}}/{{.T.Name}}_edit.html", d)
@@ -50,8 +48,10 @@ func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}(c *echox.Context)(err error){
         return nil
     }
     rst := gof.Message{}
+    req := c.Request()
+    req.ParseForm()
     e := model.{{.T.Title}}{}
-    form.ParseEntity(c.Request().Form, &e)
+    form.ParseEntity(req.Form, &e)
     if r, _ := {{.Ptr}}.Save{{.T.Title}}_(&e);r.Result_{
        rst.Data = r.ID;
     }else{
@@ -76,17 +76,17 @@ func ({{.Ptr}} *{{.T.Title}}C) Del{{.T.Title}}(c *echox.Context)(err error) {
 }
 
 
-// Get {{.T.Comment}}
+// 获取{{.T.Comment}}
 func ({{.Ptr}} *{{.T.Title}}C) Get{{.T.Title}}_(id int32)(*model.{{.T.Title}}){
    return nil
 }
 
-// Save {{.T.Comment}}
+// 保存{{.T.Comment}}
 func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}_(v *model.{{.T.Title}})(*define.Result_, error){
-   return nil,nil
+   return &define.Result_{Result_:true},nil
 }
 
-// Delete {{.T.Comment}}
+// 删除{{.T.Comment}}
 func ({{.Ptr}} *{{.T.Title}}C) Delete{{.T.Title}}_(id int32)(*define.Result_, error){
-   return nil,nil
+   return &define.Result_{Result_:true},nil
 }
