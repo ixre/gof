@@ -272,7 +272,10 @@ func (r *redisStorage) Set(key string, v interface{}) error {
 }
 
 func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
-	return r.set(key, v, seconds)
+	if seconds > 0 {
+		return r.set(key, v, seconds)
+	}
+	return nil
 }
 
 // return a redis connections

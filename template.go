@@ -28,9 +28,10 @@ var (
 	T_SHOW_LOG     = false
 )
 
-type CachedTemplate struct {
+type CacheTemplate struct {
 	_basePath      string
 	_shareFiles    []string
+	_funcMap       template.FuncMap
 	_fsNotify      bool
 	_set           map[string]*template.Template
 	_mux           *sync.RWMutex
@@ -38,8 +39,8 @@ type CachedTemplate struct {
 }
 
 // when notify is false , will not compile on file change!
-func NewCachedTemplate(basePath string, notify bool, files ...string) *CachedTemplate {
-	g := &CachedTemplate{
+func NewCacheTemplate(basePath string, notify bool, files ...string) *CacheTemplate {
+	g := &CacheTemplate{
 		_basePath:   basePath,
 		_fsNotify:   notify,
 		_set:        make(map[string]*template.Template, 0),
@@ -49,7 +50,7 @@ func NewCachedTemplate(basePath string, notify bool, files ...string) *CachedTem
 	return g.init()
 }
 
-func (c *CachedTemplate) init() *CachedTemplate {
+func (c *CacheTemplate) init() *CacheTemplate {
 	for i, v := range c._shareFiles {
 		if !strings.HasPrefix(v, c._basePath) {
 			c._shareFiles[i] = c._basePath + v
@@ -61,7 +62,7 @@ func (c *CachedTemplate) init() *CachedTemplate {
 	return c
 }
 
-func (c *CachedTemplate) println(err bool, v ...interface{}) {
+func (c *CacheTemplate) println(err bool, v ...interface{}) {
 	if err || T_SHOW_LOG {
 		v = append([]interface{}{"[ Gof][ Template]"}, v...)
 		log.Println(v...)
@@ -69,7 +70,7 @@ func (c *CachedTemplate) println(err bool, v ...interface{}) {
 }
 
 // calling on file changed
-func (c *CachedTemplate) fileChanged(event *fsnotify.Event) {
+func (c *CacheTemplate) fileChanged(event *fsnotify.Event) {
 	eventStr := event.String()
 	if runtime.GOOS == "windows" {
 		if c._winPathRegexp == nil {
@@ -93,7 +94,7 @@ func (c *CachedTemplate) fileChanged(event *fsnotify.Event) {
 	}
 }
 
-func (c *CachedTemplate) handleChange(file string) (err error) {
+func (c *CacheTemplate) handleChange(file string) (err error) {
 	fullName := c._basePath + file
 	for _, v := range c._shareFiles {
 		if v == fullName {
@@ -110,11 +111,11 @@ func (c *CachedTemplate) handleChange(file string) (err error) {
 }
 
 // file system notify
-func (c *CachedTemplate) fsNotify() {
+func (c *CacheTemplate) fsNotify() {
 	w, err := fsnotify.NewWatcher()
 	if err == nil {
 		// watch event
-		go func(g *CachedTemplate) {
+		go func(g *CacheTemplate) {
 			for {
 				select {
 				case event := <-w.Events:
@@ -148,19 +149,25 @@ func (c *CachedTemplate) fsNotify() {
 	<-make(chan bool)
 }
 
-func (c *CachedTemplate) parseTemplate(name string) (
+func (c *CacheTemplate) parseTemplate(name string) (
 	*template.Template, error) {
 	//主要的模板文件,需要第一个位置
 	files := append([]string{c._basePath + name}, c._shareFiles...)
-	return template.ParseFiles(files...)
+	t := template.New(name)
+	// 设置模板函数
+	if c._funcMap != nil {
+		t = t.Funcs(c._funcMap)
+	}
+	return t.ParseFiles(files...)
 }
 
-func (c *CachedTemplate) compileTemplate(name string) (
+func (c *CacheTemplate) compileTemplate(name string) (
 	*template.Template, error) {
 	c._mux.Lock()
 	defer c._mux.Unlock()
 	tpl, err := c.parseTemplate(name)
 	if err == nil {
+		// 上一级选择性缓存
 		if T_CACHE_PARENT || (strings.Index(name, "../") == -1 &&
 			strings.Index(name, "..\\") == -1) {
 			c._set[name] = tpl
@@ -169,10 +176,15 @@ func (c *CachedTemplate) compileTemplate(name string) (
 	} else {
 		c.println(true, "[ Compile][ Error]: ", err.Error())
 	}
+
 	return tpl, err
 }
 
-func (c *CachedTemplate) Execute(w io.Writer,
+func (c *CacheTemplate) Funcs(funcMap template.FuncMap) {
+	c._funcMap = funcMap
+}
+
+func (c *CacheTemplate) Execute(w io.Writer,
 	name string, data interface{}) error {
 	c._mux.RLock() //仅对读加锁
 	tpl, ok := c._set[name]
@@ -186,7 +198,7 @@ func (c *CachedTemplate) Execute(w io.Writer,
 	return tpl.Execute(w, data)
 }
 
-func (c *CachedTemplate) Render(w io.Writer,
+func (c *CacheTemplate) Render(w io.Writer,
 	name string, data interface{}) error {
 	return c.Execute(w, name, data)
 }
