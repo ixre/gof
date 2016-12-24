@@ -9,6 +9,8 @@
 package gof
 
 import (
+	"bytes"
+	"errors"
 	"github.com/fsnotify/fsnotify"
 	"html/template"
 	"io"
@@ -29,33 +31,44 @@ var (
 )
 
 type CacheTemplate struct {
-	_basePath      string
-	_shareFiles    []string
-	_funcMap       template.FuncMap
-	_fsNotify      bool
-	_set           map[string]*template.Template
-	_mux           *sync.RWMutex
-	_winPathRegexp *regexp.Regexp
+	_basePath         string
+	_shareFiles       []string
+	_funcMap          template.FuncMap
+	_fsNotify         bool
+	_set              map[string]*template.Template
+	_mux              *sync.RWMutex
+	_winPathRegexp    *regexp.Regexp
+	_includeMux       *sync.RWMutex
+	_includeCache     map[string]string      // 包含子模板缓存
+	_includeCheckFunc func(path string) bool // 检查子模板是否更改
 }
 
 // when notify is false , will not compile on file change!
 func NewCacheTemplate(basePath string, notify bool, files ...string) *CacheTemplate {
 	g := &CacheTemplate{
-		_basePath:   basePath,
-		_fsNotify:   notify,
-		_set:        make(map[string]*template.Template, 0),
-		_mux:        &sync.RWMutex{},
-		_shareFiles: files,
+		_basePath:     basePath,
+		_fsNotify:     notify,
+		_set:          make(map[string]*template.Template, 0),
+		_mux:          &sync.RWMutex{},
+		_shareFiles:   files,
+		_includeMux:   &sync.RWMutex{},
+		_includeCache: make(map[string]string),
 	}
 	return g.init()
 }
 
 func (c *CacheTemplate) init() *CacheTemplate {
+	// 初始化模板函数
+	c._funcMap = map[string]interface{}{
+		"include": c.include,
+	}
+	// 设置共享的子模板路径
 	for i, v := range c._shareFiles {
 		if !strings.HasPrefix(v, c._basePath) {
 			c._shareFiles[i] = c._basePath + v
 		}
 	}
+	// 开启监视
 	if c._fsNotify {
 		go c.fsNotify()
 	}
@@ -71,6 +84,7 @@ func (c *CacheTemplate) println(err bool, v ...interface{}) {
 
 // calling on file changed
 func (c *CacheTemplate) fileChanged(event *fsnotify.Event) {
+	c.resetIncludeCache()
 	eventStr := event.String()
 	if runtime.GOOS == "windows" {
 		if c._winPathRegexp == nil {
@@ -151,15 +165,10 @@ func (c *CacheTemplate) fsNotify() {
 
 func (c *CacheTemplate) parseTemplate(name string) (
 	*template.Template, error) {
-	//主要的模板文件,需要第一个位置
+	// 主要的模板文件,需要第一个位置
 	files := append([]string{c._basePath + name}, c._shareFiles...)
-	//取得文件名作为模板的名称
-	tplName := name
-	if li := strings.LastIndex(name, "/"); li != -1 {
-		tplName = name[li+1:]
-	}
-	t := template.New(tplName)
-	// 设置模板函数
+	// 新建模板并设置模板函数
+	t := template.New(c.tplName(name))
 	if c._funcMap != nil {
 		t = t.Funcs(c._funcMap)
 	}
@@ -186,7 +195,65 @@ func (c *CacheTemplate) compileTemplate(name string) (
 }
 
 func (c *CacheTemplate) Funcs(funcMap template.FuncMap) {
-	c._funcMap = funcMap
+	for k, v := range funcMap {
+		if _, ok := c._funcMap[k]; ok {
+			panic(errors.New("exists func " + k))
+		}
+		c._funcMap[k] = v
+	}
+}
+
+// 获取模板的名称
+func (c *CacheTemplate) tplName(path string) string {
+	if li := strings.LastIndex(path, "/"); li != -1 {
+		return path[li+1:]
+	}
+	return path
+}
+
+// 清除子模板的缓存
+func (c *CacheTemplate) resetIncludeCache() {
+	c._includeMux.Lock()
+	defer c._includeMux.Unlock()
+	c._includeCache = make(map[string]string)
+}
+
+// 子模板中间件，如果需要更新缓存，则返回false
+func (c *CacheTemplate) IncludeMiddle(f func(path string) bool) {
+	c._includeCheckFunc = f
+}
+
+// 读取子模板的
+func (c *CacheTemplate) include(path string) template.HTML {
+	c._includeMux.RLock()
+	str, ok := c._includeCache[path]
+	c._includeMux.RUnlock()
+	if ok {
+		if c._includeCheckFunc == nil || c._includeCheckFunc(path) {
+			return template.HTML(str)
+		}
+	}
+	c._includeMux.Lock()
+	defer c._includeMux.Unlock()
+	data, err := c.read(path)
+	if err != nil {
+		return template.HTML(err.Error())
+	}
+	result := string(data)
+	c._includeCache[path] = result
+	return template.HTML(result)
+}
+
+func (c *CacheTemplate) read(path string) ([]byte, error) {
+	var err error
+	buf := bytes.NewBuffer(nil)
+	tpl := template.New(path)
+	tpl.Funcs(c._funcMap)
+	tpl, err = tpl.ParseFiles(c._basePath + path)
+	if err == nil {
+		err = tpl.ExecuteTemplate(buf, c.tplName(path), nil)
+	}
+	return buf.Bytes(), err
 }
 
 func (c *CacheTemplate) Execute(w io.Writer,
@@ -200,9 +267,4 @@ func (c *CacheTemplate) Execute(w io.Writer,
 		}
 	}
 	return tpl.Execute(w, data)
-}
-
-func (c *CacheTemplate) Render(w io.Writer,
-	name string, data interface{}) error {
-	return c.Execute(w, name, data)
 }
