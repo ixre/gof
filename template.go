@@ -153,7 +153,12 @@ func (c *CacheTemplate) parseTemplate(name string) (
 	*template.Template, error) {
 	//主要的模板文件,需要第一个位置
 	files := append([]string{c._basePath + name}, c._shareFiles...)
-	t := template.New(name)
+	//取得文件名作为模板的名称
+	tplName := name
+	if li := strings.LastIndex(name, "/"); li != -1 {
+		tplName = name[li+1:]
+	}
+	t := template.New(tplName)
 	// 设置模板函数
 	if c._funcMap != nil {
 		t = t.Funcs(c._funcMap)
@@ -185,12 +190,11 @@ func (c *CacheTemplate) Funcs(funcMap template.FuncMap) {
 }
 
 func (c *CacheTemplate) Execute(w io.Writer,
-	name string, data interface{}) error {
+	name string, data interface{}) (err error) {
 	c._mux.RLock() //仅对读加锁
 	tpl, ok := c._set[name]
 	c._mux.RUnlock()
 	if !ok {
-		var err error
 		if tpl, err = c.compileTemplate(name); err != nil {
 			return err
 		}
