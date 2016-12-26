@@ -89,7 +89,6 @@ func (s *SocketServer) RegisterJob(job Job) error {
 	defer s.mux.Unlock()
 	for _, v := range s.jobs {
 		if reflect.ValueOf(v) == reflect.ValueOf(job) {
-			// compare func ptr
 			return errors.New("Can't repeat register job!")
 		}
 	}
