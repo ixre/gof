@@ -17,13 +17,14 @@ import (
 )
 
 const (
-	FirstLinkFormat  = ""
-	PagerLinkFormat  = "?page=%d"
-	PagerLinkCount   = 10
-	FirstPageText    = "首页"
-	LastPageText     = "末页"
+	FirstLinkFormat = ""
+	PagerLinkFormat = "?page=%d"
+	PagerLinkCount  = 10
+
 	NextPageText     = "下一页"
 	PreviousPageText = "上一页"
+	FirstPageText    = PreviousPageText
+	LastPageText     = NextPageText
 )
 const (
 	CONTROL = 1 << iota
@@ -78,36 +79,28 @@ func (d *defaultPagerGetter) Get(page, flag int) (url, text string) {
 type UrlPager struct {
 	//当前页面索引,从0开始
 	Index int
-
 	//查询条件
 	Query string
-
 	//连接和页码
 	getter PagerGetter
-
 	//页面总数
 	Pages int
-
 	//链接长度,创建多少个跳页链接
 	Number int
-
 	//记录条数
 	Total int
-
 	//页码文本格式
 	pageTextFormat string
-
 	//是否允许输入页码调页
 	enableInput bool
-
 	//使用选页
 	enableSelect bool
-
 	//分页详细记录,如果为空字符则用默认,为空则不显示
 	PagerTotal string
-
 	// 当总页数为1时，是否显示分页
 	PagingOnZero bool
+	// 是否显示分页的汇总信息
+	ShowSummary bool
 }
 
 func (u *UrlPager) check() {
@@ -129,7 +122,7 @@ func (u *UrlPager) Pager() []byte {
 	u.getter.SetPager(u)
 
 	//开始拼接html
-	bys = bytes.NewBufferString("<div class=\"pagination\">")
+	bys = bytes.NewBufferString("<div class=\"paginator\">")
 
 	//输出上一页
 	if u.Index > 0 {
@@ -202,12 +195,14 @@ func (u *UrlPager) Pager() []byte {
 	}
 	bys.WriteString(fmt.Sprintf(`<a class="%s" href="%s">%s</a>`, cls, url, text))
 
-	//显示信息
-	const pagerStr string = "<span class=\"info\">&nbsp;第%d/%d页，共%d条。</span>"
-	if len(u.PagerTotal) == 0 {
-		u.PagerTotal = pagerStr
+	if u.ShowSummary {
+		//显示信息
+		const pagerStr string = "<span class=\"info\">&nbsp;第%d/%d页，共%d条。</span>"
+		if len(u.PagerTotal) == 0 {
+			u.PagerTotal = pagerStr
+		}
+		bys.WriteString(fmt.Sprintf(u.PagerTotal, u.Index, u.Pages, u.Total))
 	}
-	bys.WriteString(fmt.Sprintf(u.PagerTotal, u.Index, u.Pages, u.Total))
 
 	bys.WriteString("</div>")
 	return bys.Bytes()
