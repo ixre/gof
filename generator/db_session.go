@@ -68,6 +68,7 @@ type (
 type toolSession struct {
 	//生成代码变量
 	codeVars map[string]interface{}
+	IdUpper  bool
 }
 
 // 数据库代码生成器
@@ -87,6 +88,10 @@ func (t *toolSession) init() *toolSession {
 }
 
 func (t *toolSession) title(str string) string {
+	// 小于3且ID大写，则返回大写
+	if t.IdUpper && len(str) < 3 {
+		return strings.ToUpper(str)
+	}
 	arr := strings.Split(str, "_")
 	for i, v := range arr {
 		arr[i] = strings.Title(v)
