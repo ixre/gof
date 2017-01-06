@@ -48,6 +48,8 @@ type Interface interface {
 
 	GetFloat64(key string) (float64, error)
 
+	GetBytes(key string) ([]byte, error)
+
 	// Delete Storage
 	Del(key string)
 

@@ -112,13 +112,7 @@ func (r *redisStorage) checkTypeErr(err error) {
 	}
 }
 
-func checkInputValueType(v interface{}) bool {
-	kind := reflect.TypeOf(v).Kind()
-	return kind == reflect.Ptr || kind == reflect.Struct ||
-		kind == reflect.Map || kind == reflect.Array
-}
-
-func checkOutputValueType(v interface{}) bool {
+func (r *redisStorage) checkOutputValueType(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Ptr
 	//vType := reflect.TypeOf(v)
 	//kind := vType.Kind()
@@ -139,16 +133,9 @@ func (r *redisStorage) Driver() string {
 	return DriveRedisStorage
 }
 
-func (r *redisStorage) getBytes(key string) ([]byte, error) {
-	conn := r.pool.Get()
-	defer conn.Close()
-	src, err := redis.Bytes(conn.Do("GET", key))
-	return src, err
-}
-
 func (r *redisStorage) decodeAssign(key string, dst interface{}) error {
-	if checkOutputValueType(dst) {
-		src, err := r.getBytes(key)
+	if r.checkOutputValueType(dst) {
+		src, err := r.GetBytes(key)
 		if err == nil {
 			err = r.decodeBytes(src, dst)
 		}
@@ -183,11 +170,17 @@ func (r *redisStorage) GetInt64(key string) (int64, error) {
 }
 
 func (r *redisStorage) GetString(key string) (string, error) {
-	d, err := r.getBytes(key)
-	if err != nil {
-		return "", err
-	}
-	return string(d), err
+	conn := r.pool.Get()
+	defer conn.Close()
+	src, err := redis.String(conn.Do("GET", key))
+	return src, err
+}
+
+func (r *redisStorage) GetBytes(key string) ([]byte, error) {
+	conn := r.pool.Get()
+	defer conn.Close()
+	src, err := redis.Bytes(conn.Do("GET", key))
+	return src, err
 }
 
 func (r *redisStorage) GetFloat64(key string) (float64, error) {
@@ -217,21 +210,11 @@ func (r *redisStorage) Del(key string) {
 	conn.Do("DEL", key)
 }
 
-func (r *redisStorage) binarySet(key string, v interface{}, seconds int64) error {
-	var err error
-	var redisValue interface{} = v
-	if checkInputValueType(v) {
-		redisValue, err = r.encodeBytes(v)
-	}
-	conn := r.pool.Get()
-	defer conn.Close()
-	err = conn.Send("SET", key, redisValue)
-	if seconds > 0 && err == nil {
-		conn.Send("EXPIRE", key, seconds)
-	}
-	conn.Flush()
-	return err
-}
+/*
+   https://github.com/garyburd/redigo/issues/21
+   It's common to store JSON in Redis. If you are only accessing
+    the data from Go, then encoding/gob is another good option for storing nested data.
+*/
 
 func (r *redisStorage) hashSet(key string, v interface{}, seconds int) (err error) {
 	if v == nil {
@@ -262,18 +245,45 @@ func (r *redisStorage) hashSet(key string, v interface{}, seconds int) (err erro
 	return err
 }
 
-func (r *redisStorage) set(key string, v interface{}, seconds int64) (err error) {
-	return r.binarySet(key, v, seconds)
+func (r *redisStorage) set(key string, v interface{}, seconds int64) error {
+	conn := r.pool.Get()
+	defer conn.Close()
+	err := conn.Send("SET", key, v)
+	if seconds > 0 && err == nil {
+		conn.Send("EXPIRE", key, seconds)
+	}
+	conn.Flush()
+	return err
+}
 
+func (r *redisStorage) binarySet(key string, v interface{}, seconds int64) error {
+	byteData, err := r.encodeBytes(v)
+	if err == nil {
+		return r.set(key, byteData, seconds)
+	}
+	return err
+}
+
+func (r *redisStorage) inputToBytes(v interface{}) bool {
+	kind := reflect.TypeOf(v).Kind()
+	return kind == reflect.Ptr || kind == reflect.Struct ||
+		kind == reflect.Map || kind == reflect.Array
+}
+
+func (r *redisStorage) anySet(key string, v interface{}, seconds int64) error {
+	if r.inputToBytes(v) {
+		return r.binarySet(key, v, seconds)
+	}
+	return r.set(key, v, seconds)
 }
 
 func (r *redisStorage) Set(key string, v interface{}) error {
-	return r.set(key, v, -1)
+	return r.anySet(key, v, -1)
 }
 
 func (r *redisStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	if seconds > 0 {
-		return r.set(key, v, seconds)
+		return r.anySet(key, v, seconds)
 	}
 	return nil
 }

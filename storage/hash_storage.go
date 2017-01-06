@@ -19,12 +19,13 @@ var _ Interface = new(hashStorage)
 // 哈希表存储
 type hashStorage struct {
 	storage map[string]interface{}
-	sync.Mutex
+	mux     *sync.RWMutex
 }
 
 func NewHashStorage() Interface {
 	return &hashStorage{
 		storage: make(map[string]interface{}),
+		mux:     &sync.RWMutex{},
 	}
 }
 
@@ -39,12 +40,21 @@ func (h *hashStorage) Driver() string {
 
 // Check key is exists or not
 func (h *hashStorage) Exists(key string) (exists bool) {
-	_, b := h.storage[key]
+	_, b := h.test(key)
 	return b
 }
 
+// test key,if key exists return value and true
+func (h *hashStorage) test(key string) (interface{}, bool) {
+	h.mux.RLock()
+	v, ok := h.storage[key]
+	h.mux.RUnlock()
+	return v, ok
+}
+
 func (h *hashStorage) Get(key string, dst interface{}) error {
-	if k, ok := h.storage[key]; ok {
+	k, ok := h.test(key)
+	if ok {
 		if reflect.TypeOf(k).Kind() == reflect.Ptr {
 			dst = k
 		} else {
@@ -56,7 +66,7 @@ func (h *hashStorage) Get(key string, dst interface{}) error {
 }
 
 func (h *hashStorage) GetBool(key string) (bool, error) {
-	if v, _ := h.GetRaw(key); v != nil {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
 		if v2, ok := v.(bool); ok {
 			return v2, nil
 		}
@@ -65,7 +75,7 @@ func (h *hashStorage) GetBool(key string) (bool, error) {
 }
 
 func (h *hashStorage) GetInt(key string) (int, error) {
-	if v, _ := h.GetRaw(key); v != nil {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
 		if v2, ok := v.(int); ok {
 			return v2, nil
 		}
@@ -74,7 +84,7 @@ func (h *hashStorage) GetInt(key string) (int, error) {
 }
 
 func (h *hashStorage) GetInt64(key string) (int64, error) {
-	if v, _ := h.GetRaw(key); v != nil {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
 		if v2, ok := v.(int64); ok {
 			return v2, nil
 		}
@@ -83,7 +93,7 @@ func (h *hashStorage) GetInt64(key string) (int64, error) {
 }
 
 func (h *hashStorage) GetString(key string) (string, error) {
-	if v, _ := h.GetRaw(key); v != nil {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
 		if v2, ok := v.(string); ok {
 			return v2, nil
 		}
@@ -91,8 +101,17 @@ func (h *hashStorage) GetString(key string) (string, error) {
 	return "", typeError
 }
 
+func (h *hashStorage) GetBytes(key string) ([]byte, error) {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
+		if v2, ok := v.([]byte); ok {
+			return v2, nil
+		}
+	}
+	return []byte(nil), typeError
+}
+
 func (h *hashStorage) GetFloat64(key string) (float64, error) {
-	if v, _ := h.GetRaw(key); v != nil {
+	if v, err := h.GetRaw(key); err == nil && v != nil {
 		if v2, ok := v.(float64); ok {
 			return v2, nil
 		}
@@ -101,20 +120,25 @@ func (h *hashStorage) GetFloat64(key string) (float64, error) {
 }
 
 func (h *hashStorage) Set(key string, v interface{}) error {
+	h.mux.Lock()
 	h.storage[key] = v
+	h.mux.Unlock()
 	return nil
 }
 
 //Get raw value
 func (h *hashStorage) GetRaw(key string) (interface{}, error) {
-	if k, ok := h.storage[key]; ok {
+	k, ok := h.test(key)
+	if ok {
 		return k, nil
 	}
 	return nil, errors.New("not such key")
 }
 
 func (h *hashStorage) Del(key string) {
+	h.mux.Lock()
 	delete(h.storage, key)
+	h.mux.Unlock()
 }
 
 // equal of h.Set(key,value)
