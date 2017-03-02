@@ -20,6 +20,13 @@ func I32Err(i int, err error) (int32, error) {
 	return int32(i), err
 }
 
+func I64Err(i int, err error) (int64, error) {
+	if err != nil {
+		return 0, err
+	}
+	return int64(i), err
+}
+
 // 将类型转为string
 func Str(d interface{}) string {
 	switch d.(type) {

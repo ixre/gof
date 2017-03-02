@@ -293,3 +293,7 @@ func Save(o Orm, entity interface{}, pk int) (int, error) {
 func I32(v int, err error) (int32, error) {
 	return util.I32Err(v, err)
 }
+
+func I64(v int, err error) (int64, error) {
+	return util.I64Err(v, err)
+}
