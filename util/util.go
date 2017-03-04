@@ -30,6 +30,9 @@ func (e *boolExtend) TInt(b bool, v1, v2 int) int {
 func (e *boolExtend) TInt32(b bool, v1, v2 int32) int32 {
 	return threeCondition(b, v1, v2).(int32)
 }
+func (e *boolExtend) TInt64(b bool, v1, v2 int64) int64 {
+	return threeCondition(b, v1, v2).(int64)
+}
 func (e *boolExtend) TString(b bool, v1, v2 string) string {
 	return threeCondition(b, v1, v2).(string)
 }
