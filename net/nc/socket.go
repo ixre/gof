@@ -30,14 +30,14 @@ type (
 	CmdFunc func(c *Client, plan string) ([]byte, error)
 
 	// 验证函数,返回编号及错误
-	AuthFunc func() (from int, err error)
+	AuthFunc func() (from int64, err error)
 
 	// 客户端
 	Client struct {
 		// 连接来源,如:来源与某个商户
-		Source int
+		Source int64
 		// 用户编号,如:商户下面的客户编号
-		User int
+		User int64
 		// 客户端连接地址
 		Addr net.Addr
 		// 连接
@@ -54,7 +54,7 @@ type (
 		output       bool               // 开启输出,默认开启
 		ReadDeadLine time.Duration      //超时断开时间
 		clients      map[string]*Client //客户端身份,断开时会删除
-		userAddrs    map[int]string     //用户的IP信息,以同时下发到多个客户端
+		userAddrs    map[int64]string   //用户的IP信息,以同时下发到多个客户端
 		handlers     map[string]CmdFunc
 		jobs         []Job
 		tr           TcpReceiver
@@ -66,7 +66,7 @@ func NewSocketServer(r TcpReceiver) *SocketServer {
 	return &SocketServer{
 		output:    true,
 		clients:   make(map[string]*Client),
-		userAddrs: make(map[int]string),
+		userAddrs: make(map[int64]string),
 		jobs:      make([]Job, 0),
 		tr:        r,
 	}
@@ -114,7 +114,7 @@ func (s *SocketServer) GetCli(conn net.Conn) (*Client, bool) {
 }
 
 // 获取用户的客户端连接, 一个用户对应一个或多个连接
-func (s *SocketServer) GetConnections(userId int) []net.Conn {
+func (s *SocketServer) GetConnections(userId int64) []net.Conn {
 	arr := strings.Split(s.userAddrs[userId], "$")
 	var connList []net.Conn = make([]net.Conn, 0)
 	for _, v := range arr {
@@ -127,7 +127,7 @@ func (s *SocketServer) GetConnections(userId int) []net.Conn {
 
 // 验证消息
 func (s *SocketServer) Auth(conn net.Conn, f AuthFunc) error {
-	var src int
+	var src int64
 	var err error
 	if f != nil {
 		src, err = f()
@@ -151,7 +151,7 @@ func (s *SocketServer) Auth(conn net.Conn, f AuthFunc) error {
 
 // 用户验证
 func (s *SocketServer) UAuth(conn net.Conn, f AuthFunc) error {
-	var uid int
+	var uid int64
 	var err error
 	var cli *Client
 	if f != nil {
@@ -182,9 +182,9 @@ func (s *SocketServer) SetCli(conn net.Conn, c *Client) {
 	s.clients[conn.RemoteAddr().String()] = c
 }
 
-func (s *SocketServer) setUserAddrs(id int, addr string) {
-	s.userAddrs[id] = addr
-}
+//func (s *SocketServer) setUserAddrs(id int64, addr string) {
+//	s.userAddrs[id] = addr
+//}
 
 func (s *SocketServer) runJobs() {
 	for _, v := range s.jobs {

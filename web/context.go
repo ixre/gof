@@ -56,7 +56,15 @@ func (c *Context) GetItem(key string) interface{} {
 func RequestRawURI(r *http.Request) string {
 	scheme := "http://"
 	if r.TLS != nil {
-		scheme = "htts://"
+		scheme = "https://"
 	}
 	return strings.Join([]string{scheme, r.Host, r.RequestURI}, "")
+}
+
+// 获取协议
+func Scheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "https://"
+	}
+	return "http://"
 }

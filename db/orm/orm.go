@@ -281,11 +281,13 @@ func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
 // save entity and return pk and error
 func Save(o Orm, entity interface{}, pk int) (int, error) {
 	if pk > 0 {
-		r, _, err := o.Save(pk, entity)
-		if r == 0 {
-			_, _, err = o.Save(nil, entity)
-		}
+		_, _, err := o.Save(pk, entity)
 		return pk, err
+		//r, _, err := o.Save(pk, entity)
+		//if r == 0 && err == nil {
+		//    _, _, err = o.Save(nil, entity)
+		//}
+		//return pk, err
 	}
 	_, int64, err := o.Save(nil, entity)
 	return int(int64), err
