@@ -13,7 +13,6 @@ import (
 	"github.com/jsix/gof"
 	"github.com/jsix/gof/web/session"
 	"net/http"
-	"strings"
 )
 
 type Context struct {
@@ -50,21 +49,4 @@ func (c *Context) GetItem(key string) interface{} {
 		return v
 	}
 	return nil
-}
-
-// 获取请求完整的地址
-func RequestRawURI(r *http.Request) string {
-	scheme := "http://"
-	if r.TLS != nil {
-		scheme = "https://"
-	}
-	return strings.Join([]string{scheme, r.Host, r.RequestURI}, "")
-}
-
-// 获取协议
-func Scheme(r *http.Request) string {
-	if r.TLS != nil {
-		return "https://"
-	}
-	return "http://"
 }

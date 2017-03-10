@@ -204,9 +204,8 @@ func assignValue(d reflect.Value, s []byte) (err error) {
 		x, err = strconv.ParseUint(string(s), 10, d.Type().Bits())
 		d.SetUint(x)
 	case reflect.Bool:
-		var x bool
-		x, err = strconv.ParseBool(string(s))
-		d.SetBool(x)
+		v := strings.ToLower(string(s))
+		d.SetBool(v == "true" || v == "on" || v == "1")
 	case reflect.String:
 		d.SetString(string(s))
 	case reflect.Slice:
