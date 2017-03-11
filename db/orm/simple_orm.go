@@ -8,6 +8,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 var _ Orm = new(simpleOrm)
@@ -19,6 +20,7 @@ type simpleOrm struct {
 	driverName string
 	useTrace   bool
 	dialect    Dialect
+	tmLock     *sync.RWMutex
 }
 
 func NewOrm(driver string, db *sql.DB) Orm {
@@ -36,6 +38,7 @@ func NewOrm(driver string, db *sql.DB) Orm {
 		driverName: driver,
 		dialect:    dialect,
 		tableMap:   make(map[string]*TableMapMeta),
+		tmLock:     &sync.RWMutex{},
 	}
 }
 
@@ -65,13 +68,16 @@ func (o *simpleOrm) debug(format string, args ...interface{}) {
 }
 
 func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
+	o.tmLock.RLock()
 	m, exists := o.tableMap[t.String()]
+	o.tmLock.RUnlock()
 	if exists {
 		return m
 	}
+	o.tmLock.Lock()
 	m = GetTableMapMeta(o.driverName, t)
 	o.tableMap[t.String()] = m
-
+	o.tmLock.Unlock()
 	if o.useTrace {
 		log.Println("[ ORM][ META]:", m)
 	}
