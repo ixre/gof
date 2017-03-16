@@ -224,33 +224,27 @@ func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
 	params []interface{}, fieldArr []string) {
 	var isSet bool
 	for i, k := range meta.FieldMapNames {
-
 		if !includePk && meta.PkIsAuto &&
 			meta.FieldMapNames[i] == meta.PkFieldName {
 			continue
 		}
-
 		field := val.Field(meta.FieldsIndex[i]) // 获取字段所在定义中的位置
 		isSet = false
 
 		switch field.Type().Kind() {
 		case reflect.String:
-			//if field.String() != "" {
 			isSet = true
 			if val.Kind() == reflect.Ptr {
 				params = append(params, field.String())
 			} else {
 				params = append(params, field.String())
 			}
-		//}
 		case reflect.Int, reflect.Int8,
 			reflect.Int16, reflect.Int32, reflect.Int64:
-			//if field.Int() != 0 {
 			isSet = true
 			params = append(params, field.Int())
 
 		case reflect.Float32, reflect.Float64:
-			//if v := field.Float(); v != 0 {
 			isSet = true
 			params = append(params, field.Float())
 
