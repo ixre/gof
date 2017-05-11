@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	connString = "root:@tcp(172.16.69.128:3306)/txmall?charset=utf8"
+	connString = "root:@tcp(dbs.ts.com:3306)/txmall?charset=utf8"
 	genDir     = "generated_code/"
 )
 

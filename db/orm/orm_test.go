@@ -16,7 +16,7 @@ import (
 )
 
 func getDb() *sql.DB {
-	db, err := sql.Open("mysql", "root:@tcp(172.16.69.128:3306)/mysql?charset=utf8")
+	db, err := sql.Open("mysql", "root:@tcp(dbs.ts.com:3306)/mysql?charset=utf8")
 	if err == nil {
 		err = db.Ping()
 	}

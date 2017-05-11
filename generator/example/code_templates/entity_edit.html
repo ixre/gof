@@ -75,7 +75,7 @@
                 var data = $B.json.toObject(formId);
                 if(flag) {
                     flag = 0;
-                    $B.xhr.jsonPost('Save{{.T.Title}}', data, function (r) {
+                    $B.xhr.jsonPost('save{{.T.Title}}', data, function (r) {
                         flag = 1;
                         if (r.result) {
                             $B.dialog.alert('保存成功', function () {
