@@ -28,7 +28,7 @@ type (
 
 		Query(sql string, f func(*sql.Rows), arg ...interface{}) error
 
-		QueryRow(sql string, f func(*sql.Row), arg ...interface{}) error
+		QueryRow(sql string, f func(*sql.Row) error, arg ...interface{}) error
 
 		ExecScalar(s string, result interface{}, arg ...interface{}) error
 
@@ -133,7 +133,7 @@ func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}
 }
 
 //查询Rows
-func (t *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interface{}) error {
+func (t *simpleConnector) QueryRow(s string, f func(*sql.Row) error, args ...interface{}) error {
 	stmt, err := t.GetDb().Prepare(s)
 	if err != nil {
 		return t.err(errors.New(fmt.Sprintf(
@@ -142,10 +142,10 @@ func (t *simpleConnector) QueryRow(s string, f func(*sql.Row), args ...interface
 		defer stmt.Close()
 		row := stmt.QueryRow(args...)
 		if f != nil && row != nil {
-			f(row)
+			return f(row)
 		}
 	}
-	return nil
+	return err
 }
 
 func (t *simpleConnector) ExecScalar(s string, result interface{},
@@ -154,12 +154,9 @@ func (t *simpleConnector) ExecScalar(s string, result interface{},
 	if result == nil {
 		return t.err(errors.New("out result is null"))
 	}
-	err1 := t.QueryRow(s, func(row *sql.Row) {
-		err = row.Scan(result)
+	err = t.QueryRow(s, func(row *sql.Row) error {
+		return row.Scan(result)
 	}, args...)
-	if err == nil {
-		err = err1
-	}
 	if err != nil && err != sql.ErrNoRows {
 		return t.err(errors.New(fmt.Sprintf(
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
