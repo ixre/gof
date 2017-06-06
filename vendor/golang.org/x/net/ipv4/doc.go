@@ -26,7 +26,7 @@
 // important, ipv4.Conn is used to set the type-of-service field on
 // the IPv4 header for each packet.
 //
-//	ln, err := net.Listen("ad_image_ad", "0.0.0.0:1024")
+//	ln, err := net.Listen("tcp4", "0.0.0.0:1024")
 //	if err != nil {
 //		// error handling
 //	}
@@ -97,7 +97,7 @@
 // between the protocol stack within the kernel.  When the application
 // needs a destination address on an incoming packet,
 // SetControlMessage of ipv4.PacketConn is used to enable control
-// message transmissons.
+// message transmissions.
 //
 //	if err := p.SetControlMessage(ipv4.FlagDst, true); err != nil {
 //		// error handling

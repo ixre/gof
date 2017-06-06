@@ -5,6 +5,7 @@
 package webdav
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -118,7 +119,14 @@ var liveProps = map[xml.Name]struct {
 	},
 	xml.Name{Space: "DAV:", Local: "getlastmodified"}: {
 		findFn: findLastModified,
-		dir:    false,
+		// http://webdav.org/specs/rfc4918.html#PROPERTY_getlastmodified
+		// suggests that getlastmodified should only apply to GETable
+		// resources, and this package does not support GET on directories.
+		//
+		// Nonetheless, some WebDAV clients expect child directories to be
+		// sortable by getlastmodified date, so this value is true, not false.
+		// See golang.org/issue/15334.
+		dir: true,
 	},
 	xml.Name{Space: "DAV:", Local: "creationdate"}: {
 		findFn: nil,
@@ -326,6 +334,12 @@ loop:
 	return []Propstat{pstat}, nil
 }
 
+func escapeXML(s string) string {
+	var buf bytes.Buffer
+	xml.EscapeText(&buf, []byte(s))
+	return buf.String()
+}
+
 func findResourceType(fs FileSystem, ls LockSystem, name string, fi os.FileInfo) (string, error) {
 	if fi.IsDir() {
 		return `<D:collection xmlns:D="DAV:"/>`, nil
@@ -338,7 +352,7 @@ func findDisplayName(fs FileSystem, ls LockSystem, name string, fi os.FileInfo) 
 		// Hide the real name of a possibly prefixed root directory.
 		return "", nil
 	}
-	return fi.Name(), nil
+	return escapeXML(fi.Name()), nil
 }
 
 func findContentLength(fs FileSystem, ls LockSystem, name string, fi os.FileInfo) (string, error) {
