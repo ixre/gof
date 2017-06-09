@@ -6,18 +6,20 @@
 </head>
 <body>
 
-<form action="" method="post" class="form margin30" id="form1">
+<form action="" method="post" class="gra-form" id="form1">
     {{range $i,$c := .T.Columns}}{{if $c.Pk}}
     <input type="hidden" field="{{$c.Title}}" name="{{$c.Title}}" value="0"/>{{else}}
     <div class="gra-form-field">{{if $c.NotNull}}
         <div class="gra-form-label"><span class="red">*&nbsp;</span>{{$c.Comment}}：</div>
         <div class="gra-form-col">
             <input type="text" field="{{$c.Title}}" name="{{$c.Title}}" class="ui-validate" required="true"/>
-        </div>{{else}}
-        <label>{{$c.Comment}}：</label>
-        <div class="t">
+        </div>
+        {{else}}
+        <div class="gra-form-label">{{$c.Comment}}：</div>
+        <div class="gra-form-col">
             <input type="text" field="{{$c.Title}}" name="{{$c.Title}}" class="ui-validate"/>
-        </div>{{end}}
+        </div>
+        {{end}}
     </div>
     {{end}}
     {{end}}
@@ -26,43 +28,39 @@
     <div class="gra-form-field">
         <div class="gra-form-label">&nbsp;</div>
         <div class="gra-form-col">
-            <div class="gra-btn-div btn-submit" id="btn_submit">
-                提交
-            </div>
-            <div class="gra-btn-div btn-reset" id="btn_reset" onclick="document.forms[0].reset()">
-                重置
-            </div>
+            <div class="gra-btn gra-btn-inline btn-submit">提交</div>
+            <div class="gra-btn gra-btn-inline btn-reset">重置</div>
         </div>
     </div>
 
 </form>
 
-<script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?spam=${.Var.Spam}"></script>
+<script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?hash=${.Var.Spam}"></script>
 <script type="text/javascript">
-    var entity = ${.Map.Entity} || {};
-    var formId = 'form1';
-    var baseJsUrl = '${.Var.StaticServe}';
-    require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function () {
-        require(['base'], pageLoad);
+    //var entity = ${.Map.Entity} || {};
+    var formId = "form1";
+    var baseJsUrl = "${.Var.StaticServe}";
+    require([baseJsUrl + "/assets/js/super/require_config.js?hash=${.Var.Spam}"], function () {
+        require(["base"], pageLoad);
     });
 
     var $d;
     var flag = 1;
-    function pageLoad($B) {
-        $d = $B.dialog.getDialog();
-        $B.json.bind(formId, entity);
+    function pageLoad(_) {
+        $d = $b.dialog.getDialog();
+        $b.json.bind(formId, entity);
 
         /*
         //上传缩略图
-        $B.upload({
-            id: 'upload_btn',
+        $b.upload({
+            id: 'upload-btn',
             debug: !true,
             url: '/upload.cgi?type=category-icon',
             exts: '*.gif;*.jpg;*.png;*.bmp'
         }, function (result, data) {
             if (result) {
-                $B.$('upload_path').value = data.url;
-                $B.$('upload_img').setAttribute('url',
+                $b.$('upload_path').value = data.url;
+                $b.$('upload_img').setAttribute('url',
                     '{{.Var.ImgServe}}/' + data.url);
             } else {
                 alert('上传失败：' + data);
@@ -70,27 +68,31 @@
         });
         */
 
-        $B.$('btn_submit').onclick = function () {
-            if ($B.validator.validate(formId)) {
-                var data = $B.json.toObject(formId);
-                if(flag) {
+        $b.$fn(".btn-submit").click(function () {
+            if ($b.validator.validate(formId)) {
+                var data = $b.json.toObject(formId);
+                if (flag) {
                     flag = 0;
-                    $B.xhr.jsonPost('save{{.T.Title}}', data, function (r) {
+                    $b.xhr.jsonPost("save{{.T.Title}}", data, function (r) {
                         flag = 1;
                         if (r.result) {
-                            $B.dialog.alert('保存成功', function () {
+                            $b.dialog.alert('保存成功', function () {
                                 if ($d) {
-                                    $d.callback('refresh');
+                                    $d.callback("refresh");
                                     $d.close();
                                 }
                             });
                         } else {
-                            $B.dialog.alert(r.message);
+                            $b.dialog.alert(r.message);
                         }
                     });
                 }
             }
-        };
+        });
+
+        $b.$fn(".btn-cancel").click(function () {
+            document.forms[0].reset();
+        });
     }
 </script>
 </body>

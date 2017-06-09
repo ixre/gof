@@ -6,21 +6,21 @@
 <body>
 
 <div id="dg"></div>
-<div class="toolBar clearfix">
-    <div class="search_bar padding2 clearfix" id="search_bar">
+<div class="gra-toolbar toolBar clearfix">
+    <div class="gra-search-bar search_bar padding2 clearfix" id="search_bar">
         <ul>
             <li>
-                <a class="easyui-linkbutton" iconcls="icon-add" id="btnAdd">
+                <a class="easyui-linkbutton btn-add" iconcls="icon-add">
                     <span class="icon"></span>创建{{.T.Comment}}</a>
             </li>
-
             <li>
                 <span class="title">关键字：</span>
                 <input type="text" field="keyword"/>
             </li>
 
             <li>
-                <a class="easyui-linkbutton" data-options="iconCls:'icon-search'" id="btnSearch">
+                <input type="hidden" field="where" value="{.Map.Where}"/>
+                <a class="easyui-linkbutton btn-search" data-options="iconCls:'icon-search'">
                     <span class="icon"></span>搜索</a>
             </li>
 
@@ -29,27 +29,25 @@
 </div>
 
 <template id="tpl_op">
-    <a href="javascript:;" class="btn btn-short" onclick="editRecord('{id}')">编辑</a>
-    <!--<a href="javascript:;" class="btn btn-short" onclick="subList('{id}')">列表</a>-->
-    <a href="javascript:;" class="btn btn-short" onclick="delRecord('{id}')">删除</a>
+    <a href="javascript:;" class="btn btn-short" onclick="_edit('{id}')">编辑</a>
+    <!--<a href="javascript:;" class="btn btn-short" onclick="_list("{id}")">列表</a>-->
+    <a href="javascript:;" class="btn btn-short" onclick="_del('{id}')">删除</a>
 </template>
 
 <script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?spam=${.Var.Spam}"></script>
 <script type="text/javascript">
 
-    var baseJsUrl = '${.Var.StaticServe}'; //设置JS文件的路径
+    var baseJsUrl = "${.Var.StaticServe}"; //设置JS文件的路径
     require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function () {
-        require(['base', 'jquery.easyui.zh', 'jr/export'], pageLoad);
+        require(["base", "jquery.easyui.zh", "jr/export","x/util"], pageLoad);
     });
 
-    var $B = {}; //Base对象,包含了页面常用的方法
     var flag = 1;
-    function pageLoad(b) {
-        $B = b;
-        expr.portal = 'master/{{.T.Prefix}}/{{.T.Title}}List';
-        var opHtml = $B.html('tpl_op');
-        $('#dg').datagrid({
-            toolbar: '.toolBar',
+    function pageLoad(_) {
+        expr.portal = "master/{{.T.Prefix}}/{{.T.Title}}List";
+        var opHtml = $b.html("tpl_op");
+        $("#dg").datagrid({
+            toolbar: ".toolBar",
             singleSelect: !false,
             pagination: true,
             rowNumbers: true,
@@ -59,51 +57,54 @@
                 [
 
         {{range $i,$c := .T.Columns}}
-            {field: '{{$c.Name}}', title: '{{$c.Comment}}', align: 'center', width: 100},
+            {field: "{{$c.Name}}", title: "{{$c.Comment}}", align:"center", width: 100},
         {{end}}
                     {
-                        field: 'Id', title: '操作', align: 'center', width: 120, formatter: function (val, row) {
-                        return $B.template(opHtml, row);
+                        field: "Id", title:"操作", align:"center", width: 120, formatter: function (val, row) {
+                        return $b.template(opHtml, row);
                     }
                     },
                 ]
             ]
         });
-        $B.$('btnSearch').onclick = function () {
-            expr.search('dg');
-        };
-        $B.$('btnAdd').onclick = createRecord;
+        $b.$fn(".btn-search").click(_search);
+        $b.$fn(".btn-add").click(_create);
+    }
+    
+    
+    function _create() {
+        var d = $b.dialog.create2("添加{{.T.Comment}}", true, true);
+        d.open("Create{{.T.Title}}", 600, 400);
+        // $b.tab.open("创建{{.T.Comment}}", "Create{{.T.Title}}", true);
+    }
+    
+    function _search() {
+        expr.search("dg");
     }
 
-    function createRecord() {
-        var d = $B.dialog.create2('添加{{.T.Comment}}', true, true);
-        d.open('/{{.T.Prefix}}/create{{.T.Title}}', 600, 400);
-        // $B.tab.open('创建{{.T.Comment}}', '/{{.T.Prefix}}/create{{.T.Title}}', true);
-    }
-
-    function editRecord(id) {
-        var d = $B.dialog.create2('修改{{.T.Comment}}', true, true);
-        d.open('/{{.T.Prefix}}/edit{{.T.Title}}?id=' + id, 600, 400);
-        // $B.tab.open('修改{{.T.Comment}}', '/{{.T.Prefix}}/edit{{.T.Title}}?id='+id, true);
+    function _edit(id) {
+        var d = $b.dialog.create2("修改{{.T.Comment}}", true, true);
+        d.open("edit{{.T.Title}}?id=" + id, 600, 400);
+        // $b.tab.open("修改{{.T.Comment}}", "edit{{.T.Title}}?id="+id, true);
     }
 
     <!--
-    function subList(id){
-        $B.tab.open('{{.T.Comment}}', '/{{.T.Prefix}}/List?group_id='+id, true);
+    function _list(id){
+        $b.tab.open("{{.T.Comment}}", "List?group_id="+id, true);
     }
     -->
 
-    function delRecord(id) {
-        $B.dialog.confirm('删除后不可恢复，您确定要继续吗？', function (r) {
+    function _del(id) {
+        $b.dialog.confirm("删除后不可恢复，您确定要继续吗？", function (r) {
             if (!r) {return;}
             if(flag) {
                 flag = 0;
-                $B.xhr.jsonPost('/{{.T.Prefix}}/del{{.T.Title}}', {id: id}, function (r) {
+                $b.xhr.jsonPost("del{{.T.Title}}", {id: id}, function (r) {
                     flag = 1;
                     if (r.result) {
                         window.refresh()
                     } else {
-                        $B.dialog.alert(r.message);
+                        $b.dialog.alert(r.message);
                     }
                 });
             }
