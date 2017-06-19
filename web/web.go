@@ -2,10 +2,22 @@ package web
 
 import (
 	"github.com/jsix/gof"
+	"github.com/jsix/gof/storage"
+	"github.com/jsix/gof/web/session"
 	"net/http"
 	"reflect"
 	"strings"
 )
+
+type Options struct {
+	Storage           storage.Interface
+	SessionCookieName string
+	XSRFCookie        bool
+}
+
+func Initialize(o Options) {
+	session.Initialize(o.Storage, o.SessionCookieName, o.XSRFCookie)
+}
 
 // 获取请求完整的地址
 func RequestRawURI(r *http.Request) string {
