@@ -34,7 +34,7 @@
 
 <template id="tpl_op">
     <a href="javascript:;" class="btn btn-short" onclick="_edit('{id}')">编辑</a>
-    <!--<a href="javascript:;" class="btn btn-short" onclick="_list("{id}")">列表</a>-->
+    <!--<a href="javascript:;" class="btn btn-short" onclick="_list('{id}')">列表</a>-->
     <a href="javascript:;" class="btn btn-short" onclick="_del('{id}')">删除</a>
 </template>
 
@@ -73,7 +73,7 @@
         });
         $b.$fn(".btn-search").click(_search);
         $b.$fn(".btn-add").click(_create);
-        $b.$fn(".bt-export").click(function(){
+        $b.$fn(".btn-export").click(function(){
             expo.showExportDialog();
         });
     }
