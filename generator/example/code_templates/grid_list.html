@@ -10,7 +10,7 @@
     <div class="expo-param-fields clearfix">
         <ul>
             <li>
-                <a class="gra-btn btn-add">
+                <a class="gra-btn gra-btn-fn btn-add">
                     <i class="fa fa-plus" aria-hidden="true"></i>创建{{.T.Comment}}</a>
             </li>
             <li>
@@ -33,9 +33,9 @@
 </div>
 
 <template id="tpl_op">
-    <a href="javascript:;" class="btn btn-short" onclick="_edit('{id}')">编辑</a>
-    <!--<a href="javascript:;" class="btn btn-short" onclick="_list('{id}')">列表</a>-->
-    <a href="javascript:;" class="btn btn-short" onclick="_del('{id}')">删除</a>
+    <a class="gra-btn gra-btn-a" href="javascript:void(0)" onclick="_edit('{id}')">编辑</a>
+    <!--<a class="gra-btn gra-btn-a" href="javascript:void(0)" onclick="_list('{id}')">列表</a>-->
+    <a class="gra-btn gra-btn-a" href="javascript:void(0)" onclick="_del('{id}')">删除</a>
 </template>
 
 <script type="text/javascript" src="${.Var.StaticServe}/assets/js/base.js?spam=${.Var.Spam}"></script>
