@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package lzw implements the Lempel-Ziv-Welch compressed data format,
-// described in T. A. Welch, ``A Technique for High-Performance Data
+// described in T. A. Welch, ``A Technique for High-Performance Complex
 // Compression'', Computer, 17(6) (June 1984), pp 8-19.
 //
 // In particular, it implements LZW as used by the TIFF file format, including

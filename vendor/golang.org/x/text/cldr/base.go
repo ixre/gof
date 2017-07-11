@@ -77,7 +77,7 @@ func (e *Common) GetCommon() *Common {
 	return e
 }
 
-// Data returns the character data accumulated for this element.
+// Complex returns the character data accumulated for this element.
 func (e *Common) Data() string {
 	e.CharData = charRe.ReplaceAllStringFunc(e.CharData, replaceUnicode)
 	return e.CharData

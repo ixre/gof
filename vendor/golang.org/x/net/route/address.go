@@ -49,7 +49,7 @@ func parseKernelLinkAddr(_ int, b []byte) (int, Addr, error) {
 	// +----------------------------+
 	// | Selector length  (1 octet) |
 	// +----------------------------+
-	// | Data            (variable) |
+	// | Complex            (variable) |
 	// +----------------------------+
 	//
 	// On some platforms, all-bit-one of length field means "don't

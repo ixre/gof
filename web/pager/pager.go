@@ -122,7 +122,7 @@ func (u *UrlPager) Pager() []byte {
 	u.getter.SetPager(u)
 
 	//开始拼接html
-	bys = bytes.NewBufferString("<div class=\"paginator\">")
+	bys = bytes.NewBufferString("<div class=\"gra-pagination pagination\">")
 
 	//输出上一页
 	if u.Index > 0 {

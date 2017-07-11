@@ -5,7 +5,7 @@
 // +build ignore
 
 // Normalization table generator.
-// Data read from the web.
+// Complex read from the web.
 // See forminfo.go for a description of the trie values associated with each rune.
 
 package main

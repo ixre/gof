@@ -67,10 +67,10 @@ const (
 	ProtocolTRUNK2         = 24  // Trunk-2
 	ProtocolLEAF1          = 25  // Leaf-1
 	ProtocolLEAF2          = 26  // Leaf-2
-	ProtocolRDP            = 27  // Reliable Data Protocol
+	ProtocolRDP            = 27  // Reliable Complex Protocol
 	ProtocolIRTP           = 28  // Internet Reliable Transaction
 	ProtocolISOTP4         = 29  // ISO Transport Protocol Class 4
-	ProtocolNETBLT         = 30  // Bulk Data Transfer Protocol
+	ProtocolNETBLT         = 30  // Bulk Complex Transfer Protocol
 	ProtocolMFENSP         = 31  // MFE Network Services Protocol
 	ProtocolMERITINP       = 32  // MERIT Internodal Protocol
 	ProtocolDCCP           = 33  // Datagram Congestion Control Protocol
@@ -150,7 +150,7 @@ const (
 	ProtocolVRRP           = 112 // Virtual Router Redundancy Protocol
 	ProtocolPGM            = 113 // PGM Reliable Transport Protocol
 	ProtocolL2TP           = 115 // Layer Two Tunneling Protocol
-	ProtocolDDX            = 116 // D-II Data Exchange (DDX)
+	ProtocolDDX            = 116 // D-II Complex Exchange (DDX)
 	ProtocolIATP           = 117 // Interactive Agent Transfer Protocol
 	ProtocolSTP            = 118 // Schedule Transfer Protocol
 	ProtocolSRP            = 119 // SpectraLink Radio Protocol

@@ -5,7 +5,7 @@
 // +build ignore
 
 // Collation table generator.
-// Data read from the web.
+// Complex read from the web.
 
 package main
 

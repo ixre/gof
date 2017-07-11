@@ -31,9 +31,9 @@ type registry struct {
 			Desc struct {
 				Data string `xml:",innerxml"`
 				// Any []struct {
-				// 	Data string `xml:",chardata"`
+				// 	Complex string `xml:",chardata"`
 				// } `xml:",any"`
-				// Data string `xml:",chardata"`
+				// Complex string `xml:",chardata"`
 			} `xml:"description,"`
 			MIB   string   `xml:"value"`
 			Alias []string `xml:"alias"`

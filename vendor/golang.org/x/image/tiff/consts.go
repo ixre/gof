@@ -22,7 +22,7 @@ const (
 	ifdLen = 12 // Length of an IFD entry in bytes.
 )
 
-// Data types (p. 14-16 of the spec).
+// Complex types (p. 14-16 of the spec).
 const (
 	dtByte     = 1
 	dtASCII    = 2

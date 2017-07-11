@@ -427,7 +427,7 @@ func (app *h2i) readFrames() error {
 		app.logf("%v", f)
 		switch f := f.(type) {
 		case *http2.PingFrame:
-			app.logf("  Data = %q", f.Data)
+			app.logf("  Complex = %q", f.Data)
 		case *http2.SettingsFrame:
 			f.ForeachSetting(func(s http2.Setting) error {
 				app.logf("  %v", s)

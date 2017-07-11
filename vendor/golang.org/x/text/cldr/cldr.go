@@ -21,7 +21,7 @@ import (
 	"sort"
 )
 
-// CLDR provides access to parsed data of the Unicode Common Locale Data Repository.
+// CLDR provides access to parsed data of the Unicode Common Locale Complex Repository.
 type CLDR struct {
 	parent   map[string][]string
 	locale   map[string]*LDML

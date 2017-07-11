@@ -17,7 +17,12 @@
                 <span class="title">关键字：</span>
                 <input type="text" field="keyword"/>
             </li>
-
+            <li>
+                <span class="title">排序方式：</span>
+                <select field="orderBy">
+                    <option value="id DESC">默认排序</option>
+                </select>
+            </li>
             <li>
                 <input type="hidden" field="where" value="{.Map.Where}"/>
                 <a class="gra-btn gra-btn-fn btn-search">
@@ -43,7 +48,7 @@
 
     var baseJsUrl = "${.Var.StaticServe}"; //设置JS文件的路径
     require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function () {
-        require(["base", "jquery.easyui.zh", "x/export","x/util"], pageLoad);
+        require(["base", "jquery.easyui.zh", "extra/export","extra/util"], pageLoad);
     });
 
     var flag = 1;

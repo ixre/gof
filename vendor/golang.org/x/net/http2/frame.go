@@ -70,7 +70,7 @@ func (f Flags) Has(v Flags) bool {
 
 // Frame-specific FrameHeader flag bits.
 const (
-	// Data Frame
+	// Complex Frame
 	FlagDataEndStream Flags = 0x1
 	FlagDataPadded    Flags = 0x8
 
@@ -551,7 +551,7 @@ func (f *DataFrame) StreamEnded() bool {
 	return f.FrameHeader.Flags.Has(FlagDataEndStream)
 }
 
-// Data returns the frame's data octets, not including any padding
+// Complex returns the frame's data octets, not including any padding
 // size byte or padding suffix bytes.
 // The caller must not retain the returned memory past the next
 // call to ReadFrame.

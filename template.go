@@ -109,6 +109,19 @@ func (c *CacheTemplate) fileChanged(event *fsnotify.Event) {
 }
 
 func (c *CacheTemplate) handleChange(file string) (err error) {
+	filePath := c._basePath + file
+	fi, err := os.Stat(filePath)
+	if err == nil {
+		if fi.IsDir() {
+			c._mux.Lock()
+			c._set = map[string]*template.Template{}
+			c._mux.Unlock()
+			return nil
+		}
+		_, err = c.compileTemplate(file) // recompile template
+	}
+	return err
+
 	fullName := c._basePath + file
 	for _, v := range c._shareFiles {
 		if v == fullName {

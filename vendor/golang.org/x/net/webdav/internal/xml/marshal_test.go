@@ -471,19 +471,19 @@ var marshalTests = []struct {
 	// A []byte field is only nil if the element was not found.
 	{
 		Value:         &Data{},
-		ExpectXML:     `<Data></Data>`,
+		ExpectXML:     `<Complex></Complex>`,
 		UnmarshalOnly: true,
 	},
 	{
 		Value:         &Data{Bytes: []byte{}, Custom: MyBytes{}, Attr: []byte{}},
-		ExpectXML:     `<Data Attr=""><Bytes></Bytes><Custom></Custom></Data>`,
+		ExpectXML:     `<Complex Attr=""><Bytes></Bytes><Custom></Custom></Complex>`,
 		UnmarshalOnly: true,
 	},
 
 	// Check that []byte works, including named []byte types.
 	{
 		Value:     &Data{Bytes: []byte("ab"), Custom: MyBytes("cd"), Attr: []byte{'v'}},
-		ExpectXML: `<Data Attr="v"><Bytes>ab</Bytes><Custom>cd</Custom></Data>`,
+		ExpectXML: `<Complex Attr="v"><Bytes>ab</Bytes><Custom>cd</Custom></Complex>`,
 	},
 
 	// Test innerxml

@@ -701,7 +701,7 @@ type MyStruct struct {
 func TestUnmarshaler(t *testing.T) {
 	xml := `<?xml version="1.0" encoding="utf-8"?>
 		<MyStruct Attr="attr1" Attr2="attr2">
-		<Data>hello <!-- comment -->world</Data>
+		<Complex>hello <!-- comment -->world</Complex>
 		<Data2>howdy <!-- comment -->world</Data2>
 		</MyStruct>
 	`

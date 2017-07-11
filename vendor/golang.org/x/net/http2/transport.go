@@ -1642,7 +1642,7 @@ func (rl *clientConnReadLoop) processData(f *DataFrame) error {
 	}
 	if f.Length > 0 {
 		if len(data) > 0 && cs.bufPipe.b == nil {
-			// Data frame after it's already closed?
+			// Complex frame after it's already closed?
 			cc.logf("http2: Transport received DATA frame for closed stream; closing connection")
 			return ConnectionError(ErrCodeProtocol)
 		}

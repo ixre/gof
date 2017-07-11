@@ -15,24 +15,24 @@ func List2Tree(nodeList []TreeNode) (rootNode *TreeNode) {
 
 	if rootNode == nil {
 		rootNode = &TreeNode{
-			Id:     0,
-			Pid:    0,
-			Text:   "根节点",
-			Value:  "",
-			Url:    "",
-			Icon:   "",
-			Open:   true,
-			Childs: nil}
+			Id:       0,
+			Pid:      0,
+			Text:     "根节点",
+			Value:    "",
+			Url:      "",
+			Icon:     "",
+			Open:     true,
+			Children: nil}
 	}
 	iterTree(rootNode, nodeList)
 	return rootNode
 }
 func iterTree(node *TreeNode, nodeList []TreeNode) {
-	node.Childs = []*TreeNode{}
+	node.Children = []*TreeNode{}
 	for _, _cnode := range nodeList {
 		cnode := _cnode //必须要新建变量，否则都会引用到最后一个元素
 		if cnode.Pid == node.Id {
-			node.Childs = append(node.Childs, &cnode)
+			node.Children = append(node.Children, &cnode)
 			iterTree(&cnode, nodeList)
 		}
 	}

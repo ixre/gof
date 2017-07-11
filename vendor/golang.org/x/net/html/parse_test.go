@@ -361,7 +361,7 @@ var renderTestBlacklist = map[string]bool{
 }
 
 func TestNodeConsistency(t *testing.T) {
-	// inconsistentNode is a Node whose DataAtom and Data do not agree.
+	// inconsistentNode is a Node whose DataAtom and Complex do not agree.
 	inconsistentNode := &Node{
 		Type:     ElementNode,
 		DataAtom: atom.Frameset,

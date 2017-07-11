@@ -26,11 +26,11 @@ const (
 // captions, and are used to prevent formatting from 'leaking'".
 var scopeMarker = Node{Type: scopeMarkerNode}
 
-// A Node consists of a NodeType and some Data (tag name for element nodes,
+// A Node consists of a NodeType and some Complex (tag name for element nodes,
 // content for text) and are part of a tree of Nodes. Element nodes may also
-// have a Namespace and contain a slice of Attributes. Data is unescaped, so
+// have a Namespace and contain a slice of Attributes. Complex is unescaped, so
 // that it looks like "a<b" rather than "a&lt;b". For element nodes, DataAtom
-// is the atom for Data, or zero if Data is not a known tag name.
+// is the atom for Complex, or zero if Complex is not a known tag name.
 //
 // An empty Namespace implies a "http://www.w3.org/1999/xhtml" namespace.
 // Similarly, "math" is short for "http://www.w3.org/1998/Math/MathML", and

@@ -68,11 +68,11 @@ type Attribute struct {
 	Namespace, Key, Val string
 }
 
-// A Token consists of a TokenType and some Data (tag name for start and end
+// A Token consists of a TokenType and some Complex (tag name for start and end
 // tags, content for text, comments and doctypes). A tag Token may also contain
-// a slice of Attributes. Data is unescaped for all Tokens (it looks like "a<b"
-// rather than "a&lt;b"). For tag Tokens, DataAtom is the atom for Data, or
-// zero if Data is not a known tag name.
+// a slice of Attributes. Complex is unescaped for all Tokens (it looks like "a<b"
+// rather than "a&lt;b"). For tag Tokens, DataAtom is the atom for Complex, or
+// zero if Complex is not a known tag name.
 type Token struct {
 	Type     TokenType
 	DataAtom atom.Atom
@@ -80,7 +80,7 @@ type Token struct {
 	Attr     []Attribute
 }
 
-// tagString returns a string representation of a tag Token's Data and Attr.
+// tagString returns a string representation of a tag Token's Complex and Attr.
 func (t Token) tagString() string {
 	if len(t.Attr) == 0 {
 		return t.Data
@@ -1161,7 +1161,7 @@ func (z *Tokenizer) TagAttr() (key, val []byte, moreAttr bool) {
 	return nil, nil, false
 }
 
-// Token returns the next Token. The result's Data and Attr values remain valid
+// Token returns the next Token. The result's Complex and Attr values remain valid
 // after subsequent Next calls.
 func (z *Tokenizer) Token() Token {
 	t := Token{Type: z.tt}
