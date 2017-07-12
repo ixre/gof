@@ -42,8 +42,8 @@ func TestGenAll(t *testing.T) {
 	fe := &form.Engine{}
 	for _, tb := range tables {
 		entityPath := genDir + modelPkgName + "/" + tb.Name + ".go"
-		iRepPath := genDir + "repo/_i_" + tb.Name + "_repo.go"
-		repPath := genDir + "repo/_" + tb.Name + "_repo.go"
+		iRepPath := genDir + "repo/auto_i" + tb.Name + "_repo.go"
+		repPath := genDir + "repo/auto_" + tb.Name + "_repo.go"
 		dslPath := genDir + "form/" + tb.Name + ".form"
 		htmPath := genDir + "html/" + tb.Name + ".html"
 		//生成实体
