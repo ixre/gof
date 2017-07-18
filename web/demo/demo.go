@@ -178,10 +178,10 @@ func main() {
 		//		return
 
 		// 使用模板
-		data := gof.TemplateDataMap{
-			"变量名": "变量值",
-		}
-		ctx.App.Template().Execute(ctx.Response, data, "template.html")
+		//data := gof.TemplateDataMap{
+		//	"变量名": "变量值",
+		//}
+		// ctx.App.Template().Execute(ctx.Response, data, "template.html")
 		return
 
 		// 使用会话
