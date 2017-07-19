@@ -35,7 +35,9 @@ const (
 	//仓储结构引用模型包路径
 	V_ModelPkg = "ModelPkg"
 	//仓储接口引用模型包路径
-	V_ModelPkgIRepo = "ModelPkgIRepo"
+	V_IRepoPkg = "IRepoPkg"
+	// 仓储包路径
+	V_RepoPkg = "RepoPkg"
 )
 
 type (
@@ -45,8 +47,9 @@ type (
 		Name string
 		// 表前缀
 		Prefix string
-		// 表名首字大写
-		Title   string
+		// 表名单词首字大写
+		Title string
+		// 表注释
 		Comment string
 		Engine  string
 		Charset string
@@ -84,7 +87,8 @@ func (ts *toolSession) init() *toolSession {
 	ts.Var(V_RepoPkgName, "repo")
 	ts.Var(V_IRepoPkgName, "repo")
 	ts.Var(V_ModelPkg, "")
-	ts.Var(V_ModelPkgIRepo, "")
+	ts.Var(V_IRepoPkg, "")
+	ts.Var(V_RepoPkg, "")
 	return ts
 }
 
@@ -232,6 +236,11 @@ func (ts *toolSession) Var(key string, v interface{}) {
 		delete(ts.codeVars, key)
 		return
 	}
+	if strings.HasSuffix(key, "PkgName") {
+		if s := v.(string); s != "" && s[len(s)-1] != '.' {
+			v = s + "."
+		}
+	}
 	ts.codeVars[key] = v
 }
 
@@ -287,6 +296,35 @@ func (ts *toolSession) GenerateCode(tb *Table, tpl CodeTemplate,
 		"E2":  ePrefix + n,
 		"Ptr": strings.ToLower(tb.Name[:1]),
 		"PK":  ts.title(pk),
+	}
+	buf := bytes.NewBuffer(nil)
+	err = t.Execute(buf, mp)
+	if err == nil {
+		code := buf.String()
+		//去除空引用
+		code = emptyImportReg.ReplaceAllString(code, "")
+		//如果不包含模型，则可能为引用空的包
+		code = emptyReg.ReplaceAllString(code, "")
+		return ts.revertTemplateVariable(code)
+	}
+	log.Println("execute template error:", err.Error())
+	return ""
+}
+
+func (ts *toolSession) GenerateTablesCode(tables []*Table, tpl CodeTemplate) string {
+	if tables == nil || len(tables) == 0 {
+		return ""
+	}
+
+	var err error
+	t := &template.Template{}
+	t, err = t.Parse(string(tpl))
+	if err != nil {
+		panic(err)
+	}
+	mp := map[string]interface{}{
+		"VAR":    ts.codeVars,
+		"Tables": tables,
 	}
 	buf := bytes.NewBuffer(nil)
 	err = t.Execute(buf, mp)

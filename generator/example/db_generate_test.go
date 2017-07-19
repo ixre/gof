@@ -33,7 +33,7 @@ func TestGenAll(t *testing.T) {
 	modelPkgName := "model"
 	dg.Var(generator.V_ModelPkgName, modelPkgName)
 	dg.Var(generator.V_ModelPkg, modelPkg)
-	dg.Var(generator.V_ModelPkgIRepo, modelPkg)
+	dg.Var(generator.V_IRepoPkg, modelPkg)
 	// 读取自定义模板
 	listTP, _ := dg.ParseTemplate("code_templates/grid_list.html")
 	editTP, _ := dg.ParseTemplate("code_templates/entity_edit.html")
