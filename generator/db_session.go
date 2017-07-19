@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	emptyReg       = regexp.MustCompile("\\s+\"\\s*\"\\s*\\n")
-	emptyImportReg = regexp.MustCompile("import\\s*\\(([\\n\\s\"]+)\\)")
+	emptyReg             = regexp.MustCompile("\\s+\"\\s*\"\\s*\\n")
+	emptyImportReg       = regexp.MustCompile("import\\s*\\(([\\n\\s\"]+)\\)")
+	revertTemplateRegexp = regexp.MustCompile("\\$\\{([^\\}]+)\\}")
 )
 
 const (
@@ -78,18 +79,18 @@ func DBCodeGenerator() *toolSession {
 	}).init()
 }
 
-func (t *toolSession) init() *toolSession {
-	t.Var(V_ModelPkgName, "model")
-	t.Var(V_RepoPkgName, "repo")
-	t.Var(V_IRepoPkgName, "repo")
-	t.Var(V_ModelPkg, "")
-	t.Var(V_ModelPkgIRepo, "")
-	return t
+func (ts *toolSession) init() *toolSession {
+	ts.Var(V_ModelPkgName, "model")
+	ts.Var(V_RepoPkgName, "repo")
+	ts.Var(V_IRepoPkgName, "repo")
+	ts.Var(V_ModelPkg, "")
+	ts.Var(V_ModelPkgIRepo, "")
+	return ts
 }
 
-func (t *toolSession) title(str string) string {
+func (ts *toolSession) title(str string) string {
 	// 小于3且ID大写，则返回大写
-	if t.IdUpper && len(str) < 3 {
+	if ts.IdUpper && len(str) < 3 {
 		return strings.ToUpper(str)
 	}
 	arr := strings.Split(str, "_")
@@ -99,7 +100,7 @@ func (t *toolSession) title(str string) string {
 	return strings.Join(arr, "")
 }
 
-func (t *toolSession) prefix(str string) string {
+func (ts *toolSession) prefix(str string) string {
 	if i := strings.Index(str, "_"); i != -1 {
 		return str[:i]
 	}
@@ -111,7 +112,7 @@ func (t *toolSession) prefix(str string) string {
 	return ""
 }
 
-func (t *toolSession) goType(dbType string) string {
+func (ts *toolSession) goType(dbType string) string {
 	l := len(dbType)
 	switch true {
 	case strings.HasPrefix(dbType, "tinyint"):
@@ -134,20 +135,20 @@ func (t *toolSession) goType(dbType string) string {
 }
 
 // 获取所有的表
-func (t *toolSession) ParseTables(tbs []*orm.Table, err error) ([]*Table, error) {
+func (ts *toolSession) ParseTables(tbs []*orm.Table, err error) ([]*Table, error) {
 	n := make([]*Table, len(tbs))
 	for i, tb := range tbs {
-		n[i] = t.ParseTable(tb)
+		n[i] = ts.ParseTable(tb)
 	}
 	return n, err
 }
 
 // 获取表结构
-func (t *toolSession) ParseTable(tb *orm.Table) *Table {
+func (ts *toolSession) ParseTable(tb *orm.Table) *Table {
 	n := &Table{
 		Name:    tb.Name,
-		Prefix:  t.prefix(tb.Name),
-		Title:   t.title(tb.Name),
+		Prefix:  ts.prefix(tb.Name),
+		Title:   ts.title(tb.Name),
 		Comment: tb.Comment,
 		Engine:  tb.Engine,
 		Charset: tb.Charset,
@@ -157,7 +158,7 @@ func (t *toolSession) ParseTable(tb *orm.Table) *Table {
 	for i, v := range tb.Columns {
 		n.Columns[i] = &Column{
 			Name:    v.Name,
-			Title:   t.title(v.Name),
+			Title:   ts.title(v.Name),
 			Pk:      v.Pk,
 			Auto:    v.Auto,
 			NotNull: v.NotNull,
@@ -169,12 +170,12 @@ func (t *toolSession) ParseTable(tb *orm.Table) *Table {
 }
 
 // 表生成结构
-func (t *toolSession) TableToGoStruct(tb *Table) string {
+func (ts *toolSession) TableToGoStruct(tb *Table) string {
 	if tb == nil {
 		return ""
 	}
 	pkgName := ""
-	if p, ok := t.codeVars[V_ModelPkgName]; ok {
+	if p, ok := ts.codeVars[V_ModelPkgName]; ok {
 		pkgName = p.(string)
 	} else {
 		pkgName = "model"
@@ -188,7 +189,7 @@ func (t *toolSession) TableToGoStruct(tb *Table) string {
 	buf.WriteString("\n// ")
 	buf.WriteString(tb.Comment)
 	buf.WriteString("\ntype ")
-	buf.WriteString(t.title(tb.Name))
+	buf.WriteString(ts.title(tb.Name))
 	buf.WriteString(" struct{\n")
 
 	for _, col := range tb.Columns {
@@ -198,9 +199,9 @@ func (t *toolSession) TableToGoStruct(tb *Table) string {
 			buf.WriteString("\n")
 		}
 		buf.WriteString("    ")
-		buf.WriteString(t.title(col.Name))
+		buf.WriteString(ts.title(col.Name))
 		buf.WriteString(" ")
-		buf.WriteString(t.goType(col.Type))
+		buf.WriteString(ts.goType(col.Type))
 		buf.WriteString(" `")
 		buf.WriteString("db:\"")
 		buf.WriteString(col.Name)
@@ -232,6 +233,11 @@ func (ts *toolSession) Var(key string, v interface{}) {
 		return
 	}
 	ts.codeVars[key] = v
+}
+
+// 还原模板的标签: ${...} -> {{...}}
+func (ts *toolSession) revertTemplateVariable(str string) string {
+	return revertTemplateRegexp.ReplaceAllString(str, "{{$1}}")
 }
 
 // 转换成为模板
@@ -290,7 +296,7 @@ func (ts *toolSession) GenerateCode(tb *Table, tpl CodeTemplate,
 		code = emptyImportReg.ReplaceAllString(code, "")
 		//如果不包含模型，则可能为引用空的包
 		code = emptyReg.ReplaceAllString(code, "")
-		return code
+		return ts.revertTemplateVariable(code)
 	}
 	log.Println("execute template error:", err.Error())
 	return ""

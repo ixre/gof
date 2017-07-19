@@ -64,15 +64,12 @@ func TestGenAll(t *testing.T) {
 		}
 		// 生成列表文件
 		str = dg.GenerateCode(tb, listTP, "", true, "")
-		str = generator.RevertTPVariable(str)
 		generator.SaveFile(str, genDir+"html_list/"+tb.Name+"_list.html")
 		// 生成表单文件
 		str = dg.GenerateCode(tb, editTP, "", true, "")
-		str = generator.RevertTPVariable(str)
 		generator.SaveFile(str, genDir+"html_edit/"+tb.Name+"_edit.html")
 		// 生成控制器
 		str = dg.GenerateCode(tb, ctrTpl, "", true, "")
-		str = generator.RevertTPVariable(str)
 		generator.SaveFile(str, genDir+"c/"+tb.Name+"_c.go")
 	}
 	//格式化代码
