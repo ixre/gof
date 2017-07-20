@@ -13,6 +13,8 @@ var (
         type I<R> interface{
             // Get <E>
             Get<R2>(primary interface{})*<E2>
+            // GetBy <E>
+            Get<R2>By(where string,v ...interface{})*<E2>
             // Select <E>
             Select<R2>(where string,v ...interface{})[]*<E2>
             // Save <E>

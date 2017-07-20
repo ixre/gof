@@ -236,11 +236,11 @@ func (ts *toolSession) Var(key string, v interface{}) {
 		delete(ts.codeVars, key)
 		return
 	}
-	if strings.HasSuffix(key, "PkgName") {
-		if s := v.(string); s != "" && s[len(s)-1] != '.' {
-			v = s + "."
-		}
-	}
+	//if strings.HasSuffix(key, "PkgName") {
+	//	if s := v.(string); s != "" && s[len(s)-1] != '.' {
+	//		v = s + "."
+	//	}
+	//}
 	ts.codeVars[key] = v
 }
 

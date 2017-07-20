@@ -40,6 +40,19 @@ var (
                 return nil
             }
 
+            // GetBy <E>
+            func (<Ptr> *<R>) Get<R2>By(where string,v ...interface{})*<E2>{
+                e := <E2>{}
+                err := <Ptr>._orm.GetBy(&e,where,v...)
+                if err == nil{
+                    return &e
+                }
+                if err != sql.ErrNoRows{
+                  log.Println("[ Orm][ Error]:",err.Error(),"; Entity:<E>")
+                }
+                return nil
+            }
+
             // Select <E>
             func (<Ptr> *<R>) Select<R2>(where string,v ...interface{})[]*<E2> {
                 list := []*<E2>{}
