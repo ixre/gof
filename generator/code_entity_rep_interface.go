@@ -11,6 +11,7 @@ var (
         )
 
         type I<R> interface{
+            // auto generate by gof
             // Get <E>
             Get<R2>(primary interface{})*<E2>
             // GetBy <E>

@@ -16,15 +16,15 @@ var (
                 "github.com/jsix/gof/db/orm"
             )
 
-            type <R> struct{
-                _orm orm.Orm
-            }
-
             // Create new <R>
             func New<R>(o orm.Orm)*<R>{
                 return &<R>{
                     _orm:o,
                 }
+            }
+
+            type <R> struct{
+                _orm orm.Orm
             }
 
             // Get <E>
@@ -65,7 +65,7 @@ var (
 
             // Save <E>
             func (<Ptr> *<R>) Save<R2>(v *<E2>)(int,error){
-                id,err := orm.Save(<Ptr>._orm,v,v.<PK>)
+                id,err := orm.Save(<Ptr>._orm,v,int(v.<PK>))
                 if err != nil && err != sql.ErrNoRows{
                   log.Println("[ Orm][ Error]:",err.Error(),"; Entity:<E>")
                 }
