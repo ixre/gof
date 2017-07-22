@@ -2,9 +2,9 @@ package tree
 
 type TreeNode struct {
 	//子节点编号
-	Id int32 `json:"id"`
+	ID int64 `json:"id"`
 	//父节点编号
-	Pid      int32       `json:"pid"`
+	Pid      int64       `json:"pid"`
 	Text     string      `json:"text"`
 	Value    string      `json:"value"`
 	Url      string      `json:"url"`

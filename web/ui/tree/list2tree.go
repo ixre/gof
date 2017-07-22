@@ -6,7 +6,7 @@ import (
 
 func List2Tree(nodeList []TreeNode) (rootNode *TreeNode) {
 	for i, k := range nodeList {
-		if k.Id == 0 {
+		if k.ID == 0 {
 			rootNode = &k
 			nodeList = append(nodeList[:i], nodeList[i+1:]...)
 			break
@@ -15,7 +15,7 @@ func List2Tree(nodeList []TreeNode) (rootNode *TreeNode) {
 
 	if rootNode == nil {
 		rootNode = &TreeNode{
-			Id:       0,
+			ID:       0,
 			Pid:      0,
 			Text:     "根节点",
 			Value:    "",
@@ -31,7 +31,7 @@ func iterTree(node *TreeNode, nodeList []TreeNode) {
 	node.Children = []*TreeNode{}
 	for _, _cnode := range nodeList {
 		cnode := _cnode //必须要新建变量，否则都会引用到最后一个元素
-		if cnode.Pid == node.Id {
+		if cnode.Pid == node.ID {
 			node.Children = append(node.Children, &cnode)
 			iterTree(&cnode, nodeList)
 		}

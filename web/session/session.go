@@ -10,6 +10,7 @@ package session
 
 import (
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"github.com/jsix/gof/crypto"
 	"github.com/jsix/gof/storage"
@@ -49,6 +50,9 @@ func getSession(w http.ResponseWriter, s storage.Interface,
 		_storage:   s,
 		_maxAge:    defaultSessionMaxAge,
 		_keyName:   cookieName,
+	}
+	if ns._storage == nil {
+		panic(errors.New("session storage not set"))
 	}
 	ns._storage.Get(_factory.getStorageKey(ns._sessionId),
 		&ns._data)

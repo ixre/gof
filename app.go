@@ -11,7 +11,9 @@ package gof
 import (
 	"github.com/jsix/gof/db"
 	"github.com/jsix/gof/log"
+	"github.com/jsix/gof/shell"
 	"github.com/jsix/gof/storage"
+	"time"
 )
 
 // 应用当前的上下文
@@ -28,4 +30,31 @@ type App interface {
 	Log() log.ILogger
 	// Application is running debug mode
 	Debug() bool
+}
+
+// 自动安装包
+func AutoInstall(d time.Duration) {
+	execInstall()
+	if d == 0 {
+		d = time.Second * 15
+	}
+	t := time.NewTimer(d)
+	for {
+		select {
+		case <-t.C:
+			if err := execInstall(); err == nil {
+				t.Reset(d)
+			} else {
+				break
+			}
+		}
+	}
+}
+
+func execInstall() error {
+	_, _, err := shell.Run("go install .")
+	if err != nil {
+		log.Println("[ Gof][ Install]:", err)
+	}
+	return err
 }
