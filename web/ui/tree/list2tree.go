@@ -4,10 +4,10 @@ import (
 	_ "fmt"
 )
 
-func List2Tree(nodeList []TreeNode) (rootNode *TreeNode) {
+func List2Tree(nodeList []FlatNode) (rootNode *TreeNode) {
 	for i, k := range nodeList {
 		if k.ID == 0 {
-			rootNode = &k
+			rootNode = k.Node()
 			nodeList = append(nodeList[:i], nodeList[i+1:]...)
 			break
 		}
@@ -15,25 +15,25 @@ func List2Tree(nodeList []TreeNode) (rootNode *TreeNode) {
 
 	if rootNode == nil {
 		rootNode = &TreeNode{
-			ID:       0,
-			Pid:      0,
-			Text:     "根节点",
+			id:       0,
+			Title:    "根节点",
 			Value:    "",
 			Url:      "",
 			Icon:     "",
-			Open:     true,
+			Expand:   true,
 			Children: nil}
 	}
-	iterTree(rootNode, nodeList)
+	walkTree(rootNode, nodeList)
 	return rootNode
 }
-func iterTree(node *TreeNode, nodeList []TreeNode) {
+
+func walkTree(node *TreeNode, nodeList []FlatNode) {
 	node.Children = []*TreeNode{}
-	for _, _cnode := range nodeList {
-		cnode := _cnode //必须要新建变量，否则都会引用到最后一个元素
-		if cnode.Pid == node.ID {
-			node.Children = append(node.Children, &cnode)
-			iterTree(&cnode, nodeList)
+	for _, v := range nodeList {
+		if v.Pid == node.id {
+			n := v.Node()
+			node.Children = append(node.Children, n)
+			walkTree(n, nodeList)
 		}
 	}
 }

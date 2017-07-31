@@ -73,12 +73,17 @@ func NewSimpleConnector(driverName, driverSource string,
 		db.SetMaxIdleConns(maxConn)
 	}
 
+	o := orm.NewOrm(driverName, db)
+	if debug {
+		o.SetTrace(true)
+	}
 	return &simpleConnector{
 		_db:           db,
-		_orm:          orm.NewOrm(driverName, db),
+		_orm:          o,
 		_driverName:   driverName,
 		_driverSource: driverName,
 		_logger:       l,
+		_debug:        debug,
 	}
 }
 

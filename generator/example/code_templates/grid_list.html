@@ -47,7 +47,7 @@
 <script type="text/javascript">
 
     var baseJsUrl = "${.Var.StaticServe}"; //设置JS文件的路径
-    require([baseJsUrl + "/assets/js/super/require_config.js?spam=${.Var.Spam}"], function () {
+    require([baseJsUrl + "/assets/js/require_config.js?spam=${.Var.Spam}"], function () {
         require(["base", "jquery.easyui.zh", "extra/export","extra/util"], pageLoad);
     });
 
