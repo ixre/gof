@@ -38,6 +38,7 @@ type TreeNode struct {
 
 func (f FlatNode) Node() *TreeNode {
 	return &TreeNode{
+		id:       f.ID,
 		Title:    f.Title,
 		Value:    f.Value,
 		Url:      f.Url,

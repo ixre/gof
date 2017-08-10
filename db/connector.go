@@ -98,8 +98,7 @@ func (t *simpleConnector) err(err error) error {
 
 func (t *simpleConnector) debugPrintf(format string, s string, args ...interface{}) {
 	if t._debug && t._logger != nil {
-		var newArgs []interface{} = make([]interface{}, 0)
-		newArgs[0] = s
+		newArgs := []interface{}{s}
 		newArgs = append(newArgs, args...)
 		t._logger.Printf(format+"\n", newArgs...)
 	}

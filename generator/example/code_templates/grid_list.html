@@ -59,7 +59,7 @@
             toolbar: ".toolBar",
             singleSelect: !false,
             pagination: true,
-            rowNumbers: true,
+            rownumbers: true,
             fitColumns: true,
             url: expo.getDataUrl(),
             columns: [
@@ -69,7 +69,7 @@
             {field: "{{$c.Name}}", title: "{{$c.Comment}}", align:"center", width: 100},
         {{end}}
                     {
-                        field: "Id", title:"操作", align:"center", width: 120, formatter: function (val, row) {
+                        field: "id", title:"操作", align:"center", width: 120, formatter: function (val, row) {
                         return $b.template(opHtml, row);
                     }
                     },
@@ -86,8 +86,8 @@
     
     function _create() {
         var d = $b.dialog.create2("添加{{.T.Comment}}", true, true);
-        d.open("Create{{.T.Title}}", 600, 400);
-        // $b.tab.open("创建{{.T.Comment}}", "Create{{.T.Title}}", true);
+        d.open("create{{.T.Title}}", 600, 400);
+        // $b.tab.open("创建{{.T.Comment}}", "create{{.T.Title}}", true);
     }
     
     function _search() {
