@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-const lineEnd byte = '\n'
+const confLineDelimer byte = '\n'
 
 var (
 	regex = regexp.MustCompile("^\\s*([^#\\s]+)\\s*=\\s*\"*([^#\\s\"]*)\"*\\s*$")
@@ -38,8 +38,8 @@ func LoadConfig(file string) (cfg *Config, err error) {
 }
 
 //从配置中读取数据
-func (this *Config) GetString(key string) string {
-	k, e := this.configDict[key]
+func (c *Config) GetString(key string) string {
+	k, e := c.configDict[key]
 	if e {
 		v, _ := k.(string)
 		return v
@@ -48,23 +48,23 @@ func (this *Config) GetString(key string) string {
 }
 
 //从配置中读取数据
-func (this *Config) Get(key string) interface{} {
-	v, e := this.configDict[key]
+func (c *Config) Get(key string) interface{} {
+	v, e := c.configDict[key]
 	if e {
 		return v
 	}
 	return nil
 }
 
-func (this *Config) Set(key string, v interface{}) {
-	if _, ok := this.configDict[key]; ok {
+func (c *Config) Set(key string, v interface{}) {
+	if _, ok := c.configDict[key]; ok {
 		panic("Key '" + key + "' is exist in config")
 	}
-	this.configDict[key] = v
+	c.configDict[key] = v
 }
 
-func (this *Config) GetInt(key string) int {
-	k, e := this.configDict[key]
+func (c *Config) GetInt(key string) int {
+	k, e := c.configDict[key]
 	if e {
 		v, ok := k.(int)
 		if ok {
@@ -79,8 +79,8 @@ func (this *Config) GetInt(key string) int {
 	return 0
 }
 
-func (this *Config) GetFloat(key string) float64 {
-	k, e := this.configDict[key]
+func (c *Config) GetFloat(key string) float64 {
+	k, e := c.configDict[key]
 	if e {
 		v, ok := k.(float64)
 		if ok {
@@ -96,8 +96,8 @@ func (this *Config) GetFloat(key string) float64 {
 }
 
 //从文件中加载配置
-func (this *Config) load(file string) (err error) {
-	this.configDict = make(map[string]interface{})
+func (c *Config) load(file string) (err error) {
+	c.configDict = make(map[string]interface{})
 	//var allContent string = ""
 	f, _err := os.Open(file)
 	if _err != nil {
@@ -106,17 +106,15 @@ func (this *Config) load(file string) (err error) {
 	defer f.Close()
 	reader := bufio.NewReader(f)
 	for {
-		line, _err := reader.ReadString(lineEnd)
+		line, _err := reader.ReadString(confLineDelimer)
 		if _err == io.EOF {
 			break
 		}
-
 		if regex.Match([]byte(line)) {
-			mathches := regex.FindStringSubmatch(line)
-			//this.configDict[mathches[1]] = mathches[2]
-			this.configDict[mathches[1]] = mathches[2]
+			matches := regex.FindStringSubmatch(line)
+			//c.configDict[matches[1]] = matches[2]
+			c.configDict[matches[1]] = matches[2]
 		}
-		//allContent = allContent + line + "\n"
 	}
 	return nil
 }
