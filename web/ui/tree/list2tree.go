@@ -4,7 +4,7 @@ import (
 	_ "fmt"
 )
 
-func List2Tree(nodeList []FlatNode) (rootNode *TreeNode) {
+func List2Tree(nodeList []FlatNode, nodeFn func(node *TreeNode)) (rootNode *TreeNode) {
 	for i, k := range nodeList {
 		if k.ID == 0 {
 			rootNode = k.Node()
@@ -23,17 +23,20 @@ func List2Tree(nodeList []FlatNode) (rootNode *TreeNode) {
 			Expand:   true,
 			Children: nil}
 	}
-	walkTree(rootNode, nodeList)
+	walkTree(rootNode, nodeList, nodeFn)
 	return rootNode
 }
 
-func walkTree(node *TreeNode, nodeList []FlatNode) {
+func walkTree(node *TreeNode, nodeList []FlatNode, nodeFn func(node *TreeNode)) {
 	node.Children = []*TreeNode{}
 	for _, v := range nodeList {
 		if v.Pid == node.id {
 			n := v.Node()
+			if nodeFn != nil {
+				nodeFn(n)
+			}
 			node.Children = append(node.Children, n)
-			walkTree(n, nodeList)
+			walkTree(n, nodeList, nodeFn)
 		}
 	}
 }
