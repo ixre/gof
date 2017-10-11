@@ -35,12 +35,12 @@ var (
 	attrRegex  = regexp.MustCompile("\\s*([^#\\s]+)\\s*=\\s*\"*([^#\\s\"]*)\"*\\s*")
 	fieldRegex = regexp.MustCompile("field\\{([\\s\\S]+?)\\}")
 	// 默认表单HTML模板
-	TDefaultFormHtml string = `<!-- FORM ID:{{.Id}} Name:{{.Label}} -->
+	TDefaultFormHtml string = `<!-- FORM ID:{{.ID}} Name:{{.Label}} -->
             {{range $i,$f := .Fields}}
             <div class="form-row">
                 <label>{{$f.Label}}</label>
                 <div class="f">
-                    <{{$f.Elem}} field="{{$f.Id}}" class="{{$f.Class}}"{{$f.AttrsHtml}}></{{$f.Elem}}>
+                    <{{$f.Elem}} field="{{$f.ID}}" class="{{$f.Class}}"{{$f.AttrsHtml}}></{{$f.Elem}}>
                 </div>
             </div>
             {{end}}`

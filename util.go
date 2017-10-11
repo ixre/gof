@@ -30,7 +30,7 @@ func AssignValue(d reflect.Value, s string) (err error) {
 		v := d.Interface()
 		switch v.(type) {
 		case time.Time:
-			t, err := time.Parse("2006-01-02 15:04:05", s)
+			t, err := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
 			if err == nil {
 				d.Set(reflect.ValueOf(t))
 			}

@@ -181,11 +181,11 @@ func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastIns
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 		return 0, -1, err
 	}
-	defer stmt.Close()
 	var lastId int64
 	var affect int64
 	affect, err = result.RowsAffected()
 	if err == nil {
+		stmt.Close()
 		lastId, err = result.LastInsertId()
 	}
 	return int(affect), int(lastId), err
