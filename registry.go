@@ -33,7 +33,7 @@ func (r *Registry) init() *Registry {
 			if strings.HasSuffix(name, ".conf") {
 				t, err := toml.LoadFile(path)
 				if err == nil {
-					key := name[:len(name)-4]
+					key := name[:len(name)-5]
 					r.data[key] = t
 					r.pathMap[key] = path
 				}
@@ -57,16 +57,17 @@ func (r *Registry) split(key string) []string {
 // get registry pair
 func (r *Registry) Get(key string) interface{} {
 	arr := r.split(key)
-	d, exist := r.data[arr[0]]
+	fk, tk := arr[0], arr[1]
+	d, exist := r.data[fk]
 	if !exist {
-		return "no such registry" + arr[0]
+		return "no such registry " + fk
 	}
 	if len(arr) == 2 {
-		return d.Get(arr[1])
+		return d.Get(tk)
 	}
-	tree := d.Get(arr[1]).(*toml.Tree)
+	tree := d.Get(tk).(*toml.Tree)
 	if tree == nil {
-		return "no such node " + arr[1]
+		return "no such node " + tk
 	}
 	return tree.Get(arr[2])
 }
@@ -74,20 +75,21 @@ func (r *Registry) Get(key string) interface{} {
 // set registry pair
 func (r *Registry) Set(key string, value interface{}) (err error) {
 	arr := r.split(key)
-	p := arr[0]
-	d, exist := r.data[p]
+	fk, tk := arr[0], arr[1]
+	d, exist := r.data[fk]
 	if !exist {
 		d, err = r.createNode(arr, value)
-		r.pathMap[arr[0]] = r.path + arr[0] + ".conf"
+		r.data[fk] = d
+		r.pathMap[fk] = r.path + fk + ".conf"
 	} else {
 		if len(arr) == 2 {
-			d.Set(arr[1], value)
+			d.Set(tk, "", false, value)
 		} else {
-			tree := d.Get(arr[1]).(*toml.Tree)
+			tree := d.Get(tk).(*toml.Tree)
 			if tree == nil {
-				return errors.New("no such node " + arr[1])
+				return errors.New("no such node " + tk)
 			}
-			tree.Set(arr[2], value)
+			tree.Set(arr[2], "", false, value)
 		}
 	}
 	_, err = os.Stat(r.path)
@@ -96,7 +98,7 @@ func (r *Registry) Set(key string, value interface{}) (err error) {
 	}
 	if err == nil {
 		var fi *os.File
-		fi, err = os.OpenFile(r.pathMap[p], os.O_CREATE|os.O_WRONLY, os.ModePerm)
+		fi, err = os.OpenFile(r.pathMap[fk], os.O_CREATE|os.O_WRONLY, os.ModePerm)
 		if err == nil {
 			_, err = d.WriteTo(fi)
 			fi.Close()
@@ -105,16 +107,15 @@ func (r *Registry) Set(key string, value interface{}) (err error) {
 	return err
 }
 func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, error) {
-	mp := map[string]interface{}{}
+	tk := arr[1]
+	tree, err := toml.TreeFromMap(map[string]interface{}{})
 	if len(arr) == 2 {
-		mp[arr[1]] = value
+		tree.Set(tk, "", false, value)
 	} else {
-		tree, _ := toml.TreeFromMap(map[string]interface{}{
+		tree2, _ := toml.TreeFromMap(map[string]interface{}{
 			arr[2]: value,
 		})
-		mp[arr[1]] = tree
+		tree.Set(tk, "", false, tree2)
 	}
-	return toml.TreeFromMap(map[string]interface{}{
-		arr[0]: mp,
-	})
+	return tree, err
 }
