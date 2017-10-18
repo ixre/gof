@@ -41,6 +41,7 @@ func (m *MySqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
 			}
 		}
 		stmt.Close()
+		rows.Close()
 		tList := make([]*Table, len(list))
 		for i, v := range list {
 			if tList[i], err = m.Table(db, v); err != nil {

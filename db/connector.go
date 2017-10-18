@@ -54,13 +54,11 @@ type simpleConnector struct {
 func NewSimpleConnector(driverName, driverSource string,
 	l log.ILogger, maxConn int, debug bool) Connector {
 	db, err := sql.Open(driverName, driverSource)
-
 	if err == nil {
 		err = db.Ping()
 	}
-
 	if err != nil {
-		defer db.Close()
+		db.Close()
 		//如果异常，则显示并退出
 		log.Fatalln("[ DBC][ " + driverName + "] " + err.Error())
 		return nil
@@ -125,6 +123,7 @@ func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}
 	}
 	if err == nil {
 		stmt.Close()
+		defer rows.Close()
 		if f != nil && rows != nil {
 			f(rows)
 		}

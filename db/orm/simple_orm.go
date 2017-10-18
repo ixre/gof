@@ -155,7 +155,6 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primaryVal))
 	}
-	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
@@ -274,7 +273,6 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
-
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
@@ -367,11 +365,9 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 
 	defer stmt.Close()
 	rows, err := stmt.Query(args...)
-
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
-
 	defer rows.Close()
 
 	/* 用反射来对输出结果复制 */
@@ -468,7 +464,6 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 
 	}
 	defer stmt.Close()
-
 	_, err = stmt.Exec(primary)
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
@@ -543,20 +538,15 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 			setCond,
 			meta.PkFieldName,
 		)
-
-		/* query */
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
 			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
 		}
 		defer stmt.Close()
-
 		params = append(params, primaryKey)
-
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
-
 		result, err := stmt.Exec(params...)
 		var rowNum int64 = 0
 		if err == nil {

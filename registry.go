@@ -65,8 +65,8 @@ func (r *Registry) Get(key string) interface{} {
 	if len(arr) == 2 {
 		return d.Get(tk)
 	}
-	tree := d.Get(tk).(*toml.Tree)
-	if tree == nil {
+	tree, result := d.Get(tk).(*toml.Tree)
+	if !result || tree == nil {
 		return "no such node " + tk
 	}
 	return tree.Get(arr[2])

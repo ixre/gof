@@ -75,7 +75,6 @@ func query(t *testing.T) {
 			t.Log(v2, "=>", ok2)
 		}
 		//println(RowsToMarshalMap(rows))
-		rows.Close()
 	})
 }
 

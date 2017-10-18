@@ -15,6 +15,10 @@ import (
 	"testing"
 )
 
+type user struct {
+	host string `db:"host"`
+}
+
 func getDb() *sql.DB {
 	db, err := sql.Open("mysql", "root:@tcp(dbs.ts.com:3306)/mysql?charset=utf8")
 	if err == nil {
@@ -30,16 +34,26 @@ func getDb() *sql.DB {
 	return db
 }
 
-func TestToolSession_Table2Struct(t *testing.T) {
-	d := &MySqlDialect{}
-	tool := DialectSession(getDb(), d)
-	tb, err := tool.Table("user")
-	if err != nil {
-		t.Error(err)
-	}
-	str := tool.TableToGoStruct(tb)
-	t.Log("//生成的结构代码为：\n" + str + "\n")
-
-	str = tool.TableToGoRepo(tb, true, "model.")
-	t.Log("//生成的REP代码为：\n" + str + "\n")
+func TestStmtClose(t *testing.T) {
+	db := getDb()
+	conn := NewOrm("mysql", db)
+	defer db.Close()
+	usr := []user{}
+	err := conn.Select(&usr, "1s=?", 1)
+	t.Log("---", usr, err)
 }
+
+//
+//func TestToolSession_Table2Struct(t *testing.T) {
+//	d := &MySqlDialect{}
+//	tool := DialectSession(getDb(), d)
+//	tb, err := tool.Table("user")
+//	if err != nil {
+//		t.Error(err)
+//	}
+//	str := tool.TableToGoStruct(tb)
+//	t.Log("//生成的结构代码为：\n" + str + "\n")
+//
+//	str = tool.TableToGoRepo(tb, true, "model.")
+//	t.Log("//生成的REP代码为：\n" + str + "\n")
+//}
