@@ -16,7 +16,7 @@ type Registry struct {
 	pathMap map[string]string
 }
 
-func NewRegistry(path string, delimer string) *Registry {
+func NewRegistry(path string, delimer string) (*Registry, error) {
 	return (&Registry{
 		path:    path,
 		delimer: delimer,
@@ -24,10 +24,11 @@ func NewRegistry(path string, delimer string) *Registry {
 }
 
 // load from config files
-func (r *Registry) init() *Registry {
+func (r *Registry) init() (*Registry, error) {
+	var err error
 	r.data = map[string]*toml.Tree{}
 	r.pathMap = map[string]string{}
-	filepath.Walk(r.path, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(r.path, func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			name := info.Name()
 			if strings.HasSuffix(name, ".conf") {
@@ -42,7 +43,7 @@ func (r *Registry) init() *Registry {
 		}
 		return nil
 	})
-	return r
+	return r, err
 }
 
 // get file key and config key
