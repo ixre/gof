@@ -24,6 +24,8 @@ type App interface {
 	Db() db.Connector
 	// Return application configs.
 	Config() *Config
+	// return registry
+	Registry() *Registry
 	// Storage
 	Storage() storage.Interface
 	// Return a logger

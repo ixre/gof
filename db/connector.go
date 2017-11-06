@@ -115,7 +115,7 @@ func (t *simpleConnector) GetOrm() orm.Orm {
 }
 
 func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.GetDb().Prepare(s)
 	var rows *sql.Rows
 	if err == nil {
@@ -153,7 +153,7 @@ func (t *simpleConnector) QueryRow(s string, f func(*sql.Row) error, args ...int
 
 func (t *simpleConnector) ExecScalar(s string, result interface{},
 	args ...interface{}) (err error) {
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	if result == nil {
 		return t.err(errors.New("out result is null"))
 	}
@@ -169,7 +169,7 @@ func (t *simpleConnector) ExecScalar(s string, result interface{},
 
 //执行
 func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args...)
+	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.GetDb().Prepare(s)
 	if err != nil {
 		return 0, -1, err

@@ -15,7 +15,7 @@ func TestGenApiSign(t *testing.T) {
 	signType := "sha1"
 	serverUrl := "http://localhost:7020/api"
 	form := url.Values{
-		"key":  []string{key},
+		"key":       []string{key},
 		"api":       []string{"status.ping,status.hello"},
 		"sign_type": []string{signType},
 	}

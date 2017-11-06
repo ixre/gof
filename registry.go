@@ -107,6 +107,11 @@ func (r *Registry) Set(key string, value interface{}) (err error) {
 	}
 	return err
 }
+
+// get string
+func (r *Registry) GetString(key string) string {
+	return r.Get(key).(string)
+}
 func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, error) {
 	tk := arr[1]
 	tree, err := toml.TreeFromMap(map[string]interface{}{})
