@@ -1,11 +1,11 @@
 package util
 
 import (
+	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
-	"math"
-	"math/rand"
 )
 
 
@@ -26,8 +26,8 @@ func RandString(n int) string {
 func RandInt(n int) int {
 	min := int(math.Pow10(n - 1))
 	max := min*10 - 1
-	mr.Seed(time.Now().Unix())
-	v := mr.Intn(max)
+	rand.Seed(time.Now().Unix())
+	v := rand.Intn(max)
 	if v < min {
 		return min + v
 	}
