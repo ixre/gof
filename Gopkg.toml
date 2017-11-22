@@ -7,7 +7,7 @@
 # required = ["github.com/user/thing/cmd/thing"]
 
 ignored = [
-    "golang.org/x/sys/unix"
+    "github.com/garyburd/redigo/redis"
 ]
 
 #

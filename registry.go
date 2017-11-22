@@ -116,7 +116,7 @@ func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, erro
 	tk := arr[1]
 	tree, err := toml.TreeFromMap(map[string]interface{}{})
 	if len(arr) == 2 {
-		tree.Set(tk,  value)
+		tree.Set(tk, value)
 	} else {
 		tree2, _ := toml.TreeFromMap(map[string]interface{}{
 			arr[2]: value,
