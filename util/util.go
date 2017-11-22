@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 //随机字符号串
@@ -38,7 +37,6 @@ var (
 	BoolExt *boolExtend   = &boolExtend{}
 	StrExt  *stringExtend = &stringExtend{}
 )
-
 
 type (
 	boolExtend struct {
