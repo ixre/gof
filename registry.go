@@ -84,13 +84,13 @@ func (r *Registry) Set(key string, value interface{}) (err error) {
 		r.pathMap[fk] = r.path + fk + ".conf"
 	} else {
 		if len(arr) == 2 {
-			d.Set(tk, "", false, value)
+			d.Set(tk, value)
 		} else {
 			tree := d.Get(tk).(*toml.Tree)
 			if tree == nil {
 				return errors.New("no such node " + tk)
 			}
-			tree.Set(arr[2], "", false, value)
+			tree.Set(arr[2], value)
 		}
 	}
 	_, err = os.Stat(r.path)
@@ -116,12 +116,12 @@ func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, erro
 	tk := arr[1]
 	tree, err := toml.TreeFromMap(map[string]interface{}{})
 	if len(arr) == 2 {
-		tree.Set(tk, "", false, value)
+		tree.Set(tk,  value)
 	} else {
 		tree2, _ := toml.TreeFromMap(map[string]interface{}{
 			arr[2]: value,
 		})
-		tree.Set(tk, "", false, tree2)
+		tree.Set(tk, tree2)
 	}
 	return tree, err
 }
