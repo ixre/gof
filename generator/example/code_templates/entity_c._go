@@ -53,7 +53,7 @@ func ({{.Ptr}} *{{.T.Title}}C) Save{{.T.Title}}(c *echox.Context)(err error){
     e := model.{{.T.Title}}{}
     form.ParseEntity(req.Form, &e)
     if r, _ := {{.Ptr}}.Save{{.T.Title}}_(&e);r.Result_{
-       rst.Data = r.ID;
+       rst.Data = r.Data;
     }else{
        err = errors.New(r.Message)
     }
