@@ -15,12 +15,15 @@ func TestGenApiSign(t *testing.T) {
 	signType := "sha1"
 	serverUrl := "http://localhost:7020/api"
 	form := url.Values{
-		"key":       []string{key},
-		"api":       []string{"status.ping,status.hello"},
-		"sign_type": []string{signType},
+		"key":          []string{key},
+		"api":          []string{"status.ping,status.hello"},
+		"product":      []string{"h"},
+		"productType":  []string{"hello"},
+		"product_kind": []string{"h"},
+		"sign_type":    []string{signType},
 	}
 	sign := Sign(signType, form, secret)
-	//t.Log("-- Sign:", sign)
+	t.Log("-- Sign:", sign)
 	form["sign"] = []string{sign}
 	cli := http.Client{}
 	rsp, err := cli.PostForm(serverUrl, form)
@@ -37,4 +40,22 @@ func TestGenApiSign(t *testing.T) {
 		t.FailNow()
 	}
 	t.Log("接口响应：", string(data))
+}
+
+func TestParamToBytes(t *testing.T) {
+	form := url.Values{
+		"Key":       []string{"sdf"},
+		"api":       []string{"dsfsf"},
+		"sign_type": []string{"sfsf"},
+		"usr":       []string{"jarrysix"},
+		"Pwd":       []string{"2423424"},
+		"loginType": []string{"normal"},
+		"checkCode": []string{""},
+	}
+
+	t.Log("---xx = ", string(paramsToBytes(form, "123")))
+	form.Set("key", form.Get("Key"))
+	form.Del("Key")
+	t.Log("---xx = ", string(paramsToBytes(form, "123")))
+
 }

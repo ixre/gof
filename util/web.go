@@ -9,10 +9,10 @@
 package util
 
 import (
-	"regexp"
-	"html/template"
 	"encoding/json"
+	"html/template"
 	"log"
+	"regexp"
 )
 
 // 是否为移动设备UserAgent
@@ -33,4 +33,3 @@ func MustHtmlJson(v interface{}) template.JS {
 	}
 	return template.JS(d)
 }
-

@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -45,24 +46,22 @@ var (
 		Code:    10092,
 		Message: "missing api info",
 	}
-	RErrApiName = &Response{
+	RErrUndefinedApi = &Response{
 		Code:    10093,
-		Message: "error api name",
+		Message: "api not defined",
 	}
 )
 
-// 参数排序后，排除sign和sign_type，拼接token，转换为字节
+// 参数首字母小写后排序，排除sign和sign_type，拼接token，转换为字节
 func paramsToBytes(r url.Values, token string) []byte {
-	i := 0
-	buf := bytes.NewBuffer(nil)
-	// 键排序
-	keys := []string{}
+	keys := keyArr{}
 	for k, _ := range r {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	sort.Sort(keys)
 	// 拼接参数和值
-	for _, k := range keys {
+	buf := bytes.NewBuffer(nil)
+	for i, k := range keys {
 		if k == "sign" || k == "sign_type" {
 			continue
 		}
@@ -72,7 +71,6 @@ func paramsToBytes(r url.Values, token string) []byte {
 		buf.WriteString(k)
 		buf.WriteString("=")
 		buf.WriteString(r[k][0])
-		i++
 	}
 	buf.WriteString(token)
 	return buf.Bytes()
@@ -106,6 +104,22 @@ func sha1Encode(data []byte) string {
 	return hex.EncodeToString(d)
 }
 
+var _ sort.Interface = keyArr{}
+
+type keyArr []string
+
+func (s keyArr) Len() int {
+	return len(s)
+}
+
+func (s keyArr) Less(i, j int) bool {
+	return strings.ToLower(s[i]) < strings.ToLower(s[j])
+}
+
+func (s keyArr) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
 /* ----------- API DEFINE ------------- */
 
 // 处理器
@@ -121,6 +135,8 @@ type Server interface {
 	Use(middleware ...MiddlewareFunc)
 	// adds after middleware
 	After(middleware ...MiddlewareFunc)
+	// trace mode
+	Trace()
 	// serve http
 	ServeHTTP(w http.ResponseWriter, h *http.Request)
 }
@@ -131,14 +147,23 @@ type Context interface {
 	Key() string
 	// 返回对应用户编号
 	User() int64
+	// 注册表
 	Registry() *gof.Registry
+	// 请求
 	Request() *http.Request
+	// 表单数据
 	Form() Form
 }
 
 // 上下文工厂
 type ContextFactory interface {
 	Factory(h *http.Request, key string, userId int64) Context
+}
+
+// 工厂生成器
+type FactoryBuilder interface {
+	// 生成下文工厂
+	Build(registry *gof.Registry) ContextFactory
 }
 
 // 中间件
@@ -149,6 +174,48 @@ type SwapFunc func(key string) (userId int64, secret string, checkSign bool)
 
 // 数据
 type Form map[string]interface{}
+
+// 获取数值
+func (f Form) GetInt32(key string) int32 {
+	o := f.Get(key)
+	switch o.(type) {
+	case int, int32, int64:
+		return int32(o.(int))
+	case string:
+		v, _ := strconv.Atoi(o.(string))
+		return int32(v)
+	}
+	panic("not int or string")
+}
+
+// 获取数值
+func (f Form) GetInt(key string) int {
+	o := f.Get(key)
+	switch o.(type) {
+	case int, int32, int64:
+		return o.(int)
+	case string:
+		v, _ := strconv.Atoi(o.(string))
+		return v
+	}
+	panic("not int or string")
+}
+
+// 获取字节
+func (f Form) GetBytes(key string) []byte {
+	if v, ok := f.Get(key).(string); ok {
+		return []byte(v)
+	}
+	return []byte(nil)
+}
+
+// 获取字符串
+func (f Form) GetString(key string) string {
+	if v, ok := f.Get(key).(string); ok {
+		return v
+	}
+	return ""
+}
 
 func (f Form) Get(key string) interface{} {
 	if v, ok := f[key]; ok {
@@ -164,6 +231,7 @@ var _ Server = new(ServeMux)
 
 // default server implement
 type ServeMux struct {
+	trace           bool
 	processors      map[string]Processor
 	mux             sync.Mutex
 	swap            SwapFunc
@@ -183,30 +251,30 @@ func NewServerMux(cf ContextFactory, swap SwapFunc) Server {
 }
 
 // 注册客户端
-func (a *ServeMux) Register(name string, h Processor) {
-	a.mux.Lock()
-	defer a.mux.Unlock()
+func (s *ServeMux) Register(name string, h Processor) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 	ls := strings.ToLower(name)
-	_, b := a.processors[ls]
+	_, b := s.processors[ls]
 	if b {
 		panic(errors.New("processor " + name + " has been resisted!"))
 	}
-	a.processors[ls] = h
+	s.processors[ls] = h
 }
 
 // adds middleware
-func (a *ServeMux) Use(middleware ...MiddlewareFunc) {
-	a.middleware = append(a.middleware, middleware...)
+func (s *ServeMux) Use(middleware ...MiddlewareFunc) {
+	s.middleware = append(s.middleware, middleware...)
 }
 
 // adds after middleware
-func (a *ServeMux) After(middleware ...MiddlewareFunc) {
-	a.afterMiddleware = append(a.afterMiddleware, middleware...)
+func (s *ServeMux) After(middleware ...MiddlewareFunc) {
+	s.afterMiddleware = append(s.afterMiddleware, middleware...)
 }
 
-func (a *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
+func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 	h.ParseForm()
-	rsp := a.serveFunc(h)
+	rsp := s.serveFunc(h)
 	var data []byte
 	if len(rsp) > 1 {
 		data, _ = json.Marshal(rsp)
@@ -219,8 +287,8 @@ func (a *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 }
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开
-func (a *ServeMux) serveFunc(h *http.Request) []*Response {
-	rsp, userId := a.checkApiPerm(h.Form)
+func (s *ServeMux) serveFunc(h *http.Request) []*Response {
+	rsp, userId := s.checkApiPerm(h.Form, h)
 	if rsp != nil {
 		return []*Response{rsp}
 	}
@@ -228,48 +296,54 @@ func (a *ServeMux) serveFunc(h *http.Request) []*Response {
 	name := strings.Split(h.Form.Get("api"), ",")
 	arr := make([]*Response, len(name))
 	// create api context
-	ctx := a.factory.Factory(h, key, userId)
+	ctx := s.factory.Factory(h, key, userId)
 	// copy form data
 	for i, v := range h.Form {
 		ctx.Form().Set(i, v[0])
 	}
 	// call api
 	for i, n := range name {
-		arr[i] = a.call(n, ctx)
+		arr[i] = s.call(n, ctx)
 	}
 	return arr
 }
+func (s *ServeMux) Trace() {
+	s.trace = true
+	if df, ok := s.factory.(*defaultContextFactory); ok {
+		df.setTrace(s.trace)
+	}
+}
 
 // call api
-func (a *ServeMux) call(apiName string, ctx Context) *Response {
+func (s *ServeMux) call(apiName string, ctx Context) *Response {
 	data := strings.Split(apiName, ".")
 	if len(data) != 2 {
-		return RErrApiName
+		return RErrUndefinedApi
 	}
 	// save api name
-	ctx.Form().Set("api_name", apiName)
+	ctx.Form().Set("$api_name", apiName)
 	// process api
 	entry, fn := strings.ToLower(data[0]), data[1]
-	if p, ok := a.processors[entry]; ok {
+	if p, ok := s.processors[entry]; ok {
 		// use middleware
-		for _, m := range a.middleware {
+		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
-				return a.response(apiName, ctx, &Response{
+				return s.response(apiName, ctx, &Response{
 					Code:    RError.Code,
 					Message: err.Error(),
 				})
 			}
 		}
-		return a.response(apiName, ctx, p.Request(fn, ctx))
+		return s.response(apiName, ctx, p.Request(fn, ctx))
 	}
-	return RErrApiName
+	return RErrUndefinedApi
 }
 
 // use response middleware
-func (a *ServeMux) response(apiName string, ctx Context, rsp *Response) *Response {
-	if len(a.afterMiddleware) > 0 {
-		ctx.Form().Set("api_response", rsp)
-		for _, m := range a.afterMiddleware {
+func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Response {
+	if len(s.afterMiddleware) > 0 {
+		ctx.Form().Set("$api_response", rsp)
+		for _, m := range s.afterMiddleware {
 			m(ctx)
 		}
 	}
@@ -277,10 +351,10 @@ func (a *ServeMux) response(apiName string, ctx Context, rsp *Response) *Respons
 }
 
 // 检查接口权限
-func (a *ServeMux) checkApiPerm(r url.Values) (rsp *Response, userId int64) {
-	key := r.Get("key")
-	sign := r.Get("sign")
-	signType := r.Get("sign_type")
+func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response, userId int64) {
+	key := form.Get("key")
+	sign := form.Get("sign")
+	signType := form.Get("sign_type")
 	// 检查参数
 	if key == "" || sign == "" || signType == "" {
 		return RMissingApiParams, 0
@@ -288,23 +362,30 @@ func (a *ServeMux) checkApiPerm(r url.Values) (rsp *Response, userId int64) {
 	if signType != "md5" && signType != "sha1" {
 		return RMissingApiParams, 0
 	}
-	userId, userToken, checkSign := a.swap(key)
+	userId, userToken, checkSign := s.swap(key)
 	if userId <= 0 {
 		return RPermissionDenied, userId
 	}
 	// 检查签名
 	if checkSign {
-		if s := Sign(signType, r, userToken); s != sign {
-			//log.Println("---", token, sign,s)
-			return RPermissionDenied, userId
+		if rs := Sign(signType, form, userToken); rs != sign {
+			if !s.trace {
+				return RPermissionDenied, userId
+			}
+			ctx := s.factory.Factory(r, key, userId)
+			// copy form data
+			cf := ctx.Form()
+			for i, v := range form {
+				cf.Set(i, v[0])
+			}
+			// set variables
+			cf.Set("$client_sign", sign)
+			cf.Set("$server_sign", rs)
+			return s.response(form.Get("api"), ctx, RPermissionDenied), userId
 		}
 	}
 	return nil, userId
 }
-
-// 默认上下文工厂
-var _ ContextFactory = new(defaultContextFactory)
-var DefaultContextFactory *defaultContextFactory = &defaultContextFactory{}
 
 var _ Context = new(defaultContext)
 
@@ -336,16 +417,40 @@ func (ctx *defaultContext) Form() Form {
 	return ctx.form
 }
 
+// 默认工厂
+var DefaultFactory FactoryBuilder = &defaultContextFactory{}
+
+var _ ContextFactory = new(defaultContextFactory)
+var _ FactoryBuilder = new(defaultContextFactory)
+
 type defaultContextFactory struct {
 	Registry *gof.Registry
+	trace    bool
+}
+
+func (d *defaultContextFactory) Build(registry *gof.Registry) ContextFactory {
+	return &defaultContextFactory{
+		Registry: registry,
+	}
+}
+
+func (d *defaultContextFactory) setTrace(trace bool) {
+	d.trace = trace
 }
 
 func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int64) Context {
-	return &defaultContext{
+	ctx := &defaultContext{
 		h:        h,
 		key:      key,
 		userId:   userId,
 		registry: d.Registry,
 		form:     map[string]interface{}{},
 	}
+	if d.trace {
+		if h != nil {
+			ctx.form.Set("$user_ip", h.RemoteAddr)
+			ctx.form.Set("$user_agent", h.UserAgent())
+		}
+	}
+	return ctx
 }
