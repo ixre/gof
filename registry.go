@@ -61,14 +61,14 @@ func (r *Registry) Get(key string) interface{} {
 	fk, tk := arr[0], arr[1]
 	d, exist := r.data[fk]
 	if !exist {
-		return "no such registry " + fk
+		panic(errors.New("no such registry " + fk))
 	}
 	if len(arr) == 2 {
 		return d.Get(tk)
 	}
 	tree, result := d.Get(tk).(*toml.Tree)
 	if !result || tree == nil {
-		return "no such node " + tk
+		panic(errors.New("no such node " + tk))
 	}
 	return tree.Get(arr[2])
 }

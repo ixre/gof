@@ -16,7 +16,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/jsix/gof"
 	"net/http"
 	"net/url"
 	"sort"
@@ -55,7 +54,7 @@ var (
 // 参数首字母小写后排序，排除sign和sign_type，拼接token，转换为字节
 func paramsToBytes(r url.Values, token string) []byte {
 	keys := keyArr{}
-	for k, _ := range r {
+	for k := range r {
 		keys = append(keys, k)
 	}
 	sort.Sort(keys)
@@ -147,8 +146,6 @@ type Context interface {
 	Key() string
 	// 返回对应用户编号
 	User() int64
-	// 注册表
-	Registry() *gof.Registry
 	// 请求
 	Request() *http.Request
 	// 表单数据
@@ -163,7 +160,7 @@ type ContextFactory interface {
 // 工厂生成器
 type FactoryBuilder interface {
 	// 生成下文工厂
-	Build(registry *gof.Registry) ContextFactory
+	Build(registry map[string]interface{}) ContextFactory
 }
 
 // 中间件
@@ -171,61 +168,6 @@ type MiddlewareFunc func(ctx Context) error
 
 // 交换信息，根据key返回用户编号、密钥和是否验证签名
 type SwapFunc func(key string) (userId int64, secret string, checkSign bool)
-
-// 数据
-type Form map[string]interface{}
-
-// 获取数值
-func (f Form) GetInt32(key string) int32 {
-	o := f.Get(key)
-	switch o.(type) {
-	case int, int32, int64:
-		return int32(o.(int))
-	case string:
-		v, _ := strconv.Atoi(o.(string))
-		return int32(v)
-	}
-	panic("not int or string")
-}
-
-// 获取数值
-func (f Form) GetInt(key string) int {
-	o := f.Get(key)
-	switch o.(type) {
-	case int, int32, int64:
-		return o.(int)
-	case string:
-		v, _ := strconv.Atoi(o.(string))
-		return v
-	}
-	panic("not int or string")
-}
-
-// 获取字节
-func (f Form) GetBytes(key string) []byte {
-	if v, ok := f.Get(key).(string); ok {
-		return []byte(v)
-	}
-	return []byte(nil)
-}
-
-// 获取字符串
-func (f Form) GetString(key string) string {
-	if v, ok := f.Get(key).(string); ok {
-		return v
-	}
-	return ""
-}
-
-func (f Form) Get(key string) interface{} {
-	if v, ok := f[key]; ok {
-		return v
-	}
-	return ""
-}
-func (f Form) Set(key string, value interface{}) {
-	f[key] = value
-}
 
 var _ Server = new(ServeMux)
 
@@ -390,11 +332,10 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 var _ Context = new(defaultContext)
 
 type defaultContext struct {
-	h        *http.Request
-	key      string
-	userId   int64
-	registry *gof.Registry
-	form     Form
+	h      *http.Request
+	key    string
+	userId int64
+	form   Form
 }
 
 func (ctx *defaultContext) Key() string {
@@ -403,10 +344,6 @@ func (ctx *defaultContext) Key() string {
 
 func (ctx *defaultContext) User() int64 {
 	return ctx.userId
-}
-
-func (ctx *defaultContext) Registry() *gof.Registry {
-	return ctx.registry
 }
 
 func (ctx *defaultContext) Request() *http.Request {
@@ -424,13 +361,13 @@ var _ ContextFactory = new(defaultContextFactory)
 var _ FactoryBuilder = new(defaultContextFactory)
 
 type defaultContextFactory struct {
-	Registry *gof.Registry
+	registry map[string]interface{}
 	trace    bool
 }
 
-func (d *defaultContextFactory) Build(registry *gof.Registry) ContextFactory {
+func (d *defaultContextFactory) Build(registry map[string]interface{}) ContextFactory {
 	return &defaultContextFactory{
-		Registry: registry,
+		registry: registry,
 	}
 }
 
@@ -440,11 +377,15 @@ func (d *defaultContextFactory) setTrace(trace bool) {
 
 func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int64) Context {
 	ctx := &defaultContext{
-		h:        h,
-		key:      key,
-		userId:   userId,
-		registry: d.Registry,
-		form:     map[string]interface{}{},
+		h:      h,
+		key:    key,
+		userId: userId,
+		form:   map[string]interface{}{},
+	}
+	if d.registry != nil {
+		for k, v := range d.registry {
+			ctx.form[k] = v
+		}
 	}
 	if d.trace {
 		if h != nil {
@@ -453,4 +394,59 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int6
 		}
 	}
 	return ctx
+}
+
+// 数据
+type Form map[string]interface{}
+
+// 获取数值
+func (f Form) GetInt32(key string) int32 {
+	o := f.Get(key)
+	switch o.(type) {
+	case int, int32, int64:
+		return int32(o.(int))
+	case string:
+		v, _ := strconv.Atoi(o.(string))
+		return int32(v)
+	}
+	panic("not int or string")
+}
+
+// 获取数值
+func (f Form) GetInt(key string) int {
+	o := f.Get(key)
+	switch o.(type) {
+	case int, int32, int64:
+		return o.(int)
+	case string:
+		v, _ := strconv.Atoi(o.(string))
+		return v
+	}
+	panic("not int or string")
+}
+
+// 获取字节
+func (f Form) GetBytes(key string) []byte {
+	if v, ok := f.Get(key).(string); ok {
+		return []byte(v)
+	}
+	return []byte(nil)
+}
+
+// 获取字符串
+func (f Form) GetString(key string) string {
+	if v, ok := f.Get(key).(string); ok {
+		return v
+	}
+	return ""
+}
+
+func (f Form) Get(key string) interface{} {
+	if v, ok := f[key]; ok {
+		return v
+	}
+	return ""
+}
+func (f Form) Set(key string, value interface{}) {
+	f[key] = value
 }
