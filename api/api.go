@@ -35,26 +35,26 @@ var (
 	StatusOK int64 = 10000
 	RError         = &Response{
 		Code:    10090,
-		Message: "api happen error",
+		Message: "internal error",
 	}
 	RPermissionDenied = &Response{
 		Code:    10091,
 		Message: "permission denied",
 	}
-	RMissingApiParams = &Response{
-		Code:    10092,
-		Message: "missing api info",
-	}
 	RErrUndefinedApi = &Response{
-		Code:    10093,
+		Code:    10092,
 		Message: "api not defined",
+	}
+	RMissingApiParams = &Response{
+		Code:    10093,
+		Message: "missing api parameters",
 	}
 )
 
 // 参数首字母小写后排序，排除sign和sign_type，拼接token，转换为字节
 func paramsToBytes(r url.Values, token string) []byte {
 	keys := keyArr{}
-	for k := range r {
+	for k, _ := range r {
 		keys = append(keys, k)
 	}
 	sort.Sort(keys)
