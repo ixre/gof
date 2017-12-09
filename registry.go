@@ -16,7 +16,11 @@ type Registry struct {
 	pathMap map[string]string
 }
 
+// create new registry manager
 func NewRegistry(path string, delimer string) (*Registry, error) {
+	if delimer == "" {
+		delimer = "."
+	}
 	return (&Registry{
 		path:    path,
 		delimer: delimer,
