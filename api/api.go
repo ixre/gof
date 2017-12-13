@@ -52,9 +52,9 @@ var (
 )
 
 // 参数首字母小写后排序，排除sign和sign_type，拼接token，转换为字节
-func paramsToBytes(r url.Values, token string) []byte {
+func ParamsToBytes(r url.Values, token string) []byte {
 	keys := keyArr{}
-	for k, _ := range r {
+	for k := range r {
 		keys = append(keys, k)
 	}
 	sort.Sort(keys)
@@ -77,7 +77,7 @@ func paramsToBytes(r url.Values, token string) []byte {
 
 // 签名
 func Sign(signType string, r url.Values, token string) string {
-	data := paramsToBytes(r, token)
+	data := ParamsToBytes(r, token)
 	switch signType {
 	case "md5":
 		return md5Encode(data)
@@ -321,6 +321,8 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 				cf.Set(i, v[0])
 			}
 			// set variables
+			cf.Set("$user_id", userId)
+			cf.Set("$user_token", userToken)
 			cf.Set("$client_sign", sign)
 			cf.Set("$server_sign", rs)
 			return s.response(form.Get("api"), ctx, RPermissionDenied), userId
