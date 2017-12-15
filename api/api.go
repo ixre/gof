@@ -51,8 +51,8 @@ var (
 	}
 )
 
-// 参数首字母小写后排序，排除sign和sign_type，拼接token，转换为字节
-func ParamsToBytes(r url.Values, token string) []byte {
+// 参数首字母小写后排序，排除sign和sign_type，secret，转换为字节
+func ParamsToBytes(r url.Values, secret string) []byte {
 	keys := keyArr{}
 	for k := range r {
 		keys = append(keys, k)
@@ -71,13 +71,13 @@ func ParamsToBytes(r url.Values, token string) []byte {
 		buf.WriteString("=")
 		buf.WriteString(r[k][0])
 	}
-	buf.WriteString(token)
+	buf.WriteString(secret)
 	return buf.Bytes()
 }
 
 // 签名
-func Sign(signType string, r url.Values, token string) string {
-	data := ParamsToBytes(r, token)
+func Sign(signType string, r url.Values, secret string) string {
+	data := ParamsToBytes(r, secret)
 	switch signType {
 	case "md5":
 		return md5Encode(data)
@@ -304,13 +304,13 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 	if signType != "md5" && signType != "sha1" {
 		return RMissingApiParams, 0
 	}
-	userId, userToken, checkSign := s.swap(key)
+	userId, userSecret, checkSign := s.swap(key)
 	if userId <= 0 {
 		return RPermissionDenied, userId
 	}
 	// 检查签名
 	if checkSign {
-		if rs := Sign(signType, form, userToken); rs != sign {
+		if rs := Sign(signType, form, userSecret); rs != sign {
 			if !s.trace {
 				return RPermissionDenied, userId
 			}
@@ -322,7 +322,7 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 			}
 			// set variables
 			cf.Set("$user_id", userId)
-			cf.Set("$user_token", userToken)
+			cf.Set("$user_secret", userSecret)
 			cf.Set("$client_sign", sign)
 			cf.Set("$server_sign", rs)
 			return s.response(form.Get("api"), ctx, RPermissionDenied), userId
@@ -402,24 +402,15 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int6
 type Form map[string]interface{}
 
 // 获取数值
-func (f Form) GetInt32(key string) int32 {
-	o := f.Get(key)
-	switch o.(type) {
-	case int, int32, int64:
-		return int32(o.(int))
-	case string:
-		v, _ := strconv.Atoi(o.(string))
-		return int32(v)
-	}
-	panic("not int or string")
-}
-
-// 获取数值
 func (f Form) GetInt(key string) int {
 	o := f.Get(key)
 	switch o.(type) {
-	case int, int32, int64:
+	case int:
 		return o.(int)
+	case int32:
+		return int(o.(int32))
+	case int64:
+		return int(o.(int64))
 	case string:
 		v, _ := strconv.Atoi(o.(string))
 		return v

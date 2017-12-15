@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -35,6 +36,88 @@ var (
 	}
 )
 
+// 服务
+func ListenAndServe(port int, debug bool) error {
+	// 创建上下文工厂
+	factory := DefaultFactory.Build(nil)
+	// 创建服务
+	s := NewServerMux(factory, apiSwapFunc)
+	hs := http.NewServeMux()
+	hs.Handle("/api", s)
+	hs.Handle("/api_v1", s)
+	// 中间件
+	tarVer := "1.0"
+	// 校验版本
+	s.Use(func(ctx Context) error {
+		prod := ctx.Form().GetString("product")
+		prodVer := ctx.Form().GetString("version")
+		if prod == "mzl" && CompareVersion(prodVer, tarVer) < 0 {
+			return errors.New(fmt.Sprintf("%d:%s,require version=%s",
+				RErrDeprecated.Code, RErrDeprecated.Message, tarVer))
+		}
+		return nil
+	})
+	if debug {
+		// 开启调试
+		s.Trace()
+		// 输出请求信息
+		s.Use(func(ctx Context) error {
+			apiName := ctx.Form().Get("$api_name").(string)
+			log.Println("[ Api][ Log]: user", ctx.Key(), " calling ", apiName)
+			data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
+			log.Println("[ Api][ Log]: request data = [", data, "]")
+			// 记录服务端请求时间
+			ctx.Form().Set("$rpc_begin_time", time.Now().UnixNano())
+			return nil
+		})
+		// 输出响应结果
+		s.After(func(ctx Context) error {
+			form := ctx.Form()
+			rsp := form.Get("$api_response").(*Response)
+			data := ""
+			if rsp.Data != nil {
+				d, _ := json.Marshal(rsp.Data)
+				data = string(d)
+			}
+			reqTime := int64(ctx.Form().GetInt("$rpc_begin_time"))
+			elapsed := float32(time.Now().UnixNano()-reqTime) / 1000000000
+			log.Println("[ Api][ Log]: response : ", rsp.Code, rsp.Message,
+				fmt.Sprintf("; elapsed time ：%.4fs ; ", elapsed),
+				"result = [", data, "]",
+			)
+			if rsp.Code == RPermissionDenied.Code {
+				data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
+				sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_secret"))
+				log.Println("[ Api][ Log]: request data = [", data, "]")
+				log.Println(" sign not match ! key =", form.Get("key"),
+					"\r\n   server_sign=", form.GetString("$server_sign"),
+					"\r\n   client_sign=", form.GetString("$client_sign"),
+					"\r\n   sort_params=", string(sortData))
+			}
+			return nil
+		})
+	}
+
+	// 注册处理器
+	s.Register("status", &StatusProcessor{})
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), s)
+}
+
+// 检查接口参数
+func apiSwapFunc(key string) (userId int64, userToken string, checkSign bool) {
+	//todo: return user info
+	if turnOffCheckPerm {
+		return 1, "123456", false
+	}
+	if key == "test" {
+		return 1, "123456", true
+	}
+	if key == "80line365mzl00" {
+		return 1, "239d2d9fb16dbe18d81c54d1764bd33b", true
+	}
+	return 0, "", false
+}
+
 func CompareVersion(v, v1 string) int {
 	return intVer(v) - intVer(v1)
 }
@@ -50,79 +133,6 @@ func intVer(s string) int {
 		panic(err)
 	}
 	return intVer
-}
-
-// 服务
-func ListenAndServe(port int) error {
-	// 创建上下文工厂
-	factory := DefaultFactory.Build(nil)
-	// 创建服务
-	s := NewServerMux(factory, apiSwapFunc)
-	s.Trace()
-	hs := http.NewServeMux()
-	hs.Handle("/api", s)
-	hs.Handle("/api_v1", s)
-	// 中间件
-	tarVer := "1.00"
-	// 校验版本
-	s.Use(func(ctx Context) error {
-		prod := ctx.Form().GetString("product")
-		prodVer := ctx.Form().GetString("version")
-		if prod == "mzl" && CompareVersion(prodVer, tarVer) < 0 {
-			return errors.New(fmt.Sprintf("%d:%s,require version=%s",
-				RErrDeprecated.Code, RErrDeprecated.Message, tarVer))
-		}
-		return nil
-	})
-	// 输出请求信息
-	s.Use(func(ctx Context) error {
-		apiName := ctx.Form().Get("$api_name").(string)
-		log.Println("[ Api][ Log]: user", ctx.Key(), " calling ", apiName)
-		data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
-		log.Println("[ Api][ Log]: request data = [", data, "]")
-		return nil
-	})
-	// 输出响应结果
-	s.After(func(ctx Context) error {
-		form := ctx.Form()
-		rsp := form.Get("$api_response").(*Response)
-		data := ""
-		if rsp.Data != nil {
-			d, _ := json.Marshal(rsp.Data)
-			data = string(d)
-		}
-		log.Println("[ Api][ Log]: response : ", rsp.Code, rsp.Message, " ;  result = [", data, "]")
-		if rsp.Code == RPermissionDenied.Code {
-			data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
-			sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_token"))
-			log.Println("[ Api][ Log]: request data = [", data, "]")
-			log.Println(" sign not match ! key =", form.Get("key"),
-				"\r\n   server_sign=", form.GetString("$server_sign"),
-				"\r\n   client_sign=", form.GetString("$client_sign"),
-				"\r\n   sort_params=", string(sortData))
-		}
-		return nil
-	})
-	// 开启调试
-	s.Trace()
-	// 注册处理器
-	s.Register("status", &StatusProcessor{})
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), s)
-}
-
-// 检查接口参数
-func apiSwapFunc(key string) (userId int64, userToken string, checkSign bool) {
-	//todo: return user info
-	if turnOffCheckPerm {
-		return 1, "123456", false
-	}
-	if key == "test" {
-		return 1, "12345678", true
-	}
-	if key == "80line365mzl00" {
-		return 1, "239d2d9fb16dbe18d81c54d1764bd33b", true
-	}
-	return 0, "", false
 }
 
 var _ Processor = new(StatusProcessor)
