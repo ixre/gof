@@ -69,7 +69,7 @@ func NewSimpleConnector(driverName, driverSource string,
 		db.SetMaxOpenConns(maxConn)
 	}
 	// 设置最大闲置的连接数
-	if maxIdleConn > 0{
+	if maxIdleConn > 0 {
 		db.SetMaxIdleConns(maxIdleConn)
 	}
 	o := orm.NewOrm(driverName, db)

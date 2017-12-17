@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -50,8 +51,8 @@ func (o *simpleOrm) Version() string {
 	return "1.0.2"
 }
 
-func (s *simpleOrm) Dialect() Dialect {
-	return s.dialect
+func (o *simpleOrm) Dialect() Dialect {
+	return o.dialect
 }
 
 func (o *simpleOrm) err(err error) error {
@@ -126,7 +127,6 @@ func (o *simpleOrm) Mapping(v interface{}, table string) {
 }
 
 func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
-	var sql string
 	var fieldLen int
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
@@ -137,27 +137,23 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
 	}
 	val = val.Elem()
-	/* build sql */
+	/* build sqlQuery */
 	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
-	var scanVal []interface{} = make([]interface{}, fieldLen)
-	var rawBytes [][]byte = make([][]byte, fieldLen)
+	var scanVal = make([]interface{}, fieldLen)
+	var rawBytes = make([][]byte, fieldLen)
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = v
 		scanVal[i] = &rawBytes[i]
 	}
-	sql = fmt.Sprintf("SELECT %s FROM %s WHERE %s=?",
-		strings.Join(fieldArr, ","),
-		meta.TableName,
-		meta.PkFieldName,
-	)
+	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, meta.PkFieldName+"=?")
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primaryVal))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sqlQuery, primaryVal))
 	}
-	stmt, err := o.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sqlQuery)
 	if err != nil {
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sqlQuery))
 	}
 	defer stmt.Close()
 	row := stmt.QueryRow(primaryVal)
@@ -171,7 +167,6 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 func (o *simpleOrm) GetBy(entity interface{}, where string,
 	args ...interface{}) error {
 
-	var sql string
 	var fieldLen int
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
@@ -193,36 +188,30 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 		return o.err(errors.New("not validate or not initialize."))
 	}
 
-	/* build sql */
+	/* build sqlQuery */
 	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 
-	var scanVal []interface{} = make([]interface{}, fieldLen)
-	var rawBytes [][]byte = make([][]byte, fieldLen)
+	var scanVal = make([]interface{}, fieldLen)
+	var rawBytes = make([][]byte, fieldLen)
 
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = v
 		scanVal[i] = &rawBytes[i]
 	}
-
-	sql = fmt.Sprintf("SELECT %s FROM %s WHERE %s",
-		strings.Join(fieldArr, ","),
-		meta.TableName,
-		where,
-	)
-
+	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, where)
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sql, where, args))
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sqlQuery, where, args))
 	}
 
 	/* query */
-	stmt, err := o.DB.Prepare(sql)
+	stmt, err := o.DB.Prepare(sqlQuery)
 	if err != nil {
 		if o.useTrace {
-			log.Println("[ ORM][ ERROR]:", err.Error(), " [ SQL]:", sql)
+			log.Println("[ ORM][ ERROR]:", err.Error(), " [ SQL]:", sqlQuery)
 		}
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sqlQuery))
 	}
 	defer stmt.Close()
 
@@ -255,8 +244,8 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
-	var scanVal []interface{} = make([]interface{}, fieldLen)
-	var rawBytes [][]byte = make([][]byte, fieldLen)
+	var scanVal = make([]interface{}, fieldLen)
+	var rawBytes = make([][]byte, fieldLen)
 
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = o.unionField(meta, v)
@@ -326,8 +315,8 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	meta := o.getTableMapMeta(baseType)
 	fieldLen = len(meta.FieldMapNames)
 	fieldArr := make([]string, fieldLen)
-	var scanVal []interface{} = make([]interface{}, fieldLen)
-	var rawBytes [][]byte = make([][]byte, fieldLen)
+	var scanVal = make([]interface{}, fieldLen)
+	var rawBytes = make([][]byte, fieldLen)
 
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = o.unionField(meta, v)
@@ -555,4 +544,28 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		}
 		return rowNum, 0, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	}
+}
+func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
+	if o.driverName != "mysql" {
+		panic("not support database driver :" + o.driverName)
+	}
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT ")
+	if o.driverName == "mssql" {
+		buf.WriteString("TOP 1 ")
+	}
+	buf.WriteString(strings.Join(fields, ","))
+	buf.WriteString(" FROM ")
+	buf.WriteString(table)
+	if len(where) > 0 {
+		buf.WriteString(" WHERE ")
+		buf.WriteString(where)
+		if o.driverName == "mysql" && strings.Index(
+			strings.ToLower(where), " limit ") == -1 {
+			buf.WriteString(" LIMIT 1")
+		}
+	} else {
+		buf.WriteString(" LIMIT 1")
+	}
+	return buf.String()
 }
