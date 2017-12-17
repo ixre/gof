@@ -134,7 +134,7 @@ func Test_to(t *testing.T) {
 func initTest() {
 	log.SetOutput(os.Stdout)
 	_connector = NewSimpleConnector("mysql",
-		"root:@tcp(dbs.ts.com:3306)/go2o?charset=utf8", nil, -1, false)
+		"root:@tcp(dbs.ts.com:3306)/go2o?charset=utf8", nil, 0, 0, false)
 	_orm = _connector.GetOrm()
 	_orm.SetTrace(!true)
 	_orm.Mapping(User{}, "user")

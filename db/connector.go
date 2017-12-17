@@ -52,7 +52,7 @@ type simpleConnector struct {
 
 // create a new connector
 func NewSimpleConnector(driverName, driverSource string,
-	l log.ILogger, maxConn int, debug bool) Connector {
+	l log.ILogger, maxConn int, maxIdleConn int, debug bool) Connector {
 	db, err := sql.Open(driverName, driverSource)
 	if err == nil {
 		err = db.Ping()
@@ -63,14 +63,15 @@ func NewSimpleConnector(driverName, driverSource string,
 		log.Fatalln("[ DBC][ " + driverName + "] " + err.Error())
 		return nil
 	}
-
-	// 设置最大连接数,设置MaxOpenConns和MaxIdleConns
+	// 设置最大打开的连接数
 	// 不出现：statement.go:27: Invalid Connection 警告信息
 	if maxConn > 0 {
 		db.SetMaxOpenConns(maxConn)
-		db.SetMaxIdleConns(maxConn)
 	}
-
+	// 设置最大闲置的连接数
+	if maxIdleConn > 0{
+		db.SetMaxIdleConns(maxIdleConn)
+	}
 	o := orm.NewOrm(driverName, db)
 	if debug {
 		o.SetTrace(true)
