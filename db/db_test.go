@@ -7,12 +7,13 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 var (
-	_connector Connector
-	_orm       orm.Orm
-	print      bool = false
+	_conn Connector
+	_orm  orm.Orm
+	print bool = false
 )
 
 func repeatRun(fc func(), time int) {
@@ -63,7 +64,7 @@ func query(t *testing.T) {
 	for i, v := range values {
 		scanValues[i] = &v
 	}
-	_connector.Query("SELECT id,usr,pwd FROM mm_member limit 0,10", func(rows *sql.Rows) {
+	_conn.Query("SELECT id,usr,pwd FROM mm_member limit 0,10", func(rows *sql.Rows) {
 		for rows.Next() {
 			rows.Scan(scanValues...)
 
@@ -133,9 +134,11 @@ func Test_to(t *testing.T) {
 
 func initTest() {
 	log.SetOutput(os.Stdout)
-	_connector = NewSimpleConnector("mysql",
-		"root:@tcp(dbs.ts.com:3306)/go2o?charset=utf8", nil, 0, 0, false)
-	_orm = _connector.GetOrm()
-	_orm.SetTrace(!true)
+	_conn = NewConnector("mysql", "root:@tcp(dbs.ts.com:3306)/go2o?charset=utf8", nil, false)
+	_conn.SetMaxIdleConns(0)
+	_conn.SetMaxIdleConns(0)
+	_conn.SetConnMaxLifetime(time.Second * 10)
+	_orm = _conn.GetOrm()
+	_orm.SetTrace(true)
 	_orm.Mapping(User{}, "user")
 }

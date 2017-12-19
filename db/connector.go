@@ -16,43 +16,29 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jsix/gof/db/orm"
 	"github.com/jsix/gof/log"
+	"time"
 )
 
 type (
 	Connector interface {
 		Driver() string
-
-		GetDb() *sql.DB
-
+		Raw() *sql.DB
 		GetOrm() orm.Orm
-
+		SetMaxOpenConns(n int)
+		SetMaxIdleConns(n int)
+		SetConnMaxLifetime(d time.Duration)
 		Query(sql string, f func(*sql.Rows), arg ...interface{}) error
-
 		QueryRow(sql string, f func(*sql.Row) error, arg ...interface{}) error
-
 		ExecScalar(s string, result interface{}, arg ...interface{}) error
-
 		Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error)
-
 		ExecNonQuery(sql string, args ...interface{}) (int, error)
 	}
 )
 
-var _ Connector = new(simpleConnector)
-
-//数据库连接器
-type simpleConnector struct {
-	_driverName   string  //驱动名称
-	_driverSource string  //驱动连接地址
-	_db           *sql.DB //golang db只需要open一次即可
-	_orm          orm.Orm
-	_logger       log.ILogger
-	_debug        bool // 是否调试模式
-}
+var _ Connector = new(defaultConnector)
 
 // create a new connector
-func NewSimpleConnector(driverName, driverSource string,
-	l log.ILogger, maxConn int, maxIdleConn int, debug bool) Connector {
+func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) Connector {
 	db, err := sql.Open(driverName, driverSource)
 	if err == nil {
 		err = db.Ping()
@@ -60,64 +46,80 @@ func NewSimpleConnector(driverName, driverSource string,
 	if err != nil {
 		db.Close()
 		//如果异常，则显示并退出
-		log.Fatalln("[ DBC][ " + driverName + "] " + err.Error())
+		log.Fatalln("[ Gof][ Connector]:" + driverName + "-" + err.Error())
 		return nil
-	}
-	// 设置最大打开的连接数
-	// 不出现：statement.go:27: Invalid Connection 警告信息
-	if maxConn > 0 {
-		db.SetMaxOpenConns(maxConn)
-	}
-	// 设置最大闲置的连接数
-	if maxIdleConn > 0 {
-		db.SetMaxIdleConns(maxIdleConn)
 	}
 	o := orm.NewOrm(driverName, db)
 	if debug {
 		o.SetTrace(true)
 	}
-	return &simpleConnector{
-		_db:           db,
-		_orm:          o,
-		_driverName:   driverName,
-		_driverSource: driverName,
-		_logger:       l,
-		_debug:        debug,
+	return &defaultConnector{
+		db:           db,
+		orm:          o,
+		driverName:   driverName,
+		driverSource: driverName,
+		logger:       l,
+		debug:        debug,
 	}
 }
 
-func (t *simpleConnector) err(err error) error {
+//数据库连接器
+type defaultConnector struct {
+	driverName   string  //驱动名称
+	driverSource string  //驱动连接地址
+	db           *sql.DB //golang db只需要open一次即可
+	orm          orm.Orm
+	logger       log.ILogger
+	debug        bool // 是否调试模式
+}
+
+func (t *defaultConnector) err(err error) error {
 	if err != nil {
-		if t._logger != nil {
-			t._logger.Error(err)
+		if t.logger != nil {
+			t.logger.Error(err)
 		}
 	}
 	return err
 }
 
-func (t *simpleConnector) debugPrintf(format string, s string, args ...interface{}) {
-	if t._debug && t._logger != nil {
+func (t *defaultConnector) debugPrintf(format string, s string, args ...interface{}) {
+	if t.debug && t.logger != nil {
 		newArgs := []interface{}{s}
 		newArgs = append(newArgs, args...)
-		t._logger.Printf(format+"\n", newArgs...)
+		t.logger.Printf(format+"\n", newArgs...)
 	}
 }
 
-func (t *simpleConnector) Driver() string {
-	return t._driverName
+func (t *defaultConnector) Driver() string {
+	return t.driverName
 }
 
-func (t *simpleConnector) GetDb() *sql.DB {
-	return t._db
+func (t *defaultConnector) Raw() *sql.DB {
+	return t.db
 }
 
-func (t *simpleConnector) GetOrm() orm.Orm {
-	return t._orm
+func (t *defaultConnector) GetOrm() orm.Orm {
+	return t.orm
 }
 
-func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
+// 设置最大打开的连接数
+func (t *defaultConnector) SetMaxOpenConns(n int) {
+	t.db.SetMaxOpenConns(n)
+}
+
+// 设置最大闲置的连接数
+func (t *defaultConnector) SetMaxIdleConns(n int) {
+	t.db.SetMaxIdleConns(n)
+}
+
+// 设置连接存活时间,同Mysql的wait_timeout
+func (t *defaultConnector) SetConnMaxLifetime(d time.Duration) {
+	t.db.SetConnMaxLifetime(d)
+}
+
+func (t *defaultConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
 	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
-	stmt, err := t.GetDb().Prepare(s)
+	stmt, err := t.Raw().Prepare(s)
 	var rows *sql.Rows
 	if err == nil {
 		rows, err = stmt.Query(args...)
@@ -137,8 +139,8 @@ func (t *simpleConnector) Query(s string, f func(*sql.Rows), args ...interface{}
 }
 
 //查询Rows
-func (t *simpleConnector) QueryRow(s string, f func(*sql.Row) error, args ...interface{}) error {
-	stmt, err := t.GetDb().Prepare(s)
+func (t *defaultConnector) QueryRow(s string, f func(*sql.Row) error, args ...interface{}) error {
+	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
 		return t.err(errors.New(fmt.Sprintf(
 			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
@@ -152,7 +154,7 @@ func (t *simpleConnector) QueryRow(s string, f func(*sql.Row) error, args ...int
 	return err
 }
 
-func (t *simpleConnector) ExecScalar(s string, result interface{},
+func (t *defaultConnector) ExecScalar(s string, result interface{},
 	args ...interface{}) (err error) {
 	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	if result == nil {
@@ -169,9 +171,9 @@ func (t *simpleConnector) ExecScalar(s string, result interface{},
 }
 
 //执行
-func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
 	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
-	stmt, err := t.GetDb().Prepare(s)
+	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
 		return 0, -1, err
 	}
@@ -191,7 +193,7 @@ func (t *simpleConnector) Exec(s string, args ...interface{}) (rows int, lastIns
 	return int(affect), int(lastId), err
 }
 
-func (t *simpleConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
+func (t *defaultConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
 	n, _, err := t.Exec(sql, args...)
 	return n, t.err(err)
 }

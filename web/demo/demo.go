@@ -24,10 +24,10 @@ import (
 // 模版(template)、存储(storage)的访问。同时可以扩展,以支持自定义
 // 的需求。App接口在应用上下文中可以获取到。
 type HttpApp struct {
-	config      *gof.Config
-	dbConnector db.Connector
-	template    *gof.Template
-	logger      log.ILogger
+	config   *gof.Config
+	dbConn   db.Connector
+	template *gof.Template
+	logger   log.ILogger
 }
 
 // 配置，支持从文件中加载。用于文件存储某些简单数据。
@@ -47,7 +47,7 @@ func (h *HttpApp) Config() *gof.Config {
 
 // 数据库连接器、Connector.ORM()可以访问ORM
 func (h *HttpApp) Db() db.Connector {
-	if h.dbConnector == nil {
+	if h.dbConn == nil {
 		source := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf-8&loc=Local",
 			h.Config().GetString("MYSQL_USR"),
 			h.Config().GetString("MYSQL_PWD"),
@@ -55,10 +55,9 @@ func (h *HttpApp) Db() db.Connector {
 			h.Config().GetInt("MYSQL_PORT"),
 			h.Config().GetString("MYSQL_DBNAME"),
 		)
-		h.dbConnector = db.NewSimpleConnector("mysql", source, h.Log(),
-			h.Config().GetInt("MYSQL_MAXCONN"), 1000, false)
+		h.dbConn = db.NewConnector("mysql", source, h.Log(), false)
 	}
-	return h.dbConnector
+	return h.dbConn
 }
 
 // 模板
