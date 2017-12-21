@@ -25,5 +25,13 @@ func TestRegistryOld(t *testing.T) {
 	r, _ := NewRegistry("./tmp/conf/", ".")
 	key := "core.config.user_name"
 	val := r.Get(key)
+	node := r.Use("core")
+	if node.Exists() {
+		node.Set("description", `
+ 			Using the Hello World guide, you’ll create a repository,
+			start a branch,write comments, and open a pull request.
+		`)
+		node.Flush()
+	}
 	t.Log("result :", val.(string))
 }

@@ -135,6 +135,10 @@ func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, erro
 	return tree, err
 }
 
+func (r *RegistryTree) Exists() bool {
+	return r.tree != nil
+}
+
 // get registry pair
 func (r *RegistryTree) Get(prop string) interface{} {
 	if r.tree != nil {
