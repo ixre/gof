@@ -28,7 +28,7 @@ var (
             }
 
             // Get <E>
-            func (<Ptr> *<R>) Get<R2>_(primary interface{})*<E2>{
+            func (<Ptr> *<R>) Get<R2>(primary interface{})*<E2>{
                 e := <E2>{}
                 err := <Ptr>._orm.Get(primary,&e)
                 if err == nil{
@@ -41,7 +41,7 @@ var (
             }
 
             // GetBy <E>
-            func (<Ptr> *<R>) Get<R2>By_(where string,v ...interface{})*<E2>{
+            func (<Ptr> *<R>) Get<R2>By(where string,v ...interface{})*<E2>{
                 e := <E2>{}
                 err := <Ptr>._orm.GetBy(&e,where,v...)
                 if err == nil{
@@ -54,7 +54,7 @@ var (
             }
 
             // Select <E>
-            func (<Ptr> *<R>) Select<R2>_(where string,v ...interface{})[]*<E2> {
+            func (<Ptr> *<R>) Select<R2>(where string,v ...interface{})[]*<E2> {
                 list := []*<E2>{}
                 err := <Ptr>._orm.Select(&list,where,v...)
                 if err != nil && err != sql.ErrNoRows{
@@ -64,7 +64,7 @@ var (
             }
 
             // Save <E>
-            func (<Ptr> *<R>) Save<R2>_(v *<E2>)(int,error){
+            func (<Ptr> *<R>) Save<R2>(v *<E2>)(int,error){
                 id,err := orm.Save(<Ptr>._orm,v,int(v.<PK>))
                 if err != nil && err != sql.ErrNoRows{
                   log.Println("[ Orm][ Error]:",err.Error(),"; Entity:<E>")
@@ -73,7 +73,7 @@ var (
             }
 
             // Delete <E>
-            func (<Ptr> *<R>) Delete<R2>_(primary interface{}) error {
+            func (<Ptr> *<R>) Delete<R2>(primary interface{}) error {
                 err := <Ptr>._orm.DeleteByPk(<E2>{}, primary)
                 if err != nil && err != sql.ErrNoRows{
                   log.Println("[ Orm][ Error]:",err.Error(),"; Entity:<E>")
@@ -82,7 +82,7 @@ var (
             }
 
             // Batch Delete <E>
-            func (<Ptr> *<R>) BatchDelete<R2>_(where string,v ...interface{})(int64,error) {
+            func (<Ptr> *<R>) BatchDelete<R2>(where string,v ...interface{})(int64,error) {
                 r,err := <Ptr>._orm.Delete(<E2>{},where,v...)
                 if err != nil && err != sql.ErrNoRows{
                   log.Println("[ Orm][ Error]:",err.Error(),"; Entity:<E>")
