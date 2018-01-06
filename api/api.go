@@ -182,7 +182,7 @@ type ServeMux struct {
 	afterMiddleware []MiddlewareFunc
 }
 
-func NewServerMux(cf ContextFactory, swap SwapFunc) Server {
+func NewServerMux(cf ContextFactory, swap SwapFunc) *ServeMux {
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
