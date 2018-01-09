@@ -30,8 +30,8 @@ func testApi(t *testing.T, apiName string, params url.Values) {
 	data, _ := ioutil.ReadAll(rsp.Body)
 	rsp1 := Response{}
 	json.Unmarshal(data, &rsp1)
-	if rsp1.Code != StatusOK {
-		t.Log("请求失败：code:", rsp1.Code, "; message:", rsp1.Message)
+	if rsp1.ErrorCode != CodeOK {
+		t.Log("请求失败：code:", rsp1.ErrorCode, "; message:", rsp1.Message)
 		t.Log("接口响应：", string(data))
 		t.FailNow()
 	}
@@ -65,8 +65,8 @@ func TestGenApiSign(t *testing.T) {
 	data, _ := ioutil.ReadAll(rsp.Body)
 	rsp1 := Response{}
 	json.Unmarshal(data, &rsp1)
-	if rsp1.Code != StatusOK {
-		t.Log("请求失败：code:", rsp1.Code, "; message:", rsp1.Message)
+	if rsp1.ErrorCode != CodeOK {
+		t.Log("请求失败：code:", rsp1.ErrorCode, "; message:", rsp1.Message)
 		t.Log("接口响应：", string(data))
 		t.FailNow()
 	}

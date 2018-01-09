@@ -26,28 +26,43 @@ import (
 
 // 接口响应
 type Response struct {
-	Code    int64       `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	ErrorCode int64
+	Message   string
+	Data      interface{}
+}
+
+func NewResponse(data interface{}) *Response {
+	return &Response{
+		Data: data,
+	}
+}
+
+func NewErrorResponse(message string) *Response {
+	return &Response{
+		ErrorCode: CodeError,
+		Message:   message,
+		Data:      nil,
+	}
 }
 
 var (
-	StatusOK int64 = 10000
-	RError         = &Response{
-		Code:    10090,
-		Message: "internal error",
+	CodeOK    int64 = 0
+	CodeError int64 = 1
+	RError          = &Response{
+		ErrorCode: 10090,
+		Message:   "",
 	}
 	RPermissionDenied = &Response{
-		Code:    10091,
-		Message: "permission denied",
+		ErrorCode: 10091,
+		Message:   "permission denied",
 	}
 	RErrUndefinedApi = &Response{
-		Code:    10092,
-		Message: "api not defined",
+		ErrorCode: 10092,
+		Message:   "api not defined",
 	}
 	RMissingApiParams = &Response{
-		Code:    10093,
-		Message: "missing api parameters",
+		ErrorCode: 10093,
+		Message:   "missing api parameters",
 	}
 )
 
@@ -166,8 +181,68 @@ type FactoryBuilder interface {
 // 中间件
 type MiddlewareFunc func(ctx Context) error
 
-// 交换信息，根据key返回用户编号、密钥和是否验证签名
-type SwapFunc func(key string) (userId int64, secret string, checkSign bool)
+// 交换信息，根据key返回用户编号、密钥
+type SwapFunc func(key string) (userId int64, secret string)
+
+// 响应编码器
+type Encoder func(w http.ResponseWriter, rsp []*Response)
+
+var (
+	DefaultEncoder    Encoder = defaultEncode
+	CompatibleEncoder Encoder = compatibleEncode
+)
+
+
+func defaultEncode(w http.ResponseWriter, rsp []*Response) {
+	for _, r := range rsp {
+		if r.ErrorCode >= RError.ErrorCode {
+			buf := bytes.NewBuffer(nil)
+			buf.WriteString("!")
+			buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
+			buf.WriteString(":")
+			buf.WriteString(r.Message)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write(buf.Bytes())
+			return
+		}
+	}
+	var data []byte
+	if len(rsp) > 1 {
+		var arr []interface{}
+		for _, v := range rsp {
+			arr = append(arr, v.Data)
+		}
+		data, _ = json.Marshal(arr)
+	} else {
+		if rsp[0].Data != nil {
+			data, _ = json.Marshal(rsp[0].Data)
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func compatibleEncode(w http.ResponseWriter, rsp []*Response) {
+	buf := bytes.NewBuffer(nil)
+	for i, r := range rsp {
+		if i > 0 {
+			buf.WriteString("$")
+		}
+		buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
+		buf.WriteString("|")
+		buf.WriteString(r.Message)
+		buf.WriteString("|")
+		if r.Data != nil {
+			d, _ := json.Marshal(r.Data)
+			buf.Write(d)
+		}
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
+}
 
 var _ Server = new(ServeMux)
 
@@ -180,15 +255,20 @@ type ServeMux struct {
 	factory         ContextFactory
 	middleware      []MiddlewareFunc
 	afterMiddleware []MiddlewareFunc
+	encoder         Encoder
 }
 
-func NewServerMux(cf ContextFactory, swap SwapFunc) *ServeMux {
+func NewServerMux(cf ContextFactory, swap SwapFunc, e Encoder) *ServeMux {
+	if e == nil {
+		e = DefaultEncoder
+	}
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
 		processors:      map[string]Processor{},
 		middleware:      []MiddlewareFunc{},
 		afterMiddleware: []MiddlewareFunc{},
+		encoder:         e,
 	}
 }
 
@@ -217,15 +297,7 @@ func (s *ServeMux) After(middleware ...MiddlewareFunc) {
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 	h.ParseForm()
 	rsp := s.serveFunc(h)
-	var data []byte
-	if len(rsp) > 1 {
-		data, _ = json.Marshal(rsp)
-	} else {
-		data, _ = json.Marshal(rsp[0])
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	s.encoder(w, rsp)
 }
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开
@@ -249,6 +321,7 @@ func (s *ServeMux) serveFunc(h *http.Request) []*Response {
 	}
 	return arr
 }
+
 func (s *ServeMux) Trace() {
 	s.trace = true
 	if df, ok := s.factory.(*defaultContextFactory); ok {
@@ -271,8 +344,8 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
 				return s.response(apiName, ctx, &Response{
-					Code:    RError.Code,
-					Message: err.Error(),
+					ErrorCode: RError.ErrorCode,
+					Message:   err.Error(),
 				})
 			}
 		}
@@ -304,29 +377,27 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 	if signType != "md5" && signType != "sha1" {
 		return RMissingApiParams, 0
 	}
-	userId, userSecret, checkSign := s.swap(key)
+	userId, userSecret := s.swap(key)
 	if userId <= 0 {
 		return RPermissionDenied, userId
 	}
 	// 检查签名
-	if checkSign {
-		if rs := Sign(signType, form, userSecret); rs != sign {
-			if !s.trace {
-				return RPermissionDenied, userId
-			}
-			ctx := s.factory.Factory(r, key, userId)
-			// copy form data
-			cf := ctx.Form()
-			for i, v := range form {
-				cf.Set(i, v[0])
-			}
-			// set variables
-			cf.Set("$user_id", userId)
-			cf.Set("$user_secret", userSecret)
-			cf.Set("$client_sign", sign)
-			cf.Set("$server_sign", rs)
-			return s.response(form.Get("api"), ctx, RPermissionDenied), userId
+	if rs := Sign(signType, form, userSecret); rs != sign {
+		if !s.trace {
+			return RPermissionDenied, userId
 		}
+		ctx := s.factory.Factory(r, key, userId)
+		// copy form data
+		cf := ctx.Form()
+		for i, v := range form {
+			cf.Set(i, v[0])
+		}
+		// set variables
+		cf.Set("$user_id", userId)
+		cf.Set("$user_secret", userSecret)
+		cf.Set("$client_sign", sign)
+		cf.Set("$server_sign", rs)
+		return s.response(form.Get("api"), ctx, RPermissionDenied), userId
 	}
 	return nil, userId
 }
@@ -400,6 +471,11 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int6
 
 // 数据
 type Form map[string]interface{}
+
+func (f Form) Contains(key string) bool {
+	_, ok := f[key]
+	return ok
+}
 
 // 获取数值
 func (f Form) GetInt(key string) int {
