@@ -79,10 +79,6 @@ func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	m = GetTableMapMeta(o.driverName, t)
 	o.tableMap[t.String()] = m
 	o.tmLock.Unlock()
-	if o.useTrace {
-		log.Println("[ ORM][ META]:", m)
-	}
-
 	return m
 }
 
@@ -121,9 +117,15 @@ func (o *simpleOrm) Mapping(v interface{}, table string) {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	meta := o.getTableMapMeta(t)
-	meta.TableName = table
-	o.tableMap[t.String()] = meta
+	entityName := t.String()
+	m := o.getTableMapMeta(t)
+	m.TableName = table
+	o.tableMap[entityName] = m
+	if o.useTrace {
+		logTxt := fmt.Sprintf("TableName=%s,FieldCount=%d,PkFieldName=%s,PkIsAuto=%v",
+			m.TableName, len(m.FieldMapNames), m.PkFieldName, m.PkIsAuto)
+		log.Println("[ ORM][ Mapping]:", entityName, "->", logTxt)
+	}
 }
 
 func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {

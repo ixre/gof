@@ -20,7 +20,7 @@ type user struct {
 }
 
 func getDb() *sql.DB {
-	db, err := sql.Open("mysql", "root:@tcp(dbs.ts.com:3306)/mysql?charset=utf8")
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/mysql?charset=utf8")
 	if err == nil {
 		err = db.Ping()
 	}

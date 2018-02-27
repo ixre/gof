@@ -184,66 +184,6 @@ type MiddlewareFunc func(ctx Context) error
 // 交换信息，根据key返回用户编号、密钥
 type SwapFunc func(key string) (userId int64, secret string)
 
-// 响应编码器
-type Encoder func(w http.ResponseWriter, rsp []*Response)
-
-var (
-	DefaultEncoder    Encoder = defaultEncode
-	CompatibleEncoder Encoder = compatibleEncode
-)
-
-
-func defaultEncode(w http.ResponseWriter, rsp []*Response) {
-	for _, r := range rsp {
-		if r.ErrorCode >= RError.ErrorCode {
-			buf := bytes.NewBuffer(nil)
-			buf.WriteString("!")
-			buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
-			buf.WriteString(":")
-			buf.WriteString(r.Message)
-			w.Header().Set("Content-Type", "text/plain")
-			w.WriteHeader(http.StatusForbidden)
-			w.Write(buf.Bytes())
-			return
-		}
-	}
-	var data []byte
-	if len(rsp) > 1 {
-		var arr []interface{}
-		for _, v := range rsp {
-			arr = append(arr, v.Data)
-		}
-		data, _ = json.Marshal(arr)
-	} else {
-		if rsp[0].Data != nil {
-			data, _ = json.Marshal(rsp[0].Data)
-		}
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-}
-
-func compatibleEncode(w http.ResponseWriter, rsp []*Response) {
-	buf := bytes.NewBuffer(nil)
-	for i, r := range rsp {
-		if i > 0 {
-			buf.WriteString("$")
-		}
-		buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
-		buf.WriteString("|")
-		buf.WriteString(r.Message)
-		buf.WriteString("|")
-		if r.Data != nil {
-			d, _ := json.Marshal(r.Data)
-			buf.Write(d)
-		}
-	}
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
-}
-
 var _ Server = new(ServeMux)
 
 // default server implement
@@ -255,20 +195,15 @@ type ServeMux struct {
 	factory         ContextFactory
 	middleware      []MiddlewareFunc
 	afterMiddleware []MiddlewareFunc
-	encoder         Encoder
 }
 
-func NewServerMux(cf ContextFactory, swap SwapFunc, e Encoder) *ServeMux {
-	if e == nil {
-		e = DefaultEncoder
-	}
+func NewServerMux(cf ContextFactory, swap SwapFunc) *ServeMux {
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
 		processors:      map[string]Processor{},
 		middleware:      []MiddlewareFunc{},
 		afterMiddleware: []MiddlewareFunc{},
-		encoder:         e,
 	}
 }
 
@@ -297,7 +232,38 @@ func (s *ServeMux) After(middleware ...MiddlewareFunc) {
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 	h.ParseForm()
 	rsp := s.serveFunc(h)
-	s.encoder(w, rsp)
+	s.defaultEncode(w, rsp)
+}
+
+func (s *ServeMux) defaultEncode(w http.ResponseWriter, rsp []*Response) {
+	for _, r := range rsp {
+		if r.ErrorCode > CodeOK {
+			buf := bytes.NewBuffer(nil)
+			buf.WriteString("!")
+			buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
+			buf.WriteString(":")
+			buf.WriteString(r.Message)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write(buf.Bytes())
+			return
+		}
+	}
+	var data []byte
+	if len(rsp) > 1 {
+		var arr []interface{}
+		for _, v := range rsp {
+			arr = append(arr, v.Data)
+		}
+		data, _ = json.Marshal(arr)
+	} else {
+		if rsp[0].Data != nil {
+			data, _ = json.Marshal(rsp[0].Data)
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开

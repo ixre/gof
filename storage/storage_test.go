@@ -16,7 +16,7 @@ type testClass struct {
 }
 
 func getRdsStorage() Interface {
-	pool := NewRedisPool("dbs.ts.com", 6379, 1,
+	pool := NewRedisPool("127.0.0.1", 6379, 1,
 		"123456", 0, 0)
 	return NewRedisStorage(pool)
 }

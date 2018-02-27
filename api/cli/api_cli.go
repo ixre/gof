@@ -26,7 +26,7 @@ var (
 	}
 	RNoSuchApp = &api.Response{
 		ErrorCode: 10096,
-		Message:   "no such serve",
+		Message:   "no such app",
 	}
 )
 
