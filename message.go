@@ -2,10 +2,12 @@ package gof
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 //操作Json结果
 type Message struct {
+	ErrCode int         `json:"errCode"`
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
@@ -13,9 +15,17 @@ type Message struct {
 }
 
 func (m *Message) Error(err error) *Message {
-	if err != nil {
+	if err == nil {
+		return m.TextError("")
+	}
+	return m.Error(err)
+}
+
+func (m *Message) TextError(err string) *Message {
+	if err = strings.TrimSpace(err); err != "" {
+		m.ErrCode = 1
 		m.Result = false
-		m.Message = err.Error()
+		m.Message = err
 	} else {
 		m.Result = true
 	}
@@ -24,6 +34,6 @@ func (m *Message) Error(err error) *Message {
 
 //序列化
 func (m Message) Marshal() []byte {
-	json, _ := json.Marshal(m)
-	return json
+	d, _ := json.Marshal(m)
+	return d
 }

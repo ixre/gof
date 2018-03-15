@@ -19,10 +19,10 @@ type dialectSession struct {
 }
 
 func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
-	return (&dialectSession{
+	return &dialectSession{
 		conn:    conn,
 		dialect: dialect,
-	})
+	}
 }
 
 // 获取所有的表

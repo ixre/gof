@@ -9,6 +9,7 @@
 package orm
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"regexp"
@@ -26,13 +27,15 @@ func (m *MySqlDialect) Name() string {
 
 // 获取所有的表
 func (m *MySqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
-	s := "SHOW TABLES "
+	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
-		s += " FROM " + dbName
+		buf.WriteString(" FROM `")
+		buf.WriteString(dbName)
+		buf.WriteString("`;")
 	}
-	list := []string{}
+	var list []string
 	tb := ""
-	stmt, err := db.Prepare(s)
+	stmt, err := db.Prepare(buf.String())
 	if err == nil {
 		rows, err := stmt.Query()
 		for rows.Next() {

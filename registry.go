@@ -85,6 +85,7 @@ func (r *Registry) split(key string) []string {
 	}
 	return arr
 }
+
 // get registry pair
 func (r *Registry) Get(key string) interface{} {
 	i := strings.Index(key, r.delimer)
@@ -117,9 +118,9 @@ func (r *Registry) Use(key string) *RegistryTree {
 
 // get string
 func (r *Registry) GetString(key string) string {
-	defer func(){
-		if err := recover();err != nil{
-			panic("key="+key)
+	defer func() {
+		if err := recover(); err != nil {
+			panic("key=" + key)
 		}
 	}()
 	return r.Get(key).(string)
@@ -138,7 +139,6 @@ func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, erro
 	}
 	return tree, err
 }
-
 
 func (r *RegistryTree) Exists() bool {
 	return r.tree != nil
