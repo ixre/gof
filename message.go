@@ -16,12 +16,12 @@ type Message struct {
 
 func (m *Message) Error(err error) *Message {
 	if err == nil {
-		return m.TextError("")
+		return m.ErrorText("")
 	}
-	return m.Error(err)
+	return m.ErrorText(err.Error())
 }
 
-func (m *Message) TextError(err string) *Message {
+func (m *Message) ErrorText(err string) *Message {
 	if err = strings.TrimSpace(err); err != "" {
 		m.ErrCode = 1
 		m.Result = false
