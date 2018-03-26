@@ -242,7 +242,7 @@ func (s *ServeMux) defaultEncode(w http.ResponseWriter, rsp []*Response) {
 			buf.WriteString("!")
 			buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
 			buf.WriteString(":")
-			buf.WriteString(r.Message)
+			buf.WriteString(r.ErrMsg)
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusForbidden)
 			w.Write(buf.Bytes())

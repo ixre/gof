@@ -7,11 +7,14 @@ import (
 
 //操作Json结果
 type Message struct {
-	ErrCode int         `json:"errCode"`
-	Result  bool        `json:"result"`
-	Code    int         `json:"code"`
-	Data    interface{} `json:"data"`
-	Message string      `json:"message"`
+	// 错误码
+	ErrCode int `json:"errCode"`
+	// 错误信息
+	ErrMsg string `json:"errMsg"`
+	//todo:删除，用ErrCode代替
+	Result bool `json:"result"`
+	//Code    int         `json:"code"`
+	Data interface{} `json:"data"`
 }
 
 func (m *Message) Error(err error) *Message {
@@ -25,7 +28,7 @@ func (m *Message) ErrorText(err string) *Message {
 	if err = strings.TrimSpace(err); err != "" {
 		m.ErrCode = 1
 		m.Result = false
-		m.Message = err
+		m.ErrMsg = err
 	} else {
 		m.Result = true
 	}
