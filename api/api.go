@@ -26,9 +26,9 @@ import (
 
 // 接口响应
 type Response struct {
-	ErrorCode int64
-	Message   string
-	Data      interface{}
+	ErrCode int64
+	ErrMsg  string
+	Data    interface{}
 }
 
 func NewResponse(data interface{}) *Response {
@@ -39,9 +39,9 @@ func NewResponse(data interface{}) *Response {
 
 func NewErrorResponse(message string) *Response {
 	return &Response{
-		ErrorCode: CodeError,
-		Message:   message,
-		Data:      nil,
+		ErrCode: CodeError,
+		ErrMsg:  message,
+		Data:    nil,
 	}
 }
 
@@ -49,20 +49,20 @@ var (
 	CodeOK    int64 = 0
 	CodeError int64 = 1
 	RError          = &Response{
-		ErrorCode: 10090,
-		Message:   "",
+		ErrCode: 10090,
+		ErrMsg:  "",
 	}
 	RPermissionDenied = &Response{
-		ErrorCode: 10091,
-		Message:   "permission denied",
+		ErrCode: 10091,
+		ErrMsg:  "permission denied",
 	}
 	RErrUndefinedApi = &Response{
-		ErrorCode: 10092,
-		Message:   "api not defined",
+		ErrCode: 10092,
+		ErrMsg:  "api not defined",
 	}
 	RMissingApiParams = &Response{
-		ErrorCode: 10093,
-		Message:   "missing api parameters",
+		ErrCode: 10093,
+		ErrMsg:  "missing api parameters",
 	}
 )
 
@@ -237,10 +237,10 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 
 func (s *ServeMux) defaultEncode(w http.ResponseWriter, rsp []*Response) {
 	for _, r := range rsp {
-		if r.ErrorCode > CodeOK {
+		if r.ErrCode > CodeOK {
 			buf := bytes.NewBuffer(nil)
 			buf.WriteString("!")
-			buf.WriteString(strconv.Itoa(int(r.ErrorCode)))
+			buf.WriteString(strconv.Itoa(int(r.ErrCode)))
 			buf.WriteString(":")
 			buf.WriteString(r.ErrMsg)
 			w.Header().Set("Content-Type", "text/plain")
@@ -310,8 +310,8 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
 				return s.response(apiName, ctx, &Response{
-					ErrorCode: RError.ErrorCode,
-					Message:   err.Error(),
+					ErrCode: RError.ErrCode,
+					ErrMsg:  err.Error(),
 				})
 			}
 		}

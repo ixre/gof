@@ -13,20 +13,20 @@ import (
 
 var (
 	RPermissionDenied = &api.Response{
-		ErrorCode: api.RPermissionDenied.ErrorCode,
-		Message:   "没有权限访问该接口",
+		ErrCode: api.RPermissionDenied.ErrCode,
+		ErrMsg:  "没有权限访问该接口",
 	}
 	RMissingApiParams = &api.Response{
-		ErrorCode: api.RMissingApiParams.ErrorCode,
-		Message:   "缺少接口参数，请联系技术人员解决",
+		ErrCode: api.RMissingApiParams.ErrCode,
+		ErrMsg:  "缺少接口参数，请联系技术人员解决",
 	}
 	RErrApiName = &api.Response{
-		ErrorCode: api.RErrUndefinedApi.ErrorCode,
-		Message:   "调用的API名称不正确",
+		ErrCode: api.RErrUndefinedApi.ErrCode,
+		ErrMsg:  "调用的API名称不正确",
 	}
 	RNoSuchApp = &api.Response{
-		ErrorCode: 10096,
-		Message:   "no such app",
+		ErrCode: 10096,
+		ErrMsg:  "no such app",
 	}
 )
 
@@ -73,15 +73,15 @@ func Post(apiName string, data map[string]string) ([]byte, error) {
 func checkApiRespErr(code int) error {
 	msg := api.Response{}
 	switch int64(code) {
-	case api.RPermissionDenied.ErrorCode:
+	case api.RPermissionDenied.ErrCode:
 		msg = *RPermissionDenied
-	case api.RMissingApiParams.ErrorCode:
+	case api.RMissingApiParams.ErrCode:
 		msg = *RMissingApiParams
-	case api.RErrUndefinedApi.ErrorCode:
+	case api.RErrUndefinedApi.ErrCode:
 		msg = *RErrApiName
-	case RNoSuchApp.ErrorCode:
+	case RNoSuchApp.ErrCode:
 		msg = *RNoSuchApp
 	}
 	return errors.New(fmt.Sprintf(
-		"Error code %d : %s", msg.ErrorCode, msg.Message))
+		"Error code %d : %s", msg.ErrCode, msg.ErrMsg))
 }
