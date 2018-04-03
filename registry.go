@@ -2,6 +2,7 @@ package gof
 
 import (
 	"errors"
+	"fmt"
 	"github.com/pelletier/go-toml"
 	"os"
 	"path/filepath"
@@ -120,7 +121,7 @@ func (r *Registry) Use(key string) *RegistryTree {
 func (r *Registry) GetString(key string) string {
 	defer func() {
 		if err := recover(); err != nil {
-			panic("key=" + key)
+			panic(fmt.Sprintf("key=%s; err=%s", key, err))
 		}
 	}()
 	return r.Get(key).(string)

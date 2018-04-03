@@ -15,7 +15,7 @@ type Item struct {
 }
 
 var (
-	items = []*Item{
+	items = ItemList{
 		{"太阳水", 0.7000},   // 70%
 		{"千年雪霜", 0.2000},  // 20%
 		{"无极棍", 0.0640},   // 6.4%
@@ -40,7 +40,7 @@ func (a ItemList) Swap(i, j int) {
 }
 
 // 随机抽取奖品，奖品比例总和应小于100%
-func getItem(items []*Item) *Item {
+func getItem(items ItemList) *Item {
 	// 建立区间及区间与奖品的映射
 	var bitArr []int
 	var bitMap = make(map[int]*Item)
@@ -55,7 +55,7 @@ func getItem(items []*Item) *Item {
 	r := rand.Intn(10000) + 1
 	// 获取R所在的区间，使用二分算法进行搜索
 	i := sort.SearchInts(bitArr, r)
-	fmt.Println(bitArr, "i=", i, ";r=", r)
+	//fmt.Println(bitArr, "i=", i, ";r=", r)
 	if i < len(bitArr) {
 		return bitMap[bitArr[i]]
 	}
@@ -68,7 +68,7 @@ func TestGetItem(t *testing.T) {
 
 	// 按概率排序
 	sort.Sort(ItemList(items))
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 1000000; i++ {
 		r := getItem(items)
 		if r == nil {
 			fmt.Println("很遗憾，您什么都没有抽到")
@@ -76,14 +76,14 @@ func TestGetItem(t *testing.T) {
 		}
 		if strings.HasPrefix(r.Name, "极品") {
 			jpCount += 1
-			//fmt.Println("您抽取到了：", r)
+			//fmt.Prinxtln("您抽取到了：", r)
 		}
 		if strings.HasPrefix(r.Name, "太阳水") {
 			nmCount += 1
 			//fmt.Println("您抽取到了：", r)
 		}
-		fmt.Println("您抽取到了：", r.Name)
-		time.Sleep(time.Second)
+		//fmt.Println("您抽取到了：", r.Name)
+		//time.Sleep(time.Second)
 	}
 	fmt.Println("抽到普将数量：", nmCount)
 	fmt.Println("抽到极品数量：", jpCount)
