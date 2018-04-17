@@ -24,7 +24,7 @@ type (
 		// 设置默认的处理程序
 		Default(handler http.Handler)
 		// 添加子域的处理程序
-		Set(sub string, handler http.Handler)
+		Register(sub string, handler http.Handler)
 		// 获取处理程序
 		Get(sub string) http.Handler
 		// 处理HTTP请求
@@ -36,50 +36,51 @@ type (
 
 var _ MultiServe = new(MultiServeHandler)
 
+// 多域请求处理器
 type MultiServeHandler struct {
-	domain   string
+	Domain   string
 	dLen     int
 	handlers map[string]http.Handler
 }
 
 func NewMultiServe(domain string) MultiServeHandler {
 	return MultiServeHandler{
-		domain:   domain,
+		Domain:   domain,
 		dLen:     len(domain),
 		handlers: make(map[string]http.Handler),
 	}
 }
 
-func (h MultiServeHandler) ListenAndServe(addr string) error {
+func (m MultiServeHandler) ListenAndServe(addr string) error {
 	log.Println("** server running on", addr)
-	err := http.ListenAndServe(addr, h)
+	err := http.ListenAndServe(addr, m)
 	if err != nil {
 		log.Println("** serve exit! ", err.Error())
 	}
 	return err
 }
 
-func (h MultiServeHandler) Default(handler http.Handler) {
-	h.handlers["*"] = handler
+func (m MultiServeHandler) Default(handler http.Handler) {
+	m.handlers["*"] = handler
 }
 
 // 获取处理程序
-func (h MultiServeHandler) Get(sub string) http.Handler {
-	return h.handlers[sub]
+func (m MultiServeHandler) Get(sub string) http.Handler {
+	return m.handlers[sub]
 }
 
-func (h MultiServeHandler) Set(sub string, handler http.Handler) {
-	h.handlers[sub] = handler
+func (m MultiServeHandler) Register(sub string, handler http.Handler) {
+	m.handlers[sub] = handler
 }
 
-func (h MultiServeHandler) SubName(r *http.Request) string {
-	return r.Host[:len(r.Host)-h.dLen]
+func (m MultiServeHandler) SubName(r *http.Request) string {
+	return r.Host[:len(r.Host)-m.dLen]
 }
 
-func (h MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	hh := h.Get(h.SubName(r)) //根据主机头返回响应内容
+func (m MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	hh := m.Get(m.SubName(r)) //根据主机头返回响应内容
 	if hh == nil {
-		hh = h.Get("*") //获取通用的serve
+		hh = m.Get("*") //获取通用的serve
 	}
 	if hh != nil {
 		hh.ServeHTTP(w, r)
