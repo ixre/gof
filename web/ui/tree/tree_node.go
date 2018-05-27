@@ -2,9 +2,9 @@ package tree
 
 type FlatNode struct {
 	// 子节点编号
-	ID int64 `json:"-"`
+	ID int `json:"-"`
 	// 父节点编号
-	Pid int64 `json:"-"`
+	Pid int `json:"-"`
 	// 文本
 	Title string `json:"title"`
 	// 值
@@ -23,7 +23,7 @@ type FlatNode struct {
 
 type TreeNode struct {
 	// 子节点编号
-	id int64 `json:"-"`
+	id int `json:"-"`
 	// 文本
 	Title string `json:"title"`
 	// 值
