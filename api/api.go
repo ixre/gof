@@ -74,8 +74,9 @@ func ParamsToBytes(r url.Values, secret string) []byte {
 	}
 	sort.Sort(keys)
 	// 拼接参数和值
+	i := 0
 	buf := bytes.NewBuffer(nil)
-	for i, k := range keys {
+	for _, k := range keys {
 		if k == "sign" || k == "sign_type" {
 			continue
 		}
@@ -85,6 +86,7 @@ func ParamsToBytes(r url.Values, secret string) []byte {
 		buf.WriteString(k)
 		buf.WriteString("=")
 		buf.WriteString(r[k][0])
+		i++
 	}
 	buf.WriteString(secret)
 	return buf.Bytes()

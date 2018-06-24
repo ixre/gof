@@ -14,7 +14,8 @@ type Message struct {
 	//todo:删除，用ErrCode代替
 	Result bool `json:"result"`
 	//Code    int         `json:"code"`
-	Data interface{} `json:"data"`
+	Data  interface{}       `json:"data"`
+	Data2 map[string]string `json:"dataMap"`
 }
 
 func (m *Message) Error(err error) *Message {

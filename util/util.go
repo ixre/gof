@@ -34,8 +34,8 @@ func RandInt(n int) int {
 }
 
 var (
-	BoolExt *boolExtend   = &boolExtend{}
-	StrExt  *stringExtend = &stringExtend{}
+	BoolExt = &boolExtend{}
+	StrExt  = &stringExtend{}
 )
 
 type (
@@ -71,7 +71,7 @@ func (e *stringExtend) String(v interface{}) string {
 
 // 字符串转为int32切片
 func (e *stringExtend) I32Slice(s string, delimer string) []int32 {
-	arr := []int32{}
+	var arr []int32
 	sArr := strings.Split(s, delimer)
 	for _, v := range sArr {
 		i, err := strconv.ParseInt(v, 10, 32)
@@ -84,7 +84,7 @@ func (e *stringExtend) I32Slice(s string, delimer string) []int32 {
 
 // 字符串转为int切片
 func (e *stringExtend) IntSlice(s string, delimer string) []int {
-	arr := []int{}
+	var arr []int
 	sArr := strings.Split(s, delimer)
 	for _, v := range sArr {
 		i, err := strconv.ParseInt(v, 10, 64)
