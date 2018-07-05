@@ -85,7 +85,7 @@ func ListenAndServe(port int, debug bool) error {
 				fmt.Sprintf("; elapsed time ：%.4fs ; ", elapsed),
 				"result = [", data, "]",
 			)
-			if rsp.Code == RPermissionDenied.Code {
+			if rsp.Code == RAccessDenied.Code {
 				data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
 				sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_secret"))
 				log.Println("[ Api][ Log]: request data = [", data, "]")

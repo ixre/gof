@@ -16,6 +16,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	http2 "github.com/jsix/gof/net/http"
+	"hash"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,9 +28,12 @@ import (
 
 // 接口响应
 type Response struct {
+	// 错误码
 	ErrCode int64
-	ErrMsg  string
-	Data    interface{}
+	// 错误消息
+	ErrMsg string
+	// 数据结果
+	Data interface{}
 }
 
 func NewResponse(data interface{}) *Response {
@@ -46,23 +51,29 @@ func NewErrorResponse(message string) *Response {
 }
 
 var (
-	CodeOK    int64 = 0
+	// 成功码
+	CodeOK int64 = 0
+	// 错误码
 	CodeError int64 = 1
-	RError          = &Response{
+	// 错误响应
+	RError = &Response{
 		ErrCode: 10090,
 		ErrMsg:  "",
 	}
-	RPermissionDenied = &Response{
+	// 无权限调用
+	RAccessDenied = &Response{
 		ErrCode: 10091,
-		ErrMsg:  "permission denied",
+		ErrMsg:  "access denied",
 	}
+	// 接口未定义
 	RErrUndefinedApi = &Response{
 		ErrCode: 10092,
 		ErrMsg:  "api not defined",
 	}
-	RMissingApiParams = &Response{
+	// 接口参数有误
+	RIncorrectApiParams = &Response{
 		ErrCode: 10093,
-		ErrMsg:  "missing api parameters",
+		ErrMsg:  "incorrect api parameters",
 	}
 )
 
@@ -97,43 +108,18 @@ func Sign(signType string, r url.Values, secret string) string {
 	data := ParamsToBytes(r, secret)
 	switch signType {
 	case "md5":
-		return md5Encode(data)
+		return byteHash(md5.New(), data)
 	case "sha1":
-		return sha1Encode(data)
+		return byteHash(sha1.New(), data)
 	}
 	return ""
 }
 
-// MD5加密
-func md5Encode(data []byte) string {
-	m := md5.New()
-	m.Write(data)
-	dec := m.Sum(nil)
-	return hex.EncodeToString(dec)
-}
-
-// SHA1加密
-func sha1Encode(data []byte) string {
-	s := sha1.New()
-	s.Write(data)
-	d := s.Sum(nil)
-	return hex.EncodeToString(d)
-}
-
-var _ sort.Interface = keyArr{}
-
-type keyArr []string
-
-func (s keyArr) Len() int {
-	return len(s)
-}
-
-func (s keyArr) Less(i, j int) bool {
-	return strings.ToLower(s[i]) < strings.ToLower(s[j])
-}
-
-func (s keyArr) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+// 计算Hash值
+func byteHash(h hash.Hash, data []byte) string {
+	h.Write(data)
+	b := h.Sum(nil)
+	return hex.EncodeToString(b)
 }
 
 /* ----------- API DEFINE ------------- */
@@ -234,10 +220,11 @@ func (s *ServeMux) After(middleware ...MiddlewareFunc) {
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 	h.ParseForm()
 	rsp := s.serveFunc(h)
-	s.defaultEncode(w, rsp)
+	s.flushOutputWriter(w, rsp)
 }
 
-func (s *ServeMux) defaultEncode(w http.ResponseWriter, rsp []*Response) {
+// 将响应输出
+func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 	for _, r := range rsp {
 		if r.ErrCode > CodeOK {
 			buf := bytes.NewBuffer(nil)
@@ -270,7 +257,7 @@ func (s *ServeMux) defaultEncode(w http.ResponseWriter, rsp []*Response) {
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开
 func (s *ServeMux) serveFunc(h *http.Request) []*Response {
-	rsp, userId := s.checkApiPerm(h.Form, h)
+	rsp, userId := s.checkAccessPerm(h.Form, h)
 	if rsp != nil {
 		return []*Response{rsp}
 	}
@@ -304,7 +291,7 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		return RErrUndefinedApi
 	}
 	// save api name
-	ctx.Form().Set("$api_name", apiName)
+	ctx.Form().Set("$api_name", apiName) // 保存接口名称
 	// process api
 	entry, fn := strings.ToLower(data[0]), data[1]
 	if p, ok := s.processors[entry]; ok {
@@ -325,7 +312,7 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 // use response middleware
 func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Response {
 	if len(s.afterMiddleware) > 0 {
-		ctx.Form().Set("$api_response", rsp)
+		ctx.Form().Set("$api_response", rsp) // 保存响应
 		for _, m := range s.afterMiddleware {
 			m(ctx)
 		}
@@ -334,25 +321,25 @@ func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Respons
 }
 
 // 检查接口权限
-func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response, userId int64) {
+func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Response, userId int64) {
 	key := form.Get("key")
 	sign := form.Get("sign")
 	signType := form.Get("sign_type")
 	// 检查参数
 	if key == "" || sign == "" || signType == "" {
-		return RMissingApiParams, 0
+		return RIncorrectApiParams, 0
 	}
 	if signType != "md5" && signType != "sha1" {
-		return RMissingApiParams, 0
+		return RIncorrectApiParams, 0
 	}
 	userId, userSecret := s.swap(key)
 	if userId <= 0 {
-		return RPermissionDenied, userId
+		return RAccessDenied, userId
 	}
 	// 检查签名
 	if rs := Sign(signType, form, userSecret); rs != sign {
 		if !s.trace {
-			return RPermissionDenied, userId
+			return RAccessDenied, userId
 		}
 		ctx := s.factory.Factory(r, key, userId)
 		// copy form data
@@ -365,7 +352,7 @@ func (s *ServeMux) checkApiPerm(form url.Values, r *http.Request) (rsp *Response
 		cf.Set("$user_secret", userSecret)
 		cf.Set("$client_sign", sign)
 		cf.Set("$server_sign", rs)
-		return s.response(form.Get("api"), ctx, RPermissionDenied), userId
+		return s.response(form.Get("api"), ctx, RAccessDenied), userId
 	}
 	return nil, userId
 }
@@ -430,7 +417,7 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int6
 	}
 	if d.trace {
 		if h != nil {
-			ctx.form.Set("$user_ip", h.RemoteAddr)
+			ctx.form.Set("$user_ip", http2.RealIp(h))
 			ctx.form.Set("$user_agent", h.UserAgent())
 		}
 	}
@@ -486,4 +473,21 @@ func (f Form) Get(key string) interface{} {
 }
 func (f Form) Set(key string, value interface{}) {
 	f[key] = value
+}
+
+/*------ other support code ------*/
+var _ sort.Interface = keyArr{}
+
+type keyArr []string
+
+func (s keyArr) Len() int {
+	return len(s)
+}
+
+func (s keyArr) Less(i, j int) bool {
+	return strings.ToLower(s[i]) < strings.ToLower(s[j])
+}
+
+func (s keyArr) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
