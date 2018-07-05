@@ -119,6 +119,7 @@ func (s *Session) UseInstead(sessionId string) {
 
 // 销毁会话
 func (s *Session) Destroy() {
+	s._data = nil
 	s._storage.Del(_factory.getStorageKey(s._sessionId))
 	s.setMaxAge(-1e9)
 	s.flushToClient()
