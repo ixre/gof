@@ -140,7 +140,7 @@ var _ Processor = new(StatusProcessor)
 type StatusProcessor struct{}
 
 func (p *StatusProcessor) Request(fn string, ctx Context) *Response {
-	r := &Response{Code: CodeOK}
+	r := &Response{Code: RSuccessCode}
 	switch fn {
 	case "ping":
 		r.Data = "pong"

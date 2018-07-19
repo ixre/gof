@@ -13,25 +13,25 @@ import (
 
 var (
 	RAccessDenied = &api.Response{
-		ErrCode: api.RAccessDenied.ErrCode,
+		RspCode: api.RAccessDenied.RspCode,
 		ErrMsg:  "没有权限访问该接口",
 	}
 	RIncorrectApiParams = &api.Response{
-		ErrCode: api.RIncorrectApiParams.ErrCode,
+		RspCode: api.RIncorrectApiParams.RspCode,
 		ErrMsg:  "缺少接口参数，请联系技术人员解决",
 	}
-	RErrApiName = &api.Response{
-		ErrCode: api.RErrUndefinedApi.ErrCode,
+	RUndefinedApi = &api.Response{
+		RspCode: api.RUndefinedApi.RspCode,
 		ErrMsg:  "调用的API名称不正确",
 	}
 	RNoSuchApp = &api.Response{
-		ErrCode: 10096,
+		RspCode: 10096,
 		ErrMsg:  "no such app",
 	}
 )
 
 var (
-	API_SERVER    = "http://localhost:1419/uams_api_v1"
+	API_SERVER    = "http://localhost:1419/openapi"
 	API_USER      = "< replace your api user >"
 	API_TOKEN     = "< replace your api token >"
 	API_APP       = "< replace your serve code >"
@@ -73,15 +73,15 @@ func Post(apiName string, data map[string]string) ([]byte, error) {
 func checkApiRespErr(code int) error {
 	msg := api.Response{}
 	switch int64(code) {
-	case api.RAccessDenied.ErrCode:
+	case api.RAccessDenied.RspCode:
 		msg = *RAccessDenied
-	case api.RIncorrectApiParams.ErrCode:
+	case api.RIncorrectApiParams.RspCode:
 		msg = *RIncorrectApiParams
-	case api.RErrUndefinedApi.ErrCode:
-		msg = *RErrApiName
-	case RNoSuchApp.ErrCode:
+	case api.RUndefinedApi.RspCode:
+		msg = *RUndefinedApi
+	case RNoSuchApp.RspCode:
 		msg = *RNoSuchApp
 	}
 	return errors.New(fmt.Sprintf(
-		"Error code %d : %s", msg.ErrCode, msg.ErrMsg))
+		"Error code %d : %s", msg.RspCode, msg.ErrMsg))
 }

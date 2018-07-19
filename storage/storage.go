@@ -12,8 +12,8 @@ package storage
 import "errors"
 
 const (
-	DriveHashStorage  string = "hash-storage"
-	DriveRedisStorage string = "redis-storage"
+	DriveHashStorage  = "hash-storage"
+	DriveRedisStorage = "redis-storage"
 )
 
 var typeError = errors.New("type convert error")
@@ -29,14 +29,17 @@ type Interface interface {
 	// Check key is exists or not
 	Exists(key string) (exists bool)
 
+	// Set Value
+	Set(key string, v interface{}) error
+
+	// Auto Delete Set
+	SetExpire(key string, v interface{}, seconds int64) error
+
 	// Get Value
 	Get(key string, dst interface{}) error
 
 	//Get raw value
 	GetRaw(key string) (interface{}, error)
-
-	// Set Value
-	Set(key string, v interface{}) error
 
 	GetBool(key string) (bool, error)
 
@@ -52,7 +55,4 @@ type Interface interface {
 
 	// Delete Storage
 	Del(key string)
-
-	// Auto Delete Set
-	SetExpire(key string, v interface{}, seconds int64) error
 }

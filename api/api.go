@@ -29,7 +29,7 @@ import (
 // 接口响应
 type Response struct {
 	// 错误码
-	ErrCode int64
+	RspCode int64
 	// 错误消息
 	ErrMsg string
 	// 数据结果
@@ -44,7 +44,7 @@ func NewResponse(data interface{}) *Response {
 
 func NewErrorResponse(message string) *Response {
 	return &Response{
-		ErrCode: CodeError,
+		RspCode: RErrorCode,
 		ErrMsg:  message,
 		Data:    nil,
 	}
@@ -52,28 +52,33 @@ func NewErrorResponse(message string) *Response {
 
 var (
 	// 成功码
-	CodeOK int64 = 0
+	RSuccessCode int64 = 0
 	// 错误码
-	CodeError int64 = 1
+	RErrorCode int64 = 1
 	// 错误响应
-	RError = &Response{
-		ErrCode: 10090,
-		ErrMsg:  "",
+	RInternalError = &Response{
+		RspCode: 10090,
+		ErrMsg:  "server internal error",
 	}
 	// 无权限调用
 	RAccessDenied = &Response{
-		ErrCode: 10091,
+		RspCode: 10091,
 		ErrMsg:  "access denied",
 	}
 	// 接口未定义
-	RErrUndefinedApi = &Response{
-		ErrCode: 10092,
+	RUndefinedApi = &Response{
+		RspCode: 10092,
 		ErrMsg:  "api not defined",
 	}
 	// 接口参数有误
 	RIncorrectApiParams = &Response{
-		ErrCode: 10093,
+		RspCode: 10093,
 		ErrMsg:  "incorrect api parameters",
+	}
+	// 接口已过期
+	RDeprecated = &Response{
+		RspCode: 10094,
+		ErrMsg:  "api is deprecated",
 	}
 )
 
@@ -225,12 +230,15 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 
 // 将响应输出
 func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
+	if rsp == nil || len(rsp) == 0 {
+		panic("no such response can flush to writer")
+	}
 	for _, r := range rsp {
-		if r.ErrCode > CodeOK {
+		if r.RspCode > RSuccessCode {
 			buf := bytes.NewBuffer(nil)
-			buf.WriteString("!")
-			buf.WriteString(strconv.Itoa(int(r.ErrCode)))
-			buf.WriteString(":")
+			buf.WriteString("#")
+			buf.WriteString(strconv.Itoa(int(r.RspCode)))
+			buf.WriteString("#")
 			buf.WriteString(r.ErrMsg)
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusForbidden)
@@ -288,7 +296,7 @@ func (s *ServeMux) Trace() {
 func (s *ServeMux) call(apiName string, ctx Context) *Response {
 	data := strings.Split(apiName, ".")
 	if len(data) != 2 {
-		return RErrUndefinedApi
+		return RUndefinedApi
 	}
 	// save api name
 	ctx.Form().Set("$api_name", apiName) // 保存接口名称
@@ -299,14 +307,14 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
 				return s.response(apiName, ctx, &Response{
-					ErrCode: RError.ErrCode,
+					RspCode: RInternalError.RspCode,
 					ErrMsg:  err.Error(),
 				})
 			}
 		}
 		return s.response(apiName, ctx, p.Request(fn, ctx))
 	}
-	return RErrUndefinedApi
+	return RUndefinedApi
 }
 
 // use response middleware
