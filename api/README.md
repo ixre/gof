@@ -68,6 +68,12 @@
 	    return hex.EncodeToString(d)
     }
 
+## 接口返回
+接口返回错误格式为:"#错误码#错误消息"，如：
+```
+#10091#api access denied
+```
+
 
 ## 接口请求示例代码(go)
     

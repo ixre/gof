@@ -63,7 +63,7 @@ var (
 	// 无权限调用
 	RAccessDenied = &Response{
 		RspCode: 10091,
-		ErrMsg:  "access denied",
+		ErrMsg:  "api access denied",
 	}
 	// 接口未定义
 	RUndefinedApi = &Response{
