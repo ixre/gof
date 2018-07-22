@@ -74,9 +74,6 @@ func NewRedisPool(host string, port int, db int, auth string,
 type IRedisStorage interface {
 	// return a redis connections
 	GetConn() redis.Conn
-	// Read and unmarshal from redis,if redis return err,
-	// marshal and write to redis
-	RWJson(key string, dst interface{}, src func() interface{}, second int64) error
 	// get keys start with prefix
 	Keys(prefix string) ([]string, error)
 	// delete keys contain prefix
@@ -331,12 +328,14 @@ func (r *redisStorage) RWJson(key string, dst interface{},
 			panic(errors.New("src is null pointer"))
 		}
 		dst = src()
-		jsonBytes, err = json.Marshal(dst)
-		if err == nil {
-			if second > 0 {
-				r.SetExpire(key, jsonBytes, second)
-			} else {
-				r.Set(key, jsonBytes)
+		if dst != nil {
+			jsonBytes, err = json.Marshal(dst)
+			if err == nil {
+				if second > 0 {
+					r.SetExpire(key, jsonBytes, second)
+				} else {
+					r.Set(key, jsonBytes)
+				}
 			}
 		}
 	}

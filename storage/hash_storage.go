@@ -145,3 +145,17 @@ func (h *hashStorage) Del(key string) {
 func (h *hashStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	return h.Set(key, v)
 }
+
+func (h *hashStorage) RWJson(key string, dst interface{}, src func() interface{}, second int64) error {
+	err := h.Get(key, &dst)
+	if err != nil {
+		if src == nil {
+			panic(errors.New("src is null pointer"))
+		}
+		dst = src()
+		if dst != nil {
+			h.SetExpire(key, dst, second)
+		}
+	}
+	return err
+}

@@ -29,7 +29,7 @@ import (
 // 接口响应
 type Response struct {
 	// 错误码
-	RspCode int64
+	RspCode int
 	// 错误消息
 	ErrMsg string
 	// 数据结果
@@ -52,9 +52,9 @@ func NewErrorResponse(message string) *Response {
 
 var (
 	// 成功码
-	RSuccessCode int64 = 0
+	RSuccessCode = 0
 	// 错误码
-	RErrorCode int64 = 1
+	RErrorCode = 1
 	// 错误响应
 	RInternalError = &Response{
 		RspCode: 10090,
@@ -153,7 +153,7 @@ type Context interface {
 	// 返回接口KEY
 	Key() string
 	// 返回对应用户编号
-	User() int64
+	User() int
 	// 请求
 	Request() *http.Request
 	// 表单数据
@@ -162,7 +162,7 @@ type Context interface {
 
 // 上下文工厂
 type ContextFactory interface {
-	Factory(h *http.Request, key string, userId int64) Context
+	Factory(h *http.Request, key string, userId int) Context
 }
 
 // 工厂生成器
@@ -175,7 +175,7 @@ type FactoryBuilder interface {
 type MiddlewareFunc func(ctx Context) error
 
 // 交换信息，根据key返回用户编号、密钥
-type SwapFunc func(key string) (userId int64, secret string)
+type SwapUserFunc func(key string) (userId int, secret string)
 
 var _ Server = new(ServeMux)
 
@@ -184,13 +184,13 @@ type ServeMux struct {
 	trace           bool
 	processors      map[string]Processor
 	mux             sync.Mutex
-	swap            SwapFunc
+	swap            SwapUserFunc
 	factory         ContextFactory
 	middleware      []MiddlewareFunc
 	afterMiddleware []MiddlewareFunc
 }
 
-func NewServerMux(cf ContextFactory, swap SwapFunc) *ServeMux {
+func NewServerMux(cf ContextFactory, swap SwapUserFunc) *ServeMux {
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
@@ -329,7 +329,7 @@ func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Respons
 }
 
 // 检查接口权限
-func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Response, userId int64) {
+func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Response, userId int) {
 	key := form.Get("key")
 	sign := form.Get("sign")
 	signType := form.Get("sign_type")
@@ -341,7 +341,7 @@ func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Respo
 		return RIncorrectApiParams, 0
 	}
 	userId, userSecret := s.swap(key)
-	if userId <= 0 {
+	if userId <= 0 || userSecret == "" {
 		return RAccessDenied, userId
 	}
 	// 检查签名
@@ -370,7 +370,7 @@ var _ Context = new(defaultContext)
 type defaultContext struct {
 	h      *http.Request
 	key    string
-	userId int64
+	userId int
 	form   Form
 }
 
@@ -378,7 +378,7 @@ func (ctx *defaultContext) Key() string {
 	return ctx.key
 }
 
-func (ctx *defaultContext) User() int64 {
+func (ctx *defaultContext) User() int {
 	return ctx.userId
 }
 
@@ -411,7 +411,7 @@ func (d *defaultContextFactory) setTrace(trace bool) {
 	d.trace = trace
 }
 
-func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int64) Context {
+func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int) Context {
 	ctx := &defaultContext{
 		h:      h,
 		key:    key,

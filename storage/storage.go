@@ -55,4 +55,8 @@ type Interface interface {
 
 	// Delete Storage
 	Del(key string)
+
+	// Read and unmarshal from redis,if redis return err,
+	// marshal and write to redis
+	RWJson(key string, dst interface{}, src func() interface{}, second int64) error
 }
