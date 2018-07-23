@@ -157,7 +157,8 @@ type Context interface {
 	// 请求
 	Request() *http.Request
 	// 表单数据
-	Form() Form
+	Form() FormData
+	Resign(userId int, )
 }
 
 // 上下文工厂
@@ -174,8 +175,8 @@ type FactoryBuilder interface {
 // 中间件
 type MiddlewareFunc func(ctx Context) error
 
-// 交换信息，根据key返回用户编号、密钥
-type SwapUserFunc func(key string) (userId int, secret string)
+// 交换凭据信息，根据key返回用户编号、密钥，可在方法中存储相关用户的信息到上下文
+type CredentialFunc func(ctx Context, key string) (userId int, secret string)
 
 var _ Server = new(ServeMux)
 
@@ -184,13 +185,13 @@ type ServeMux struct {
 	trace           bool
 	processors      map[string]Processor
 	mux             sync.Mutex
-	swap            SwapUserFunc
+	swap            CredentialFunc
 	factory         ContextFactory
 	middleware      []MiddlewareFunc
 	afterMiddleware []MiddlewareFunc
 }
 
-func NewServerMux(cf ContextFactory, swap SwapUserFunc) *ServeMux {
+func NewServerMux(cf ContextFactory, swap CredentialFunc) *ServeMux {
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
@@ -265,15 +266,16 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开
 func (s *ServeMux) serveFunc(h *http.Request) []*Response {
-	rsp, userId := s.checkAccessPerm(h.Form, h)
+	key := h.Form.Get("key")
+	ctx := s.factory.Factory(h, key, 0)
+	rsp, userId := s.checkAccessPerm(ctx, key, h.Form, h)
 	if rsp != nil {
 		return []*Response{rsp}
 	}
-	key := h.Form.Get("key")
 	name := strings.Split(h.Form.Get("api"), ",")
 	arr := make([]*Response, len(name))
-	// create api context
-	ctx := s.factory.Factory(h, key, userId)
+	// resign user to api context
+	ctx.Resign(userId)
 	// copy form data
 	for i, v := range h.Form {
 		ctx.Form().Set(i, v[0])
@@ -329,8 +331,7 @@ func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Respons
 }
 
 // 检查接口权限
-func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Response, userId int) {
-	key := form.Get("key")
+func (s *ServeMux) checkAccessPerm(ctx Context, key string, form url.Values, r *http.Request) (rsp *Response, userId int) {
 	sign := form.Get("sign")
 	signType := form.Get("sign_type")
 	// 检查参数
@@ -340,29 +341,35 @@ func (s *ServeMux) checkAccessPerm(form url.Values, r *http.Request) (rsp *Respo
 	if signType != "md5" && signType != "sha1" {
 		return RIncorrectApiParams, 0
 	}
-	userId, userSecret := s.swap(key)
+	userId, userSecret := s.swap(ctx, key)
 	if userId <= 0 || userSecret == "" {
 		return RAccessDenied, userId
 	}
 	// 检查签名
 	if rs := Sign(signType, form, userSecret); rs != sign {
-		if !s.trace {
-			return RAccessDenied, userId
-		}
-		ctx := s.factory.Factory(r, key, userId)
-		// copy form data
-		cf := ctx.Form()
-		for i, v := range form {
-			cf.Set(i, v[0])
-		}
-		// set variables
-		cf.Set("$user_id", userId)
-		cf.Set("$user_secret", userSecret)
-		cf.Set("$client_sign", sign)
-		cf.Set("$server_sign", rs)
-		return s.response(form.Get("api"), ctx, RAccessDenied), userId
+		ctx.Form().Set("$user_id", userId)
+		ctx.Form().Set("$user_secret", userSecret)
+		ctx.Form().Set("$client_sign", sign)
+		ctx.Form().Set("$server_sign", rs)
+		return s.responseAccessDenied(form.Get("api"), ctx, form, userId)
 	}
 	return nil, userId
+}
+
+// response access denied
+func (s *ServeMux) responseAccessDenied(apiName string, ctx Context,
+	form url.Values, userId int) (*Response, int) {
+	if !s.trace {
+		return RAccessDenied, userId
+	}
+	// resign user
+	ctx.Resign(userId)
+	// copy form data
+	cf := ctx.Form()
+	for i, v := range form {
+		cf.Set(i, v[0])
+	}
+	return s.response(form.Get("api"), ctx, RAccessDenied), userId
 }
 
 var _ Context = new(defaultContext)
@@ -371,7 +378,7 @@ type defaultContext struct {
 	h      *http.Request
 	key    string
 	userId int
-	form   Form
+	form   FormData
 }
 
 func (ctx *defaultContext) Key() string {
@@ -386,8 +393,15 @@ func (ctx *defaultContext) Request() *http.Request {
 	return ctx.h
 }
 
-func (ctx *defaultContext) Form() Form {
+func (ctx *defaultContext) Form() FormData {
 	return ctx.form
+}
+
+func (ctx *defaultContext) Resign(userId int) {
+	if ctx.userId > 0 {
+		panic("user not allow repeat signed")
+	}
+	ctx.userId = userId
 }
 
 // 默认工厂
@@ -433,15 +447,15 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int)
 }
 
 // 数据
-type Form map[string]interface{}
+type FormData map[string]interface{}
 
-func (f Form) Contains(key string) bool {
+func (f FormData) Contains(key string) bool {
 	_, ok := f[key]
 	return ok
 }
 
 // 获取数值
-func (f Form) GetInt(key string) int {
+func (f FormData) GetInt(key string) int {
 	o := f.Get(key)
 	switch o.(type) {
 	case int:
@@ -458,7 +472,7 @@ func (f Form) GetInt(key string) int {
 }
 
 // 获取字节
-func (f Form) GetBytes(key string) []byte {
+func (f FormData) GetBytes(key string) []byte {
 	if v, ok := f.Get(key).(string); ok {
 		return []byte(v)
 	}
@@ -466,20 +480,20 @@ func (f Form) GetBytes(key string) []byte {
 }
 
 // 获取字符串
-func (f Form) GetString(key string) string {
+func (f FormData) GetString(key string) string {
 	if v, ok := f.Get(key).(string); ok {
 		return v
 	}
 	return ""
 }
 
-func (f Form) Get(key string) interface{} {
+func (f FormData) Get(key string) interface{} {
 	if v, ok := f[key]; ok {
 		return v
 	}
 	return ""
 }
-func (f Form) Set(key string, value interface{}) {
+func (f FormData) Set(key string, value interface{}) {
 	f[key] = value
 }
 
