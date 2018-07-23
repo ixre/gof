@@ -158,7 +158,7 @@ type Context interface {
 	Request() *http.Request
 	// 表单数据
 	Form() FormData
-	Resign(userId int, )
+	Resign(userId int)
 }
 
 // 上下文工厂
