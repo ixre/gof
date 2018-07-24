@@ -33,7 +33,7 @@ type Response struct {
 	// 错误消息
 	ErrMsg string
 	// 数据结果
-	Data interface{}
+	Data interface{} `json:"Data,omitempty"`
 }
 
 func NewResponse(data interface{}) *Response {
@@ -238,7 +238,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 		if r.RspCode > RSuccessCode {
 			buf := bytes.NewBuffer(nil)
 			buf.WriteString("#")
-			buf.WriteString(strconv.Itoa(int(r.RspCode)))
+			buf.WriteString(strconv.Itoa(r.RspCode))
 			buf.WriteString("#")
 			buf.WriteString(r.ErrMsg)
 			w.Header().Set("Content-Type", "text/plain")
@@ -253,10 +253,10 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 		for _, v := range rsp {
 			arr = append(arr, v.Data)
 		}
-		data, _ = json.Marshal(arr)
+		data, _ = s.marshal(arr)
 	} else {
 		if rsp[0].Data != nil {
-			data, _ = json.Marshal(rsp[0].Data)
+			data, _ = s.marshal(rsp[0].Data)
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -370,6 +370,10 @@ func (s *ServeMux) responseAccessDenied(apiName string, ctx Context,
 		cf.Set(i, v[0])
 	}
 	return s.response(form.Get("api"), ctx, RAccessDenied), userId
+}
+func (s *ServeMux) marshal(d interface{}) ([]byte, interface{}) {
+	bytes, err := json.Marshal(d)
+	return bytes, err
 }
 
 var _ Context = new(defaultContext)

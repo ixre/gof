@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+type Result struct {
+	ErrCode int               `json:"ErrCode"`
+	ErrMsg  string            `json:"ErrMsg,omitempty"`
+	Data    map[string]string `json:"Data,omitempty"`
+}
+
 //操作Json结果
 type Message struct {
 	// 错误码

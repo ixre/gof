@@ -39,9 +39,9 @@ func NewClient(server string, key string, secret string, signType string, errFun
 }
 
 // 请求接口
-func (c Client) Post(apiName string, data map[string]string) ([]byte, error) {
+func (c Client) Post(apiName string, params map[string]string) ([]byte, error) {
 	cli := &http.Client{}
-	form := c.copy(data)
+	form := c.copy(params)
 	form["api"] = []string{apiName}
 	form["key"] = []string{c.key}
 	form["sign_type"] = []string{c.signType}
