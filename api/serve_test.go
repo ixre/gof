@@ -27,12 +27,12 @@ const (
 
 var (
 	RErrNotService = &Response{
-		Code:   10094,
-		ErrMsg: "api not service",
+		Code:    10094,
+		Message: "api not service",
 	}
 	RErrDeprecated = &Response{
-		Code:   10095,
-		ErrMsg: "api is deprecated",
+		Code:    10095,
+		Message: "api is deprecated",
 	}
 )
 
@@ -53,7 +53,7 @@ func ListenAndServe(port int, debug bool) error {
 		prodVer := ctx.Form().GetString("version")
 		if prod == "mzl" && CompareVersion(prodVer, tarVer) < 0 {
 			return errors.New(fmt.Sprintf("%d:%s,require version=%s",
-				RErrDeprecated.Code, RErrDeprecated.ErrMsg, tarVer))
+				RErrDeprecated.Code, RErrDeprecated.Message, tarVer))
 		}
 		return nil
 	})
@@ -81,7 +81,7 @@ func ListenAndServe(port int, debug bool) error {
 			}
 			reqTime := int64(ctx.Form().GetInt("$rpc_begin_time"))
 			elapsed := float32(time.Now().UnixNano()-reqTime) / 1000000000
-			log.Println("[ Api][ Log]: response : ", rsp.Code, rsp.ErrMsg,
+			log.Println("[ Api][ Log]: response : ", rsp.Code, rsp.Message,
 				fmt.Sprintf("; elapsed time ：%.4fs ; ", elapsed),
 				"result = [", data, "]",
 			)

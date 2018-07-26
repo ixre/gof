@@ -28,11 +28,11 @@ import (
 
 // 接口响应
 type Response struct {
-	// 错误码
-	RspCode int
-	// 错误消息
-	ErrMsg string
-	// 数据结果
+	// 响应码
+	Code int
+	// 响应消息
+	Message string
+	// 响应数据
 	Data interface{} `json:"Data,omitempty"`
 }
 
@@ -44,8 +44,8 @@ func NewResponse(data interface{}) *Response {
 
 func NewErrorResponse(message string) *Response {
 	return &Response{
-		RspCode: RErrorCode,
-		ErrMsg:  message,
+		Code:    RErrorCode,
+		Message: message,
 		Data:    nil,
 	}
 }
@@ -57,28 +57,28 @@ var (
 	RErrorCode = 1
 	// 错误响应
 	RInternalError = &Response{
-		RspCode: 10090,
-		ErrMsg:  "server internal error",
+		Code:    10090,
+		Message: "server internal error",
 	}
 	// 无权限调用
 	RAccessDenied = &Response{
-		RspCode: 10091,
-		ErrMsg:  "api access denied",
+		Code:    10091,
+		Message: "api access denied",
 	}
 	// 接口未定义
 	RUndefinedApi = &Response{
-		RspCode: 10092,
-		ErrMsg:  "api not defined",
+		Code:    10092,
+		Message: "api not defined",
 	}
 	// 接口参数有误
 	RIncorrectApiParams = &Response{
-		RspCode: 10093,
-		ErrMsg:  "incorrect api parameters",
+		Code:    10093,
+		Message: "incorrect api parameters",
 	}
 	// 接口已过期
 	RDeprecated = &Response{
-		RspCode: 10094,
-		ErrMsg:  "api is deprecated",
+		Code:    10094,
+		Message: "api is deprecated",
 	}
 )
 
@@ -235,12 +235,12 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 		panic("no such response can flush to writer")
 	}
 	for _, r := range rsp {
-		if r.RspCode > RSuccessCode {
+		if r.Code > RSuccessCode {
 			buf := bytes.NewBuffer(nil)
 			buf.WriteString("#")
-			buf.WriteString(strconv.Itoa(r.RspCode))
+			buf.WriteString(strconv.Itoa(r.Code))
 			buf.WriteString("#")
-			buf.WriteString(r.ErrMsg)
+			buf.WriteString(r.Message)
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusForbidden)
 			w.Write(buf.Bytes())
@@ -309,8 +309,8 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
 				return s.response(apiName, ctx, &Response{
-					RspCode: RInternalError.RspCode,
-					ErrMsg:  err.Error(),
+					Code:    RInternalError.Code,
+					Message: err.Error(),
 				})
 			}
 		}
