@@ -131,7 +131,7 @@ func byteHash(h hash.Hash, data []byte) string {
 
 // 接口处理器
 type Handler interface {
-	Request(fn string, ctx Context) *Response
+	Process(fn string, ctx Context) *Response
 }
 
 // 接口处理方法
@@ -330,7 +330,7 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 				})
 			}
 		}
-		return s.response(apiName, ctx, p.Request(fn, ctx))
+		return s.response(apiName, ctx, p.Process(fn, ctx))
 	}
 	return RUndefinedApi
 }

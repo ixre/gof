@@ -35,7 +35,7 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 		http.Error(w, errMsg, http.StatusNotFound)
 		return
 	} else {
-		//包含基础的ResponseWriter和http.Request 2个参数
+		// 包含基础的ResponseWriter和http.Request 2个参数
 		argsLen := len(args)
 		numIn := method.Type().NumIn()
 

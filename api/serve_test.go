@@ -139,7 +139,7 @@ var _ Handler = new(StatusProcessor)
 
 type StatusProcessor struct{}
 
-func (p *StatusProcessor) Request(fn string, ctx Context) *Response {
+func (p *StatusProcessor) Process(fn string, ctx Context) *Response {
 	r := &Response{Code: RSuccessCode}
 	switch fn {
 	case "ping":

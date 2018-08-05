@@ -84,7 +84,7 @@ func init() {
 
 	HandleHttpBeforePrint = func(ctx *Context) bool {
 		r := ctx.Request
-		fmt.Println("[Request] ", time.Now().Format("2006-01-02 15:04:05"), ": URL:", r.RequestURI)
+		fmt.Println("[ Request] ", time.Now().Format("2006-01-02 15:04:05"), ": URL:", r.RequestURI)
 		for k, v := range r.Header {
 			fmt.Println(k, ":", v)
 		}
