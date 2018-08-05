@@ -11,7 +11,6 @@ type Result struct {
 	Data    map[string]string `json:"Data,omitempty"`
 }
 
-
 func (r *Result) Error(err error) *Result {
 	if err == nil {
 		return r.ErrorText("")

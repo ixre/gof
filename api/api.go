@@ -129,15 +129,24 @@ func byteHash(h hash.Hash, data []byte) string {
 
 /* ----------- API DEFINE ------------- */
 
-// 处理器
-type Processor interface {
+// 接口处理器
+type Handler interface {
 	Request(fn string, ctx Context) *Response
 }
+
+// 接口处理方法
+type HandlerFunc func(ctx Context) interface{}
+
+// 中间件
+type MiddlewareFunc func(ctx Context) error
+
+// 交换凭据信息，根据key返回用户编号、密钥，可在方法中存储相关用户的信息到上下文
+type CredentialFunc func(ctx Context, key string) (userId int, secret string)
 
 // API服务
 type Server interface {
 	// 注册客户端
-	Register(name string, p Processor)
+	Register(name string, p Handler)
 	// adds middleware
 	Use(middleware ...MiddlewareFunc)
 	// adds after middleware
@@ -158,6 +167,7 @@ type Context interface {
 	Request() *http.Request
 	// 表单数据
 	Form() FormData
+	// 分配UserId
 	Resign(userId int)
 }
 
@@ -172,18 +182,24 @@ type FactoryBuilder interface {
 	Build(registry map[string]interface{}) ContextFactory
 }
 
-// 中间件
-type MiddlewareFunc func(ctx Context) error
-
-// 交换凭据信息，根据key返回用户编号、密钥，可在方法中存储相关用户的信息到上下文
-type CredentialFunc func(ctx Context, key string) (userId int, secret string)
+// 处理接口方法
+func HandleMultiFunc(fn string, ctx Context, funcMap map[string]HandlerFunc) *Response {
+	if v, ok := funcMap[fn]; ok {
+		d := v(ctx)
+		if rsp := d.(*Response); rsp != nil {
+			return rsp
+		}
+		return &Response{Data: d}
+	}
+	return RUndefinedApi
+}
 
 var _ Server = new(ServeMux)
 
 // default server implement
 type ServeMux struct {
 	trace           bool
-	processors      map[string]Processor
+	processors      map[string]Handler
 	mux             sync.Mutex
 	swap            CredentialFunc
 	factory         ContextFactory
@@ -195,14 +211,14 @@ func NewServerMux(cf ContextFactory, swap CredentialFunc) *ServeMux {
 	return &ServeMux{
 		swap:            swap,
 		factory:         cf,
-		processors:      map[string]Processor{},
+		processors:      map[string]Handler{},
 		middleware:      []MiddlewareFunc{},
 		afterMiddleware: []MiddlewareFunc{},
 	}
 }
 
 // 注册客户端
-func (s *ServeMux) Register(name string, h Processor) {
+func (s *ServeMux) Register(name string, h Handler) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	ls := strings.ToLower(name)

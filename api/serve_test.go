@@ -135,7 +135,7 @@ func intVer(s string) int {
 	return intVer
 }
 
-var _ Processor = new(StatusProcessor)
+var _ Handler = new(StatusProcessor)
 
 type StatusProcessor struct{}
 
