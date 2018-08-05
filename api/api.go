@@ -186,8 +186,12 @@ type FactoryBuilder interface {
 func HandleMultiFunc(fn string, ctx Context, funcMap map[string]HandlerFunc) *Response {
 	if v, ok := funcMap[fn]; ok {
 		d := v(ctx)
-		if rsp := d.(*Response); rsp != nil {
-			return rsp
+		switch d.(type) {
+		case *Response:
+			return d.(*Response)
+		case Response:
+			r := d.(Response)
+			return &r
 		}
 		return &Response{Data: d}
 	}
