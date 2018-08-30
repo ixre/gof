@@ -51,7 +51,9 @@ func (r *Registry) dirInit() (*Registry, error) {
 		return r, err
 	}
 	for _, f := range files {
-		r.load(r.path+"/"+f.Name(), f)
+		if err = r.load(r.path+"/"+f.Name(), f); err != nil {
+			return r, errors.New(f.Name() + ":" + err.Error())
+		}
 	}
 	return r, nil
 }
@@ -119,12 +121,14 @@ func (r *Registry) Use(key string) *RegistryTree {
 
 // get string
 func (r *Registry) GetString(key string) string {
-	defer func() {
-		if err := recover(); err != nil {
-			panic(fmt.Sprintf("key=%s; err=%s", key, err))
-		}
-	}()
+	defer getRecover(key)
 	return r.Get(key).(string)
+}
+
+func getRecover(key string) {
+	if err := recover(); err != nil {
+		panic(fmt.Sprintf("key=%s; err=%s", key, err))
+	}
 }
 
 func (r *Registry) createNode(arr []string, value interface{}) (*toml.Tree, error) {
@@ -162,14 +166,22 @@ func (r *RegistryTree) Get(prop string) interface{} {
 }
 
 func (r *RegistryTree) GetString(prop string) string {
+	defer getRecover(prop)
 	return r.Get(prop).(string)
 }
 
 func (r *RegistryTree) GetInt(prop string) int {
+	defer getRecover(prop)
 	return r.Get(prop).(int)
 }
 
+func (r *RegistryTree) GetFloat(prop string) float64 {
+	defer getRecover(prop)
+	return r.Get(prop).(float64)
+}
+
 func (r *RegistryTree) GetBool(prop string) bool {
+	defer getRecover(prop)
 	return r.Get(prop).(bool)
 }
 

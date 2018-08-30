@@ -26,3 +26,4 @@ vendor
 *.prof
 .idea
 .DS_Store
+go.sum
