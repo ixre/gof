@@ -26,7 +26,7 @@ type Interface interface {
 	// return storage source
 	Source() interface{}
 
-	// Check key is exists or not
+	// check key is exists or not
 	Exists(key string) (exists bool)
 
 	// Set Value

@@ -35,7 +35,7 @@ func (d *dialectSession) TablesByPrefix(db string,
 	prefix string) ([]*Table, error) {
 	list, err := d.dialect.Tables(d.conn, db)
 	if err == nil {
-		l := []*Table{}
+		var l []*Table
 		for _, v := range list {
 			if strings.HasPrefix(v.Name, prefix) {
 				l = append(l, v)

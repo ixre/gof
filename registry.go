@@ -165,6 +165,11 @@ func (r *RegistryTree) Get(prop string) interface{} {
 	return nil
 }
 
+// is contains prop
+func (r *RegistryTree) Contains(prop string) bool {
+	return r.Get(prop) != nil
+}
+
 func (r *RegistryTree) GetString(prop string) string {
 	defer getRecover(prop)
 	return r.Get(prop).(string)

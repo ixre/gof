@@ -38,7 +38,7 @@ func (h *hashStorage) Driver() string {
 	return DriveHashStorage
 }
 
-// Check key is exists or not
+// check key is exists or not
 func (h *hashStorage) Exists(key string) (exists bool) {
 	_, b := h.test(key)
 	return b

@@ -212,7 +212,7 @@ func (r *redisStorage) Del(key string) {
 }
 
 /*
-   https://github.com/garyburd/redigo/issues/21
+   https://github.com/gomodule/redigo/issues/21
    It's common to store JSON in Redis. If you are only accessing
     the data from Go, then encoding/gob is another good option for storing nested data.
 */
