@@ -463,7 +463,7 @@ func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int)
 	}
 	if d.trace {
 		if h != nil {
-			ctx.form.Set("$user_ip", http2.RealIp(h))
+			ctx.form.Set("$user_ip_addr", http2.RealIp(h))
 			ctx.form.Set("$user_agent", h.UserAgent())
 		}
 	}
