@@ -1,4 +1,4 @@
-module github.com/jsix/gof
+module github.com/ixre/gof
 
 require (
 	github.com/BurntSushi/toml v0.3.0 // indirect

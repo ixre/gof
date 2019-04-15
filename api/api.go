@@ -16,7 +16,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	http2 "github.com/jsix/gof/net/http"
+	http2 "github.com/ixre/gof/net/http"
 	"hash"
 	"net/http"
 	"net/url"

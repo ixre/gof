@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jsix/gof/db/orm"
+	"github.com/ixre/gof/db/orm"
 	"log"
 	"os"
 	"testing"

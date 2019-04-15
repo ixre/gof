@@ -3,8 +3,8 @@ package web
 import (
 	"errors"
 	"fmt"
-	"github.com/jsix/gof"
-	"github.com/jsix/gof/log"
+	"github.com/ixre/gof"
+	"github.com/ixre/gof/log"
 	"net/http"
 	"os"
 	"time"

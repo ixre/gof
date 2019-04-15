@@ -14,8 +14,8 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jsix/gof/db/orm"
-	"github.com/jsix/gof/log"
+	"github.com/ixre/gof/db/orm"
+	"github.com/ixre/gof/log"
 	"time"
 )
 

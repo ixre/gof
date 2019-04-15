@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/jsix/gof"
+	"github.com/ixre/gof"
 	"net"
 	"net/http"
 	"reflect"

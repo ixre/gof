@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jsix/gof/util"
+	"github.com/ixre/gof/util"
 	"reflect"
 	"strconv"
 	"strings"

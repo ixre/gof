@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/jsix/gof/db/orm"
+	"github.com/ixre/gof/db/orm"
 	"io/ioutil"
 	"os"
 	"path/filepath"

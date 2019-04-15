@@ -9,7 +9,7 @@
 package mvc
 
 import (
-	"github.com/jsix/gof/web"
+	"github.com/ixre/gof/web"
 	"log"
 	"net/http"
 	"strings"

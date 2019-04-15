@@ -10,8 +10,8 @@
 package web
 
 import (
-	"github.com/jsix/gof"
-	"github.com/jsix/gof/web/session"
+	"github.com/ixre/gof"
+	"github.com/ixre/gof/web/session"
 	"net/http"
 )
 

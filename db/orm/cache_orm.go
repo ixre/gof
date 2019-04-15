@@ -9,7 +9,7 @@
 package orm
 
 import (
-	"github.com/jsix/gof/storage"
+	"github.com/ixre/gof/storage"
 )
 
 var _ Orm = new(cacheProxy)

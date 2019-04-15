@@ -1,7 +1,7 @@
 package form
 
 import (
-	"github.com/jsix/gof/net/http"
+	"github.com/ixre/gof/net/http"
 )
 
 //转换到实体
