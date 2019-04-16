@@ -262,7 +262,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 			buf.WriteString("#")
 			buf.WriteString(r.Message)
 			w.Header().Set("Content-Type", "text/plain")
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusOK)
 			w.Write(buf.Bytes())
 			return
 		}
