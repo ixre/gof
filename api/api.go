@@ -344,7 +344,7 @@ func (s *ServeMux) response(apiName string, ctx Context, rsp *Response) *Respons
 	if len(s.afterMiddleware) > 0 {
 		ctx.Form().Set("$api_response", rsp) // 保存响应
 		for _, m := range s.afterMiddleware {
-			m(ctx)
+			_ = m(ctx)
 		}
 	}
 	return rsp
