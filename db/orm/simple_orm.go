@@ -29,6 +29,8 @@ func NewOrm(driver string, db *sql.DB) Orm {
 	switch driver {
 	case "mysql":
 		dialect = &MySqlDialect{}
+	case "postgres", "postgresql":
+		dialect = &PostgresqlDialect{}
 	case "mssql":
 		dialect = &MsSqlDialect{}
 	case "sqlite":
@@ -362,15 +364,15 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	defer rows.Close()
 
 	/* 用反射来对输出结果复制 */
-
 	toArr := toVal
-
 	for rows.Next() {
 		e := reflect.New(baseType)
 		v := e.Elem()
 		if err = rows.Scan(scanVal...); err != nil {
 			break
 		}
+		//println(fmt.Sprintf("%#v",	string(rawBytes[0])))
+		//println(fmt.Sprintf("%#v",	string(rawBytes[1])))
 		//for i, fi := range meta.FieldsIndex {
 		//	SetField(v.Field(fi), rawBytes[i])
 		//}
@@ -447,12 +449,10 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primary))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s \n [ SQL]:%s", err.Error(), sql)))
-
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(primary)
@@ -484,23 +484,19 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		for i := range pArr {
 			pArr[i] = "?"
 		}
-
 		sql = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", meta.TableName,
 			strings.Join(fieldArr, ","),
 			strings.Join(pArr, ","),
 		)
-
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
-
 		/* query */
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
 			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + "\n[ SQL]" + sql))
 		}
 		defer stmt.Close()
-
 		result, err := stmt.Exec(params...)
 		var rowNum int64 = 0
 		var lastInsertId int64 = 0
@@ -514,9 +510,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		return rowNum, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
 	} else {
 		//update model
-
 		var setCond string
-
 		for i, k := range fieldArr {
 			if i == 0 {
 				setCond = fmt.Sprintf("%s = ?", k)

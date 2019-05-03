@@ -16,6 +16,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/ixre/gof/db/orm"
 	"github.com/ixre/gof/log"
+	"github.com/lib/pq"
+	"strings"
 	"time"
 )
 
@@ -39,7 +41,7 @@ var _ Connector = new(defaultConnector)
 
 // create a new connector
 func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) Connector {
-	db, err := sql.Open(driverName, driverSource)
+	db, err := open(driverName, driverSource)
 	if err == nil {
 		err = db.Ping()
 	}
@@ -61,6 +63,19 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) Co
 		logger:       l,
 		debug:        debug,
 	}
+}
+
+// 创建连接
+func open(driverName string, driverSource string) (*sql.DB, error) {
+	switch strings.ToLower(driverName) {
+	case "postgres", "postgresql":
+		conn, err := pq.NewConnector(driverSource)
+		if err == nil {
+			return sql.OpenDB(conn), err
+		}
+		return nil, err
+	}
+	return sql.Open(driverName, driverSource)
 }
 
 //数据库连接器
