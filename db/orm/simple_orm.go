@@ -8,6 +8,7 @@ import (
 	"github.com/ixre/gof/storage"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -151,7 +152,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 		fieldArr[i] = v
 		scanVal[i] = &rawBytes[i]
 	}
-	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, meta.PkFieldName+"=?")
+	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, meta.PkFieldName+" = "+o.getParamHolder(0))
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sqlQuery, primaryVal))
 	}
@@ -441,9 +442,10 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	/* build sql */
 	meta := o.getTableMapMeta(t)
 
-	sql = fmt.Sprintf("DELETE FROM %s WHERE %s=?",
+	sql = fmt.Sprintf("DELETE FROM %s WHERE %s=%s",
 		meta.TableName,
 		meta.PkFieldName,
+		o.getParamHolder(0),
 	)
 
 	if o.useTrace {
@@ -482,7 +484,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 	if primaryKey == nil {
 		var pArr = make([]string, len(fieldArr))
 		for i := range pArr {
-			pArr[i] = "?"
+			pArr[i] = o.getParamHolder(i)
 		}
 		sql = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", meta.TableName,
 			strings.Join(fieldArr, ","),
@@ -513,15 +515,16 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		var setCond string
 		for i, k := range fieldArr {
 			if i == 0 {
-				setCond = fmt.Sprintf("%s = ?", k)
+				setCond = fmt.Sprintf("%s = %s", k,o.getParamHolder(i))
 			} else {
-				setCond = fmt.Sprintf("%s,%s = ?", setCond, k)
+				setCond = fmt.Sprintf("%s,%s = %s", setCond, k,o.getParamHolder(i))
 			}
 		}
 
-		sql = fmt.Sprintf("UPDATE %s SET %s WHERE %s=?", meta.TableName,
+		sql = fmt.Sprintf("UPDATE %s SET %s WHERE %s=%s", meta.TableName,
 			setCond,
 			meta.PkFieldName,
+			o.getParamHolder(len(fieldArr)),
 		)
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
@@ -542,9 +545,6 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 	}
 }
 func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
-	if o.driverName != "mysql" {
-		panic("not support database driver :" + o.driverName)
-	}
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT ")
 	if o.driverName == "mssql" {
@@ -561,7 +561,19 @@ func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where st
 			buf.WriteString(" LIMIT 1")
 		}
 	} else {
+		//if o.driverName == "postgresql" || o.driverName =="postgres"{
+		//	buf.WriteString("LIMIT 1")
+		//}
 		buf.WriteString(" LIMIT 1")
 	}
 	return buf.String()
+}
+
+func (o *simpleOrm) getParamHolder(n int)string {
+	switch o.driverName {
+	case "mysql":return "?"
+	case "postgres","postgresql":
+		return "$"+strconv.Itoa(n+1)
+	}
+	return "?"
 }

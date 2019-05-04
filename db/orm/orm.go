@@ -42,7 +42,7 @@ type (
 		GetByQuery(dst interface{}, sql string, args ...interface{}) error
 
 		//Select more than 1 entity list
-		//@to : refrence to queryed entity list
+		//@to : reference to queried entity list
 		//@params : query condition
 		//@where : other condition
 		Select(dst interface{}, where string, args ...interface{}) error
@@ -276,11 +276,6 @@ func Save(o Orm, entity interface{}, pk int) (int, error) {
 	if pk > 0 {
 		_, _, err := o.Save(pk, entity)
 		return pk, err
-		//r, _, err := o.Save(pk, entity)
-		//if r == 0 && err == nil {
-		//    _, _, err = o.Save(nil, entity)
-		//}
-		//return pk, err
 	}
 	_, int64, err := o.Save(nil, entity)
 	return int(int64), err
