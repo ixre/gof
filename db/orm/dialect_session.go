@@ -26,14 +26,14 @@ func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
 }
 
 // 获取所有的表
-func (d *dialectSession) Tables(db string) ([]*Table, error) {
-	return d.dialect.Tables(d.conn, db)
+func (d *dialectSession) Tables(database string, schema string) ([]*Table, error) {
+	return d.dialect.Tables(d.conn, database, schema)
 }
 
 // 获取所有的表
-func (d *dialectSession) TablesByPrefix(db string,
+func (d *dialectSession) TablesByPrefix(database string, schema string,
 	prefix string) ([]*Table, error) {
-	list, err := d.dialect.Tables(d.conn, db)
+	list, err := d.dialect.Tables(d.conn, database, schema)
 	if err == nil {
 		var l []*Table
 		for _, v := range list {

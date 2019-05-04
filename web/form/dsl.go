@@ -15,12 +15,12 @@ import (
 
 type (
 	Form struct {
-		Id     string
+		ID     string
 		Label  string
 		Fields []*Field
 	}
 	Field struct {
-		Id        string
+		ID        string
 		Label     string
 		Elem      string
 		Class     string
@@ -64,7 +64,7 @@ func (e *Engine) Parse(dsl string) (*Form, error) {
 	for _, v := range mcs {
 		switch v[1] {
 		case "id":
-			f.Id = v[2]
+			f.ID = v[2]
 		case "label":
 			f.Label = v[2]
 		}
@@ -77,7 +77,7 @@ func (e *Engine) Parse(dsl string) (*Form, error) {
 		for _, v := range mcs {
 			switch v[1] {
 			case "id":
-				fd.Id = v[2]
+				fd.ID = v[2]
 			case "label":
 				fd.Label = v[2]
 			case "element":
@@ -110,11 +110,11 @@ func (e *Engine) SaveDSL(f *Form, path string) error {
 	}
 	if err == nil {
 		defer fi.Close()
-		fi.WriteString("id=" + f.Id)
+		fi.WriteString("id=" + f.ID)
 		fi.WriteString("\nlabel=" + f.Label)
 		for _, f := range f.Fields {
 			fi.WriteString("\nfield{\n")
-			fi.WriteString(fmt.Sprintf("    id=%s\n", f.Id))
+			fi.WriteString(fmt.Sprintf("    id=%s\n", f.ID))
 			fi.WriteString(fmt.Sprintf("    label=%s\n", f.Label))
 			fi.WriteString(fmt.Sprintf("    element=%s\n", f.Elem))
 			fi.WriteString(fmt.Sprintf("    class=%s\n", f.Class))
@@ -140,14 +140,14 @@ func (t *Engine) title(str string) string {
 // 将数据库表格转为表单对象
 func (e *Engine) TableToForm(tb *orm.Table) *Form {
 	f := &Form{
-		Id:     e.title(tb.Name),
+		ID:     e.title(tb.Name),
 		Label:  e.title(tb.Comment),
 		Fields: []*Field{},
 	}
 	for _, v := range tb.Columns {
 		if !v.Auto {
 			fd := &Field{
-				Id:    e.title(v.Name),
+				ID:    e.title(v.Name),
 				Label: e.title(v.Comment),
 				Elem:  "input",
 			}

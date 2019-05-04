@@ -20,7 +20,7 @@ func (m *MsSqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MsSqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+func (m *MsSqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Table, error) {
 	panic("not implement")
 }
 

@@ -13,6 +13,7 @@ import (
 	"database/sql"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ func (m *MySqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MySqlDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+func (m *MySqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Table, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
@@ -117,12 +118,15 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	for _, str := range colArr {
 		match := colReg.FindStringSubmatch(str)
 		if match != nil {
+			dbType := match[2]
 			col := &Column{
 				Name:    match[1],
-				Type:    match[2],
+				Type:    dbType,
 				Auto:    strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
 				Pk:      match[1] == pkField,
+				Length:  -1,
+				GoType:  m.getGoType(dbType),
 			}
 			comMatch := commReg.FindStringSubmatch(str)
 			if comMatch != nil {
@@ -132,4 +136,26 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 		}
 	}
 	return table, nil
+}
+
+func (m *MySqlDialect) getGoType(dbType string) int {
+	switch true {
+	case strings.HasPrefix(dbType, "tinyint"):
+		return GoTypeInt32
+	case strings.HasPrefix(dbType, "bit"):
+		return GoTypeBoolean
+	case strings.HasPrefix(dbType, "int("):
+		i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
+		if i > 10 {
+			return GoTypeInt32
+		}
+		return GoTypeInt64
+	case strings.HasPrefix(dbType, "float"):
+		return GoTypeFloat32
+	case strings.HasPrefix(dbType, "decimal"):
+		return GoTypeFloat64
+	case dbType == "text", strings.HasPrefix(dbType, "varchar"):
+		return GoTypeString
+	}
+	return GoTypeUnknown
 }

@@ -20,7 +20,7 @@ func (s *SqLiteDialect) Name() string {
 }
 
 // 获取所有的表
-func (s *SqLiteDialect) Tables(db *sql.DB, dbName string) ([]*Table, error) {
+func (s *SqLiteDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Table, error) {
 	panic("not implement")
 }
 

@@ -8,7 +8,7 @@ import (
 func TestPGDialect(t *testing.T) {
 	conn := db.NewConnector("postgresql", "postgres://postgres:123456@127.0.0.1:5432/go2o?sslmode=disable", nil, false)
 	orm := conn.GetOrm()
-	tables, err := orm.Dialect().Tables(conn.Raw(), "")
+	tables, err := orm.Dialect().Tables(conn.Raw(), "", "public")
 	if err != nil {
 		t.Error(err)
 	}

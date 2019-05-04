@@ -76,7 +76,9 @@ type (
 		Auto    bool
 		NotNull bool
 		Type    string
+		Length  int
 		Comment string
+		GoType  int
 	}
 
 	// find some information of entity
@@ -87,10 +89,20 @@ type (
 		// 数据库方言名称
 		Name() string
 		// 获取所有的表
-		Tables(db *sql.DB, dbName string) ([]*Table, error)
+		Tables(db *sql.DB, database string, schema string) ([]*Table, error)
 		// 获取表结构
 		Table(db *sql.DB, table string) (*Table, error)
 	}
+)
+
+var (
+	GoTypeUnknown = 0
+	GoTypeString  = 1
+	GoTypeBoolean = 2
+	GoTypeInt32   = 3
+	GoTypeInt64   = 4
+	GoTypeFloat32 = 5
+	GoTypeFloat64 = 6
 )
 
 // 获取表元数据

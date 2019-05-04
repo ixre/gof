@@ -103,11 +103,11 @@ func (o *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 	return GetPKName(t)
 }
 
-func (o *simpleOrm) unionField(meta *TableMapMeta, v string) string {
+func (o *simpleOrm) unionField(meta *TableMapMeta, field string) string {
 	if len(meta.TableName) != 0 {
-		return meta.TableName + "." + v
+		return meta.TableName + "." + field
 	}
-	return v
+	return field
 }
 
 func (o *simpleOrm) SetTrace(b bool) {
@@ -244,41 +244,33 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	}
 
 	val = val.Elem()
-
 	/* build sql */
 	meta := o.getTableMapMeta(t)
 	fieldLen = len(meta.FieldsIndex)
 	fieldArr := make([]string, fieldLen)
 	var scanVal = make([]interface{}, fieldLen)
 	var rawBytes = make([][]byte, fieldLen)
-
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
-
 	if strings.Index(sql, "*") != -1 {
 		sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
 	}
-
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s", sql))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
 	defer stmt.Close()
-
 	row := stmt.QueryRow(args...)
 	err = row.Scan(scanVal...)
-
 	if err != nil {
 		return o.err(err)
 	}
-
 	return assignValues(meta, &val, rawBytes)
 }
 
@@ -298,36 +290,29 @@ func (o *simpleOrm) SelectByQuery(to interface{}, sql string, args ...interface{
 func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...interface{}) error {
 	var fieldLen int
 	var eleIsPtr bool // 元素是否为指针
-
 	toVal := reflect.Indirect(reflect.ValueOf(dst))
 	toTyp := reflect.TypeOf(dst).Elem()
-
 	if toTyp.Kind() == reflect.Ptr {
 		toTyp = toTyp.Elem()
 	}
-
 	if toTyp.Kind() != reflect.Slice {
 		return o.err(errors.New("dst must be slice"))
 	}
-
 	baseType := toTyp.Elem()
 	if baseType.Kind() == reflect.Ptr {
 		eleIsPtr = true
 		baseType = baseType.Elem()
 	}
-
 	/* build sql */
 	meta := o.getTableMapMeta(baseType)
 	fieldLen = len(meta.FieldMapNames)
 	fieldArr := make([]string, fieldLen)
 	var scanVal = make([]interface{}, fieldLen)
 	var rawBytes = make([][]byte, fieldLen)
-
 	for i, v := range meta.FieldMapNames {
 		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
-
 	if fullSql {
 		if strings.Index(sql, "*") != -1 {
 			sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
@@ -346,24 +331,20 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 				where)
 		}
 	}
-
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s [ Params] - %+v", sql, args))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return o.err(errors.New(fmt.Sprintf("%s - [ SQL]: %s- [Args]:%+v", err.Error(), sql, args)))
 	}
-
 	defer stmt.Close()
 	rows, err := stmt.Query(args...)
 	if err != nil {
 		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
 	}
 	defer rows.Close()
-
 	/* 用反射来对输出结果复制 */
 	toArr := toVal
 	for rows.Next() {
@@ -377,7 +358,6 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		//for i, fi := range meta.FieldsIndex {
 		//	SetField(v.Field(fi), rawBytes[i])
 		//}
-
 		assignValues(meta, &v, rawBytes)
 		if eleIsPtr {
 			toArr = reflect.Append(toArr, e)
@@ -392,36 +372,28 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 func (o *simpleOrm) Delete(entity interface{}, where string,
 	args ...interface{}) (effect int64, err error) {
 	var sql string
-
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-
 	/* build sql */
 	meta := o.getTableMapMeta(t)
-
 	if where == "" {
 		return 0, errors.New("Unknown condition")
 	}
-
 	sql = fmt.Sprintf("DELETE FROM %s WHERE %s",
 		meta.TableName,
 		where,
 	)
-
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, args))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
 		return 0, o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s", err.Error(), sql)))
-
 	}
 	defer stmt.Close()
-
 	result, err := stmt.Exec(args...)
 	var rowNum int64 = 0
 	if err == nil {
@@ -515,9 +487,9 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		var setCond string
 		for i, k := range fieldArr {
 			if i == 0 {
-				setCond = fmt.Sprintf("%s = %s", k,o.getParamHolder(i))
+				setCond = fmt.Sprintf("%s = %s", k, o.getParamHolder(i))
 			} else {
-				setCond = fmt.Sprintf("%s,%s = %s", setCond, k,o.getParamHolder(i))
+				setCond = fmt.Sprintf("%s,%s = %s", setCond, k, o.getParamHolder(i))
 			}
 		}
 
@@ -569,11 +541,12 @@ func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where st
 	return buf.String()
 }
 
-func (o *simpleOrm) getParamHolder(n int)string {
+func (o *simpleOrm) getParamHolder(n int) string {
 	switch o.driverName {
-	case "mysql":return "?"
-	case "postgres","postgresql":
-		return "$"+strconv.Itoa(n+1)
+	case "mysql":
+		return "?"
+	case "postgres", "postgresql":
+		return "$" + strconv.Itoa(n+1)
 	}
 	return "?"
 }

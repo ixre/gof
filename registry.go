@@ -58,6 +58,10 @@ func (r *Registry) dirInit() (*Registry, error) {
 	return r, nil
 }
 
+func LoadToml(path string) (*toml.Tree, error) {
+	return toml.LoadFile(path)
+}
+
 func (r *Registry) load(path string, info os.FileInfo) error {
 	if info.IsDir() {
 		return nil

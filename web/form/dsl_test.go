@@ -10,9 +10,9 @@ func TestEngine_ParseFile(t *testing.T) {
 	}
 
 	t.Log("输出表数据")
-	t.Log("ID:", form.Id, "; Label:", form.Label)
+	t.Log("ID:", form.ID, "; Label:", form.Label)
 	for i, v := range form.Fields {
-		t.Log("Field ", i, "- ID:", v.Id, "; Label:",
+		t.Log("Field ", i, "- ID:", v.ID, "; Label:",
 			v.Label, "; Elem:", v.Elem, "; Class:", v.Class)
 		for k, v := range v.Attrs {
 			t.Log("   Attr:", k, "=", v)
