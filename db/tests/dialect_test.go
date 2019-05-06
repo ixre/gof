@@ -25,7 +25,7 @@ func TestPGDialect(t *testing.T) {
 func TestMysqlDialect(t *testing.T) {
 	conn := db.NewConnector("mysql", "root:123456@tcp(127.0.0.1:3306)/mysql?charset=utf8", nil, false)
 	orm := conn.GetOrm()
-	tables, err := orm.Dialect().Tables(conn.Raw(), "","")
+	tables, err := orm.Dialect().Tables(conn.Raw(), "", "")
 	if err != nil {
 		t.Error(err)
 	}

@@ -440,7 +440,6 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 	var sql string
 	//var condition string
 	//var fieldLen int
-
 	t := reflect.TypeOf(entity)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -458,7 +457,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		for i := range pArr {
 			pArr[i] = o.getParamHolder(i)
 		}
-		sql = o.getInsertSQL(meta,fieldArr,pArr)
+		sql = o.getInsertSQL(meta, fieldArr, pArr)
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
@@ -468,17 +467,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + "\n[ SQL]" + sql))
 		}
 		defer stmt.Close()
-		result, err := stmt.Exec(params...)
-		var rowNum int64 = 0
-		var lastInsertId int64 = 0
-		if err == nil {
-			rowNum, err = result.RowsAffected()
-			if err == nil {
-				lastInsertId, err = result.LastInsertId()
-			}
-			return rowNum, lastInsertId, err
-		}
-		return rowNum, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return o.stmtUpdateExec(stmt, sql, params...)
 	} else {
 		//update model
 		var setCond string
@@ -490,7 +479,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 			}
 		}
 
-		sql = o.getUpdateSQL(meta,setCond,fieldArr)
+		sql = o.getUpdateSQL(meta, setCond, fieldArr)
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
 			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
@@ -500,15 +489,33 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
-		result, err := stmt.Exec(params...)
-		var rowNum int64 = 0
-		if err == nil {
-			rowNum, err = result.RowsAffected()
-			return rowNum, 0, err
-		}
-		return rowNum, 0, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return o.stmtUpdateExec(stmt, sql, params...)
 	}
 }
+
+func (o *simpleOrm) stmtUpdateExec(stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
+	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
+	if (o.driverName == "postgres" || o.driverName == "postgresql") && (strings.Contains(sql_, "returning") || strings.Contains(sql_, "RETURNING")) {
+		var lastInsertId int64
+		row := stmt.QueryRow(params...)
+		if err := row.Scan(&lastInsertId); err != nil {
+			return 0, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql_))
+		}
+		return 0, lastInsertId, nil
+	}
+	result, err := stmt.Exec(params...)
+	var rowNum int64 = 0
+	var lastInsertId int64 = 0
+	if err == nil {
+		rowNum, err = result.RowsAffected()
+		if err == nil {
+			lastInsertId, err = result.LastInsertId()
+		}
+		return rowNum, lastInsertId, err
+	}
+	return rowNum, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql_))
+}
+
 func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT ")
@@ -554,7 +561,7 @@ func (o *simpleOrm) getInsertSQL(meta *TableMapMeta, fieldArr []string, pArr []s
 	buf.WriteString(strings.Join(pArr, ","))
 	buf.WriteString(" )")
 	// Postgresql需要在INSERT后执行 RETURNING id 才能返回LastInsertId
-	if o.driverName == "postgres" || o.driverName == "postgresql"{
+	if o.driverName == "postgres" || o.driverName == "postgresql" {
 		buf.WriteString(" RETURNING ")
 		buf.WriteString(meta.PkFieldName)
 		buf.WriteString(";")
@@ -573,7 +580,7 @@ func (o *simpleOrm) getUpdateSQL(meta *TableMapMeta, setCond string, fieldArr []
 	buf.WriteString(" = ")
 	buf.WriteString(o.getParamHolder(len(fieldArr)))
 	// Postgresql需要在INSERT后执行 RETURNING id 才能返回LastInsertId
-	if o.driverName == "postgres" || o.driverName == "postgresql"{
+	if o.driverName == "postgres" || o.driverName == "postgresql" {
 		buf.WriteString(" RETURNING ")
 		buf.WriteString(meta.PkFieldName)
 		buf.WriteString(";")

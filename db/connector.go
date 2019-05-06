@@ -58,7 +58,7 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) Co
 	return &defaultConnector{
 		db:           db,
 		orm:          o,
-		driverName:   driverName,
+		driverName:   strings.ToLower(driverName),
 		driverSource: driverName,
 		logger:       l,
 		debug:        debug,
@@ -187,6 +187,10 @@ func (t *defaultConnector) ExecScalar(s string, result interface{},
 
 //执行
 func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
+	if (t.driverName == "postgres" || t.driverName == "postgresql") && (strings.Contains(s, "returning") || strings.Contains(s, "RETURNING")) {
+		return t.execPostgres(s, args...)
+	}
 	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
@@ -206,6 +210,12 @@ func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastIn
 		lastId, err = result.LastInsertId()
 	}
 	return int(affect), int(lastId), err
+}
+
+func (t *defaultConnector) execPostgres(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+	var id int
+	err = t.ExecScalar(s, &id, args...)
+	return 0, id, err
 }
 
 func (t *defaultConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
