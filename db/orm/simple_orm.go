@@ -39,7 +39,7 @@ func NewOrm(driver string, db *sql.DB) Orm {
 	}
 	return &simpleOrm{
 		DB:         db,
-		driverName: driver,
+		driverName: strings.ToLower(driver),
 		dialect:    dialect,
 		tableMap:   make(map[string]*TableMapMeta),
 		tmLock:     &sync.RWMutex{},
@@ -458,10 +458,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		for i := range pArr {
 			pArr[i] = o.getParamHolder(i)
 		}
-		sql = fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", meta.TableName,
-			strings.Join(fieldArr, ","),
-			strings.Join(pArr, ","),
-		)
+		sql = o.getInsertSQL(meta,fieldArr,pArr)
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
@@ -493,11 +490,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 			}
 		}
 
-		sql = fmt.Sprintf("UPDATE %s SET %s WHERE %s=%s", meta.TableName,
-			setCond,
-			meta.PkFieldName,
-			o.getParamHolder(len(fieldArr)),
-		)
+		sql = o.getUpdateSQL(meta,setCond,fieldArr)
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
 			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
@@ -549,4 +542,41 @@ func (o *simpleOrm) getParamHolder(n int) string {
 		return "$" + strconv.Itoa(n+1)
 	}
 	return "?"
+}
+
+// 获取插入数据SQL
+func (o *simpleOrm) getInsertSQL(meta *TableMapMeta, fieldArr []string, pArr []string) string {
+	buf := bytes.NewBufferString("INSERT INTO ")
+	buf.WriteString(meta.TableName)
+	buf.WriteString(" (")
+	buf.WriteString(strings.Join(fieldArr, ","))
+	buf.WriteString(" ) VALUES (")
+	buf.WriteString(strings.Join(pArr, ","))
+	buf.WriteString(" )")
+	// Postgresql需要在INSERT后执行 RETURNING id 才能返回LastInsertId
+	if o.driverName == "postgres" || o.driverName == "postgresql"{
+		buf.WriteString(" RETURNING ")
+		buf.WriteString(meta.PkFieldName)
+		buf.WriteString(";")
+	}
+	return buf.String()
+}
+
+// 获取UPDATE SQL
+func (o *simpleOrm) getUpdateSQL(meta *TableMapMeta, setCond string, fieldArr []string) string {
+	buf := bytes.NewBufferString("UPDATE ")
+	buf.WriteString(meta.TableName)
+	buf.WriteString(" SET ")
+	buf.WriteString(setCond)
+	buf.WriteString(" WHERE ")
+	buf.WriteString(meta.PkFieldName)
+	buf.WriteString(" = ")
+	buf.WriteString(o.getParamHolder(len(fieldArr)))
+	// Postgresql需要在INSERT后执行 RETURNING id 才能返回LastInsertId
+	if o.driverName == "postgres" || o.driverName == "postgresql"{
+		buf.WriteString(" RETURNING ")
+		buf.WriteString(meta.PkFieldName)
+		buf.WriteString(";")
+	}
+	return buf.String()
 }
