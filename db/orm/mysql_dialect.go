@@ -79,7 +79,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	if desc == "" {
 		return nil, errors.New("not found table information")
 	}
-	//log.Println("-- Result:" + desc+"\n\n")
+	//log.Println("-- ErrCode:" + desc+"\n\n")
 	//time.Sleep(time.Second)
 	i, j := strings.Index(desc, "(\n"), strings.Index(desc, "\n)")
 	//获取表名
