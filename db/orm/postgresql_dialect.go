@@ -100,7 +100,7 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 				len, _ := strconv.Atoi(rd[3])
 				c := &Column{
 					Name:    rd[1],
-					IsPK:    rd[8] == "1",
+					IsPk:    rd[8] == "1",
 					Auto:    rd[7] == "1",
 					NotNull: rd[5] == "1",
 					Type:    rd[2],
@@ -129,14 +129,21 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 }
 
 func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
-	if dbType == "integer" {
+	switch dbType {
+	case "bigint":
+		return TypeInt64
+	case "smallint":
+		return TypeInt16
+	case "numeric":
+		return TypeFloat64
+	case "boolean":
+		return TypeBoolean
+	case "integer":
 		if len > 32 {
 			return TypeInt64
+		} else {
+			return TypeInt32
 		}
-		return TypeInt32
-	}
-	if dbType == "boolean" {
-		return TypeBoolean
 	}
 	if strings.HasPrefix(dbType, "character") {
 		return TypeString
@@ -147,5 +154,6 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		}
 		return TypeFloat32
 	}
+	println("[ ORM][ Dialect][ Warning]: not support type :", dbType)
 	return TypeUnknown
 }

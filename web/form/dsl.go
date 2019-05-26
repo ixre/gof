@@ -151,7 +151,7 @@ func (e *Engine) TableToForm(tb *orm.Table) *Form {
 				Label: e.title(v.Comment),
 				Elem:  "input",
 			}
-			if v.IsPK {
+			if v.IsPk {
 				fd.Attrs = map[string]string{
 					"type":    "hidden",
 					"primary": "true",

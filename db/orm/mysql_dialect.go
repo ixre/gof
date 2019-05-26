@@ -124,7 +124,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 				Type:    dbType,
 				Auto:    strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
-				IsPK:    match[1] == pkField,
+				IsPk:    match[1] == pkField,
 				Length:  -1,
 				TypeId:  m.getTypeId(dbType),
 			}
@@ -157,5 +157,6 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 	case dbType == "text", strings.HasPrefix(dbType, "varchar"):
 		return TypeString
 	}
+	println("[ ORM][ Dialect][ Warning]: not support type :", dbType)
 	return TypeUnknown
 }

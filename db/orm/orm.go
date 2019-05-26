@@ -79,7 +79,7 @@ type (
 	// 列
 	Column struct {
 		Name    string
-		IsPK    bool
+		IsPk    bool
 		Auto    bool
 		NotNull bool
 		Type    string
@@ -106,10 +106,11 @@ var (
 	TypeUnknown = 0
 	TypeString  = 1
 	TypeBoolean = 2
-	TypeInt32   = 3
-	TypeInt64   = 4
-	TypeFloat32 = 5
-	TypeFloat64 = 6
+	TypeInt16   = 3
+	TypeInt32   = 4
+	TypeInt64   = 5
+	TypeFloat32 = 6
+	TypeFloat64 = 7
 )
 
 // 获取表元数据
