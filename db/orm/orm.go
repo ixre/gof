@@ -62,23 +62,30 @@ type (
 
 	// 表
 	Table struct {
-		Name    string
+		// 名称
+		Name string
+		// 注释
 		Comment string
-		Engine  string
+		// 引擎
+		Engine string
+		// 架构
+		Schema string
+		// 编码
 		Charset string
+		// 列
 		Columns []*Column
 	}
 
 	// 列
 	Column struct {
 		Name    string
-		Pk      bool
+		IsPK    bool
 		Auto    bool
 		NotNull bool
 		Type    string
 		Length  int
 		Comment string
-		GoType  int
+		TypeId  int
 	}
 
 	// find some information of entity
@@ -96,13 +103,13 @@ type (
 )
 
 var (
-	GoTypeUnknown = 0
-	GoTypeString  = 1
-	GoTypeBoolean = 2
-	GoTypeInt32   = 3
-	GoTypeInt64   = 4
-	GoTypeFloat32 = 5
-	GoTypeFloat64 = 6
+	TypeUnknown = 0
+	TypeString  = 1
+	TypeBoolean = 2
+	TypeInt32   = 3
+	TypeInt64   = 4
+	TypeFloat32 = 5
+	TypeFloat64 = 6
 )
 
 // 获取表元数据

@@ -124,9 +124,9 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 				Type:    dbType,
 				Auto:    strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
-				Pk:      match[1] == pkField,
+				IsPK:    match[1] == pkField,
 				Length:  -1,
-				GoType:  m.getGoType(dbType),
+				TypeId:  m.getTypeId(dbType),
 			}
 			comMatch := commReg.FindStringSubmatch(str)
 			if comMatch != nil {
@@ -138,24 +138,24 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	return table, nil
 }
 
-func (m *MySqlDialect) getGoType(dbType string) int {
+func (m *MySqlDialect) getTypeId(dbType string) int {
 	switch true {
 	case strings.HasPrefix(dbType, "tinyint"):
-		return GoTypeInt32
+		return TypeInt32
 	case strings.HasPrefix(dbType, "bit"):
-		return GoTypeBoolean
+		return TypeBoolean
 	case strings.HasPrefix(dbType, "int("):
 		i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
 		if i > 10 {
-			return GoTypeInt32
+			return TypeInt32
 		}
-		return GoTypeInt64
+		return TypeInt64
 	case strings.HasPrefix(dbType, "float"):
-		return GoTypeFloat32
+		return TypeFloat32
 	case strings.HasPrefix(dbType, "decimal"):
-		return GoTypeFloat64
+		return TypeFloat64
 	case dbType == "text", strings.HasPrefix(dbType, "varchar"):
-		return GoTypeString
+		return TypeString
 	}
-	return GoTypeUnknown
+	return TypeUnknown
 }

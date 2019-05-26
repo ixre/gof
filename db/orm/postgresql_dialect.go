@@ -21,11 +21,10 @@ func (p *PostgresqlDialect) Name() string {
 func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) ([]*Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
-	if schema != "" {
-		buf.WriteString(schema)
-	} else {
-		buf.WriteString("public")
+	if schema == "" {
+		schema = "public"
 	}
+	buf.WriteString(schema)
 	buf.WriteByte('\'')
 	var list []string
 	tb := ""
@@ -44,6 +43,7 @@ func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) (
 			if tList[i], err = p.Table(db, v); err != nil {
 				return nil, err
 			}
+			tList[i].Schema = schema
 		}
 		return tList, nil
 	}
@@ -100,17 +100,17 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 				len, _ := strconv.Atoi(rd[3])
 				c := &Column{
 					Name:    rd[1],
-					Pk:      rd[8] == "1",
+					IsPK:    rd[8] == "1",
 					Auto:    rd[7] == "1",
 					NotNull: rd[5] == "1",
 					Type:    rd[2],
 					Comment: rd[9],
 					Length:  len,
-					GoType:  p.getGoType(rd[2], len),
+					TypeId:  p.getTypeId(rd[2], len),
 				}
-				if strings.HasPrefix(table, "wal_") {
-					println("---", rd[2], len)
-				}
+				//if strings.HasPrefix(table, "wal_") {
+				//	println("---", rd[2], len)
+				//}
 				columns = append(columns, c)
 				colMap[c.Name] = c
 			}
@@ -128,24 +128,24 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 	return nil, err
 }
 
-func (p *PostgresqlDialect) getGoType(dbType string, len int) int {
+func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 	if dbType == "integer" {
 		if len > 32 {
-			return GoTypeInt64
+			return TypeInt64
 		}
-		return GoTypeInt32
+		return TypeInt32
 	}
 	if dbType == "boolean" {
-		return GoTypeBoolean
+		return TypeBoolean
 	}
 	if strings.HasPrefix(dbType, "character") {
-		return GoTypeString
+		return TypeString
 	}
 	if dbType == "float" {
 		if len > 32 {
-			return GoTypeFloat64
+			return TypeFloat64
 		}
-		return GoTypeFloat32
+		return TypeFloat32
 	}
-	return GoTypeUnknown
+	return TypeUnknown
 }
