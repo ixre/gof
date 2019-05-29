@@ -134,10 +134,12 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		return TypeInt64
 	case "smallint":
 		return TypeInt16
-	case "numeric":
+	case "numeric","double precision":
 		return TypeFloat64
-	case "boolean":
+	case "boolean","bit":
 		return TypeBoolean
+	case "text":
+		return TypeString
 	case "integer":
 		if len > 32 {
 			return TypeInt64
