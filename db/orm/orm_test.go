@@ -38,9 +38,9 @@ func TestStmtClose(t *testing.T) {
 	db := getDb()
 	conn := NewOrm("mysql", db)
 	defer db.Close()
-	usr := []user{}
-	err := conn.Select(&usr, "1s=?", 1)
-	t.Log("---", usr, err)
+	user := []user{}
+	err := conn.Select(&user, "1s=?", 1)
+	t.Log("---", user, err)
 }
 
 //

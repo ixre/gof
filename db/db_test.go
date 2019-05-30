@@ -37,21 +37,21 @@ type User struct {
 func model() {
 	initTest()
 	println("===== testing model =======")
-	var usr User
-	_orm.Get(&usr, "root")
-	println("User:" + usr.User)
-	println("Pwd:" + usr.Pwd)
-	println("Host:" + usr.Host)
+	var user User
+	_orm.Get(&user, "root")
+	println("User:" + user.User)
+	println("Pwd:" + user.Pwd)
+	println("Host:" + user.Host)
 }
 
 func sel() {
 	initTest()
 	println("===== testing select model =======")
 	for i := 0; i < 3; i++ {
-		var usrs []User
-		_orm.Select(&usrs, "user=?", "root")
+		var users []User
+		_orm.Select(&users, "user=?", "root")
 		if i == 0 {
-			println(usrs)
+			println(users)
 		}
 	}
 }
@@ -64,7 +64,7 @@ func query(t *testing.T) {
 	for i, v := range values {
 		scanValues[i] = &v
 	}
-	_conn.Query("SELECT id,usr,pwd FROM mm_member limit 0,10", func(rows *sql.Rows) {
+	_conn.Query("SELECT id,user,pwd FROM mm_member limit 0,10", func(rows *sql.Rows) {
 		for rows.Next() {
 			rows.Scan(scanValues...)
 
@@ -102,23 +102,23 @@ func Test_to(t *testing.T) {
 //	i, i2, err :=_orm.Save(nil, User{Host: "localhost", User: "uu1", Pwd: "1233455"})
 //	fmt.Println(i, i2, err)
 //
-//	var usr User
-//	_orm.Get(&usr, "uu1")
-//	fmt.Println("Inserted :", usr)
+//	var user User
+//	_orm.Get(&user, "uu1")
+//	fmt.Println("Inserted :", user)
 //
 //}
 
 //func Test_savemodel(t *testing.T) {
 //	fmt.Println("===== testing save model =======")
-//	var usr User
-//	_orm.Get(&usr, "uu1")
-//	usr.Host = "127.0.0.1"
-//	_, _, err := _orm.Save(usr.User, usr)
+//	var user User
+//	_orm.Get(&user, "uu1")
+//	user.Host = "127.0.0.1"
+//	_, _, err := _orm.Save(user.User, user)
 //	if err != nil {
 //		fmt.Println("happend error:", err.Error())
 //	} else {
-//		_orm.Get(&usr, "uu1")
-//		fmt.Println("updated host:", usr.Host)
+//		_orm.Get(&user, "uu1")
+//		fmt.Println("updated host:", user.Host)
 //	}
 //
 //}

@@ -133,7 +133,7 @@ func (t *defaultConnector) SetConnMaxLifetime(d time.Duration) {
 }
 
 func (t *defaultConnector) Query(s string, f func(*sql.Rows), args ...interface{}) error {
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
+	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.Raw().Prepare(s)
 	var rows *sql.Rows
 	if err == nil {
@@ -147,7 +147,7 @@ func (t *defaultConnector) Query(s string, f func(*sql.Rows), args ...interface{
 		}
 	} else if err != sql.ErrNoRows {
 		err = t.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n",
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n",
 			err.Error(), s, args)))
 	}
 	return err
@@ -158,7 +158,7 @@ func (t *defaultConnector) QueryRow(s string, f func(*sql.Row) error, args ...in
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
 		return t.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+			"[ SQL][ PREPARE][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 	} else {
 		defer stmt.Close()
 		row := stmt.QueryRow(args...)
@@ -171,7 +171,7 @@ func (t *defaultConnector) QueryRow(s string, f func(*sql.Row) error, args ...in
 
 func (t *defaultConnector) ExecScalar(s string, result interface{},
 	args ...interface{}) (err error) {
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
+	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	if result == nil {
 		return t.err(errors.New("out result is null"))
 	}
@@ -180,7 +180,7 @@ func (t *defaultConnector) ExecScalar(s string, result interface{},
 	}, args...)
 	if err != nil && err != sql.ErrNoRows {
 		return t.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 	}
 	return err
 }
@@ -191,7 +191,7 @@ func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastIn
 	if (t.driverName == "postgres" || t.driverName == "postgresql") && (strings.Contains(s, "returning") || strings.Contains(s, "RETURNING")) {
 		return t.execPostgres(s, args...)
 	}
-	t.debugPrintf("[ DBC][ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
+	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
 		return 0, -1, err
@@ -199,7 +199,7 @@ func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastIn
 	result, err := stmt.Exec(args...)
 	if err != nil {
 		err = t.err(errors.New(fmt.Sprintf(
-			"[ DBC][ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
 		return 0, -1, err
 	}
 	var lastId int64

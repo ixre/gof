@@ -17,7 +17,7 @@ func TestQuery(t *testing.T) {
 		scanValues[i] = &v
 	}
 	t.Log("testing...")
-	_conn.Query("SELECT id,usr,pwd FROM mm_member limit 10 offset 0", func(rows *sql.Rows) {
+	_conn.Query("SELECT id,user,pwd FROM mm_member limit 10 offset 0", func(rows *sql.Rows) {
 		for rows.Next() {
 			rows.Scan(scanValues...)
 			s1 := scanValues[0].(*interface{})
@@ -34,17 +34,17 @@ func TestPGOrmSelect(t *testing.T) {
 	initPGTest()
 	println("===== testing select model =======")
 	for i := 0; i < 3; i++ {
-		var usrs []PGMember
-		_orm.Select(&usrs, "usr=$1", "jarry6")
+		var users []PGMember
+		_orm.Select(&users, "user=$1", "jarry6")
 		if i == 0 {
-			t.Logf("%#v\n", usrs)
+			t.Logf("%#v\n", users)
 		}
 	}
 }
 
 type PGMember struct {
 	Id   int32  `db:"id" pk:"yes" auto:"yes"`
-	User string `db:"usr"`
+	User string `db:"user"`
 	Pwd  string `db:"pwd"`
 }
 

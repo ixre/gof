@@ -58,12 +58,22 @@ func (o *simpleOrm) Dialect() Dialect {
 	return o.dialect
 }
 
-func (o *simpleOrm) err(err error) error {
-	if o.useTrace && err != nil && err != sql.ErrNoRows {
-		log.Println("[ ORM][ ERROR]:", err.Error())
+func (o *simpleOrm) err(err error,s string,args ...interface{}) error {
+	if err != nil && err != sql.ErrNoRows {
+		if len(s) == 0 {
+			log.Println("[ ORM][ ERROR]:", err.Error())
+		} else {
+			if len(args) > 0 {
+				log.Println(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s [Args]:%+v", err.Error(), s, args))
+			} else {
+				log.Println(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s ", err.Error(), s))
+			}
+		}
 	}
 	return err
 }
+
+
 
 func (o *simpleOrm) debug(format string, args ...interface{}) {
 	if o.useTrace {
@@ -139,7 +149,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	}
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"),"")
 	}
 	val = val.Elem()
 	/* build sqlQuery */
@@ -157,14 +167,13 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sqlQuery, primaryVal))
 	}
 	stmt, err := o.DB.Prepare(sqlQuery)
-	if err != nil {
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sqlQuery))
+	if err == nil{
+		defer stmt.Close()
+		row := stmt.QueryRow(primaryVal)
+		err = row.Scan(scanVal...)
 	}
-	defer stmt.Close()
-	row := stmt.QueryRow(primaryVal)
-	err = row.Scan(scanVal...)
 	if err != nil {
-		return o.err(err)
+		return o.err(err, sqlQuery)
 	}
 	return assignValues(meta, &val, rawBytes)
 }
@@ -180,17 +189,17 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("unaddressable of entity ,it must be a ptr"),"")
 	}
 
 	if strings.Trim(where, "") == "" {
-		return o.err(errors.New("param where can't be empty "))
+		return o.err(errors.New("param where can't be empty "),"")
 	}
 
 	val = val.Elem()
 
 	if !val.IsValid() {
-		return o.err(errors.New("not validate or not initialize."))
+		return o.err(errors.New("not validate or not initialize."),"")
 	}
 
 	/* build sqlQuery */
@@ -209,24 +218,16 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sqlQuery, where, args))
 	}
-
 	/* query */
 	stmt, err := o.DB.Prepare(sqlQuery)
-	if err != nil {
-		if o.useTrace {
-			log.Println("[ ORM][ ERROR]:", err.Error(), " [ SQL]:", sqlQuery)
-		}
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sqlQuery))
+	if err == nil{
+		defer stmt.Close()
+		row := stmt.QueryRow(args...)
+		err = row.Scan(scanVal...)
 	}
-	defer stmt.Close()
-
-	row := stmt.QueryRow(args...)
-	err = row.Scan(scanVal...)
-
 	if err != nil {
-		return o.err(err)
+		return o.err(err,sqlQuery)
 	}
-
 	return assignValues(meta, &val, rawBytes)
 }
 
@@ -240,7 +241,7 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"))
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"),"")
 	}
 
 	val = val.Elem()
@@ -262,14 +263,13 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
-	if err != nil {
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+	if err == nil{
+		defer stmt.Close()
+		row := stmt.QueryRow(args...)
+		err = row.Scan(scanVal...)
 	}
-	defer stmt.Close()
-	row := stmt.QueryRow(args...)
-	err = row.Scan(scanVal...)
 	if err != nil {
-		return o.err(err)
+		return o.err(err,sql)
 	}
 	return assignValues(meta, &val, rawBytes)
 }
@@ -296,7 +296,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		toTyp = toTyp.Elem()
 	}
 	if toTyp.Kind() != reflect.Slice {
-		return o.err(errors.New("dst must be slice"))
+		return o.err(errors.New("dst must be slice"),"")
 	}
 	baseType := toTyp.Elem()
 	if baseType.Kind() == reflect.Ptr {
@@ -337,12 +337,12 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return o.err(errors.New(fmt.Sprintf("%s - [ SQL]: %s- [Args]:%+v", err.Error(), sql, args)))
+		return o.err(err, sql, args)
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query(args...)
 	if err != nil {
-		return o.err(errors.New(err.Error() + "\n[ SQL]:" + sql))
+		return o.err(err, sql)
 	}
 	defer rows.Close()
 	/* 用反射来对输出结果复制 */
@@ -366,7 +366,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		}
 	}
 	toVal.Set(toArr)
-	return o.err(err)
+	return o.err(err,sql)
 }
 
 func (o *simpleOrm) Delete(entity interface{}, where string,
@@ -391,7 +391,7 @@ func (o *simpleOrm) Delete(entity interface{}, where string,
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return 0, o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s", err.Error(), sql)))
+		return 0, o.err(err, sql)
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(args...)
@@ -400,7 +400,7 @@ func (o *simpleOrm) Delete(entity interface{}, where string,
 		rowNum, err = result.RowsAffected()
 	}
 	if err != nil {
-		return rowNum, o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return rowNum, o.err(err,sql)
 	}
 	return rowNum, nil
 }
@@ -426,17 +426,17 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
 	if err != nil {
-		return o.err(errors.New(fmt.Sprintf("[ ORM][ ERROR]:%s \n [ SQL]:%s", err.Error(), sql)))
+		return o.err(err, sql)
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(primary)
 	if err != nil {
-		return o.err(errors.New(err.Error() + "\n[ SQL]" + sql))
+		return o.err(err,sql)
 	}
 	return nil
 }
 
-func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
+func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
 	var sql string
 	//var condition string
 	//var fieldLen int
@@ -452,7 +452,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 	params, fieldArr := ItrFieldForSave(meta, &val, false)
 
 	//insert
-	if primaryKey == nil {
+	if primary == nil {
 		var pArr = make([]string, len(fieldArr))
 		for i := range pArr {
 			pArr[i] = o.getParamHolder(i)
@@ -464,7 +464,7 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		/* query */
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + "\n[ SQL]" + sql))
+			return 0, 0, o.err( err,sql)
 		}
 		defer stmt.Close()
 		return o.stmtUpdateExec(stmt, sql, params...)
@@ -482,10 +482,10 @@ func (o *simpleOrm) Save(primaryKey interface{}, entity interface{}) (rows int64
 		sql = o.getUpdateSQL(meta, setCond, fieldArr)
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, o.err(errors.New("[ ORM][ ERROR]:" + err.Error() + " [ SQL]" + sql))
+			return 0, 0, o.err( err, sql)
 		}
 		defer stmt.Close()
-		params = append(params, primaryKey)
+		params = append(params, primary)
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
@@ -499,7 +499,7 @@ func (o *simpleOrm) stmtUpdateExec(stmt *sql.Stmt, sql_ string, params ...interf
 		var lastInsertId int64
 		row := stmt.QueryRow(params...)
 		if err := row.Scan(&lastInsertId); err != nil {
-			return 0, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql_))
+			return 0, lastInsertId, o.err(err, sql_)
 		}
 		return 0, lastInsertId, nil
 	}
@@ -513,7 +513,7 @@ func (o *simpleOrm) stmtUpdateExec(stmt *sql.Stmt, sql_ string, params ...interf
 		}
 		return rowNum, lastInsertId, err
 	}
-	return rowNum, lastInsertId, o.err(errors.New(err.Error() + "\n[ SQL]" + sql_))
+	return rowNum, lastInsertId, o.err(err,sql_)
 }
 
 func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
