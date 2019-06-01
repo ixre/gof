@@ -58,7 +58,7 @@ func (o *simpleOrm) Dialect() Dialect {
 	return o.dialect
 }
 
-func (o *simpleOrm) err(err error,s string,args ...interface{}) error {
+func (o *simpleOrm) err(err error, s string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
 		if len(s) == 0 {
 			log.Println("[ ORM][ ERROR]:", err.Error())
@@ -72,8 +72,6 @@ func (o *simpleOrm) err(err error,s string,args ...interface{}) error {
 	}
 	return err
 }
-
-
 
 func (o *simpleOrm) debug(format string, args ...interface{}) {
 	if o.useTrace {
@@ -102,15 +100,6 @@ func (o *simpleOrm) getTableName(t reflect.Type) string {
 		return v.TableName
 	}
 	return t.Name()
-}
-
-//if not defined primary key.the first key will as primary key
-func (o *simpleOrm) getPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
-	v, exists := o.tableMap[t.String()]
-	if exists {
-		return v.PkFieldName, v.PkIsAuto
-	}
-	return GetPKName(t)
 }
 
 func (o *simpleOrm) unionField(meta *TableMapMeta, field string) string {
@@ -149,7 +138,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	}
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"),"")
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"), "")
 	}
 	val = val.Elem()
 	/* build sqlQuery */
@@ -167,7 +156,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sqlQuery, primaryVal))
 	}
 	stmt, err := o.DB.Prepare(sqlQuery)
-	if err == nil{
+	if err == nil {
 		defer stmt.Close()
 		row := stmt.QueryRow(primaryVal)
 		err = row.Scan(scanVal...)
@@ -189,17 +178,17 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("unaddressable of entity ,it must be a ptr"),"")
+		return o.err(errors.New("unaddressable of entity ,it must be a ptr"), "")
 	}
 
 	if strings.Trim(where, "") == "" {
-		return o.err(errors.New("param where can't be empty "),"")
+		return o.err(errors.New("param where can't be empty "), "")
 	}
 
 	val = val.Elem()
 
 	if !val.IsValid() {
-		return o.err(errors.New("not validate or not initialize."),"")
+		return o.err(errors.New("not validate or not initialize."), "")
 	}
 
 	/* build sqlQuery */
@@ -220,13 +209,13 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sqlQuery)
-	if err == nil{
+	if err == nil {
 		defer stmt.Close()
 		row := stmt.QueryRow(args...)
 		err = row.Scan(scanVal...)
 	}
 	if err != nil {
-		return o.err(err,sqlQuery)
+		return o.err(err, sqlQuery)
 	}
 	return assignValues(meta, &val, rawBytes)
 }
@@ -241,7 +230,7 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 
 	val := reflect.ValueOf(entity)
 	if val.Kind() != reflect.Ptr {
-		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"),"")
+		return o.err(errors.New("Unaddressable of entity ,it must be a ptr"), "")
 	}
 
 	val = val.Elem()
@@ -263,13 +252,13 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
-	if err == nil{
+	if err == nil {
 		defer stmt.Close()
 		row := stmt.QueryRow(args...)
 		err = row.Scan(scanVal...)
 	}
 	if err != nil {
-		return o.err(err,sql)
+		return o.err(err, sql)
 	}
 	return assignValues(meta, &val, rawBytes)
 }
@@ -296,7 +285,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		toTyp = toTyp.Elem()
 	}
 	if toTyp.Kind() != reflect.Slice {
-		return o.err(errors.New("dst must be slice"),"")
+		return o.err(errors.New("dst must be slice"), "")
 	}
 	baseType := toTyp.Elem()
 	if baseType.Kind() == reflect.Ptr {
@@ -366,7 +355,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		}
 	}
 	toVal.Set(toArr)
-	return o.err(err,sql)
+	return o.err(err, sql)
 }
 
 func (o *simpleOrm) Delete(entity interface{}, where string,
@@ -400,7 +389,7 @@ func (o *simpleOrm) Delete(entity interface{}, where string,
 		rowNum, err = result.RowsAffected()
 	}
 	if err != nil {
-		return rowNum, o.err(err,sql)
+		return rowNum, o.err(err, sql)
 	}
 	return rowNum, nil
 }
@@ -431,7 +420,7 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	defer stmt.Close()
 	_, err = stmt.Exec(primary)
 	if err != nil {
-		return o.err(err,sql)
+		return o.err(err, sql)
 	}
 	return nil
 }
@@ -448,6 +437,8 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 
 	// build sql
 	meta := o.getTableMapMeta(t)
+	// pk type is int?
+	isIntPk := o.isIntPk(meta.PkFieldTypeId)
 	//fieldLen = len(meta.FieldNames)
 	params, fieldArr := ItrFieldForSave(meta, &val, false)
 
@@ -464,10 +455,10 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		/* query */
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, o.err( err,sql)
+			return 0, 0, o.err(err, sql)
 		}
 		defer stmt.Close()
-		return o.stmtUpdateExec(stmt, sql, params...)
+		return o.stmtUpdateExec(isIntPk, stmt, sql, params...)
 	} else {
 		//update model
 		var setCond string
@@ -482,24 +473,26 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		sql = o.getUpdateSQL(meta, setCond, fieldArr)
 		stmt, err := o.DB.Prepare(sql)
 		if err != nil {
-			return 0, 0, o.err( err, sql)
+			return 0, 0, o.err(err, sql)
 		}
 		defer stmt.Close()
 		params = append(params, primary)
 		if o.useTrace {
 			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
 		}
-		return o.stmtUpdateExec(stmt, sql, params...)
+		return o.stmtUpdateExec(isIntPk, stmt, sql, params...)
 	}
 }
 
-func (o *simpleOrm) stmtUpdateExec(stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
+func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
 	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
 	if (o.driverName == "postgres" || o.driverName == "postgresql") && (strings.Contains(sql_, "returning") || strings.Contains(sql_, "RETURNING")) {
 		var lastInsertId int64
 		row := stmt.QueryRow(params...)
-		if err := row.Scan(&lastInsertId); err != nil {
-			return 0, lastInsertId, o.err(err, sql_)
+		if isIntPk {
+			if err := row.Scan(&lastInsertId); err != nil {
+				return 0, lastInsertId, o.err(err, sql_)
+			}
 		}
 		return 0, lastInsertId, nil
 	}
@@ -508,12 +501,12 @@ func (o *simpleOrm) stmtUpdateExec(stmt *sql.Stmt, sql_ string, params ...interf
 	var lastInsertId int64 = 0
 	if err == nil {
 		rowNum, err = result.RowsAffected()
-		if err == nil {
+		if err == nil && isIntPk {
 			lastInsertId, err = result.LastInsertId()
 		}
 		return rowNum, lastInsertId, err
 	}
-	return rowNum, lastInsertId, o.err(err,sql_)
+	return rowNum, lastInsertId, o.err(err, sql_)
 }
 
 func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
@@ -586,4 +579,12 @@ func (o *simpleOrm) getUpdateSQL(meta *TableMapMeta, setCond string, fieldArr []
 		buf.WriteString(";")
 	}
 	return buf.String()
+}
+
+func (o *simpleOrm) isIntPk(typeId int) bool {
+	switch typeId {
+	case TypeInt16, TypeInt32, TypeInt64:
+		return true
+	}
+	return false
 }

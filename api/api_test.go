@@ -78,7 +78,7 @@ func TestParamToBytes(t *testing.T) {
 		"Key":       []string{"sdf"},
 		"api":       []string{"dsfsf"},
 		"sign_type": []string{"sfsf"},
-		"user":       []string{"jarrysix"},
+		"user":      []string{"jarrysix"},
 		"Pwd":       []string{"2423424"},
 		"loginType": []string{"normal"},
 		"checkCode": []string{""},

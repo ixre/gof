@@ -13,9 +13,10 @@ import (
 
 type (
 	TableMapMeta struct {
-		TableName   string
-		PkFieldName string
-		PkIsAuto    bool
+		TableName     string
+		PkFieldName   string
+		PkFieldTypeId int
+		PkIsAuto      bool
 		//the index of fields
 		FieldsIndex   []int
 		FieldMapNames []string
@@ -103,23 +104,24 @@ type (
 )
 
 var (
-	TypeUnknown = 0
-	TypeString  = 1
-	TypeBoolean = 2
-	TypeInt16   = 3
-	TypeInt32   = 4
-	TypeInt64   = 5
-	TypeFloat32 = 6
-	TypeFloat64 = 7
+	TypeUnknown = int(reflect.Invalid)
+	TypeString  = int(reflect.String)
+	TypeBoolean = int(reflect.Bool)
+	TypeInt16   = int(reflect.Int16)
+	TypeInt32   = int(reflect.Int32)
+	TypeInt64   = int(reflect.Int64)
+	TypeFloat32 = int(reflect.Float32)
+	TypeFloat64 = int(reflect.Float64)
 )
 
 // 获取表元数据
 func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {
 	ixs, maps := GetFields(driver, t)
-	pkName, pkIsAuto := GetPKName(t)
+	pkName, pkType, pkIsAuto := GetPKName(t)
 	m := &TableMapMeta{
 		TableName:     t.Name(),
 		PkFieldName:   pkName,
+		PkFieldTypeId: pkType,
 		PkIsAuto:      pkIsAuto,
 		FieldsIndex:   ixs,
 		FieldMapNames: maps,
@@ -128,26 +130,22 @@ func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {
 }
 
 //if not defined primary key.the first key will as primary key
-func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
+func GetPKName(t reflect.Type) (pkName string, pkType int, pkIsAuto bool) {
 	var ti int = t.NumField()
-
-	ffc := func(f reflect.StructField) (string, bool) {
+	ffc := func(f reflect.StructField) (string, int, bool) {
 		if f.Tag != "" {
 			var isAuto bool
 			var fieldName string
-
 			if ia := f.Tag.Get("auto"); ia == "yes" || ia == "1" {
 				isAuto = true
 			}
-
 			if fieldName = f.Tag.Get("db"); fieldName != "" {
-				return fieldName, isAuto
+				return fieldName, GetReflectTypeId(f.Type), isAuto
 			}
-			return f.Name, isAuto
+			return f.Name, GetReflectTypeId(f.Type), isAuto
 		}
-		return f.Name, false
+		return f.Name, GetReflectTypeId(f.Type), false
 	}
-
 	for i := 0; i < ti; i++ {
 		f := t.Field(i)
 		if f.Tag != "" {
@@ -157,7 +155,6 @@ func GetPKName(t reflect.Type) (pkName string, pkIsAuto bool) {
 			}
 		}
 	}
-
 	return ffc(t.Field(0))
 }
 
