@@ -32,7 +32,7 @@ type (
 		Query(sql string, f func(*sql.Rows), arg ...interface{}) error
 		QueryRow(sql string, f func(*sql.Row) error, arg ...interface{}) error
 		ExecScalar(s string, result interface{}, arg ...interface{}) error
-		Exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error)
+		//exec(sql string, args ...interface{}) (rows int, lastInsertId int, err error)
 		ExecNonQuery(sql string, args ...interface{}) (int, error)
 	}
 )
@@ -186,7 +186,7 @@ func (t *defaultConnector) ExecScalar(s string, result interface{},
 }
 
 //执行
-func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
+func (t *defaultConnector) exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
 	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
 	if (t.driverName == "postgres" || t.driverName == "postgresql") && (strings.Contains(s, "returning") || strings.Contains(s, "RETURNING")) {
 		return t.execPostgres(s, args...)
@@ -194,6 +194,7 @@ func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastIn
 	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
+		panic(err.Error() + "/" + s)
 		return 0, -1, err
 	}
 	result, err := stmt.Exec(args...)
@@ -207,7 +208,9 @@ func (t *defaultConnector) Exec(s string, args ...interface{}) (rows int, lastIn
 	affect, err = result.RowsAffected()
 	if err == nil {
 		stmt.Close()
-		lastId, err = result.LastInsertId()
+		if t.driverName != "postgres" && t.driverName != "postgresql" {
+			lastId, err = result.LastInsertId()
+		}
 	}
 	return int(affect), int(lastId), err
 }
@@ -219,6 +222,6 @@ func (t *defaultConnector) execPostgres(s string, args ...interface{}) (rows int
 }
 
 func (t *defaultConnector) ExecNonQuery(sql string, args ...interface{}) (int, error) {
-	n, _, err := t.Exec(sql, args...)
+	n, _, err := t.exec(sql, args...)
 	return n, t.err(err)
 }
