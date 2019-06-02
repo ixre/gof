@@ -8,17 +8,21 @@ import (
 	"time"
 )
 
-const letterStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+var LetterBytes = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
 //随机字符号串
 func RandString(n int) string {
-	lsLen := len(letterStr)
-	var runes = make([]byte, n)
-	rand.Read(runes)
-	for i, b := range runes {
-		runes[i] = letterStr[b%byte(lsLen)]
+	return string(RandBytes(n,LetterBytes))
+}
+
+func RandBytes(n int,letters []byte)[]byte{
+	l := len(letters)
+	var arr = make([]byte, n)
+	rand.Read(arr)
+	for i, b := range arr {
+		arr[i] = letters[b%byte(l)]
 	}
-	return string(runes)
+	return arr
 }
 
 // 随机整数

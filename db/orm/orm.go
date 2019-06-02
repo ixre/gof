@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+
+
+const(
+	MySQL = 1
+	Postgresql = 2
+)
+
 type (
 	TableMapMeta struct {
 		TableName     string
