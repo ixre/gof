@@ -12,10 +12,10 @@ var LetterBytes = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 
 //随机字符号串
 func RandString(n int) string {
-	return string(RandBytes(n,LetterBytes))
+	return string(RandBytes(n, LetterBytes))
 }
 
-func RandBytes(n int,letters []byte)[]byte{
+func RandBytes(n int, letters []byte) []byte {
 	l := len(letters)
 	var arr = make([]byte, n)
 	rand.Read(arr)

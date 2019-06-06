@@ -11,10 +11,8 @@ import (
 	"time"
 )
 
-
-
-const(
-	MySQL = 1
+const (
+	MySQL      = 1
 	Postgresql = 2
 )
 

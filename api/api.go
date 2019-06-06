@@ -165,6 +165,8 @@ type Context interface {
 	User() int
 	// 请求
 	Request() *http.Request
+	// 响应
+	Response() http.ResponseWriter
 	// 表单数据
 	Form() FormData
 	// 分配UserId
@@ -173,7 +175,7 @@ type Context interface {
 
 // 上下文工厂
 type ContextFactory interface {
-	Factory(h *http.Request, key string, userId int) Context
+	Factory(h *http.Request, w http.ResponseWriter, key string, userId int) Context
 }
 
 // 工厂生成器
@@ -203,6 +205,7 @@ var _ Server = new(ServeMux)
 // default server implement
 type ServeMux struct {
 	trace           bool
+	cors            bool
 	processors      map[string]Handler
 	mux             sync.Mutex
 	swap            CredentialFunc
@@ -211,8 +214,9 @@ type ServeMux struct {
 	afterMiddleware []MiddlewareFunc
 }
 
-func NewServerMux(cf ContextFactory, swap CredentialFunc) *ServeMux {
+func NewServerMux(cf ContextFactory, swap CredentialFunc, cors bool) *ServeMux {
 	return &ServeMux{
+		cors:            cors,
 		swap:            swap,
 		factory:         cf,
 		processors:      map[string]Handler{},
@@ -244,8 +248,16 @@ func (s *ServeMux) After(middleware ...MiddlewareFunc) {
 }
 
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
+	if s.cors {
+		origin := h.Header.Get("ORIGIN")
+		if h.Method == "OPTIONS" {
+			s.preFlight(w, h, origin)
+			return
+		}
+		w.Header().Add("Access-Control-Allow-Origin", origin)
+	}
 	h.ParseForm()
-	rsp := s.serveFunc(h)
+	rsp := s.serveFunc(h, w)
 	s.flushOutputWriter(w, rsp)
 }
 
@@ -285,9 +297,9 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 }
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开
-func (s *ServeMux) serveFunc(h *http.Request) []*Response {
+func (s *ServeMux) serveFunc(h *http.Request, w http.ResponseWriter) []*Response {
 	key := h.Form.Get("key")
-	ctx := s.factory.Factory(h, key, 0)
+	ctx := s.factory.Factory(h, w, key, 0)
 	rsp, userId := s.checkAccessPerm(ctx, key, h.Form, h)
 	if rsp != nil {
 		return []*Response{rsp}
@@ -396,10 +408,21 @@ func (s *ServeMux) marshal(d interface{}) ([]byte, interface{}) {
 	return bytes, err
 }
 
+func (s *ServeMux) preFlight(w http.ResponseWriter, h *http.Request, origin string) {
+	header := w.Header()
+	header.Add("Access-Control-Allow-Origin", origin)
+	header.Add("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
+	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
+	header.Add("Access-Control-Allow-Credentials", "true")
+	w.WriteHeader(200)
+	w.Write([]byte("ok"))
+}
+
 var _ Context = new(defaultContext)
 
 type defaultContext struct {
 	h      *http.Request
+	w      http.ResponseWriter
 	key    string
 	userId int
 	form   FormData
@@ -415,6 +438,10 @@ func (ctx *defaultContext) User() int {
 
 func (ctx *defaultContext) Request() *http.Request {
 	return ctx.h
+}
+
+func (ctx *defaultContext) Response() http.ResponseWriter {
+	return ctx.w
 }
 
 func (ctx *defaultContext) Form() FormData {
@@ -449,9 +476,10 @@ func (d *defaultContextFactory) setTrace(trace bool) {
 	d.trace = trace
 }
 
-func (d *defaultContextFactory) Factory(h *http.Request, key string, userId int) Context {
+func (d *defaultContextFactory) Factory(h *http.Request, w http.ResponseWriter, key string, userId int) Context {
 	ctx := &defaultContext{
 		h:      h,
+		w:      w,
 		key:    key,
 		userId: userId,
 		form:   map[string]interface{}{},
