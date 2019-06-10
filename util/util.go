@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var LetterBytes = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+var LetterBytes = []byte("01234ABCDEFGHIJK56789abcdefghijklmLMNOPQRSTUVWXYZnopqrstuvwxyz")
 
 //随机字符号串
 func RandString(n int) string {
