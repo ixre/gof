@@ -51,7 +51,7 @@ type UnixCrypto struct {
 
 func NewUnixCrypto(token, offset string) *UnixCrypto {
 	u := &UnixCrypto{}
-	u.pos = len(token)/2 + 1
+	u.pos = int(token[2])%9+1
 	u.md5Bytes = u.getMd5(token, offset)
 	return u
 }
@@ -82,9 +82,9 @@ func (u *UnixCrypto) Encode() []byte {
 	l := u.pos
 	buf := bytes.NewBuffer(nil)
 	buf.Write(u.md5Bytes[:l])
-	//前10位，unix和md5交叉
+	//前10位，unix反序和md5交叉
 	for i := 0; i < 10; i++ {
-		buf.WriteString(unixStr[i : i+1])
+		buf.WriteString(unixStr[9-i : 9-i+1])
 		buf.Write(u.md5Bytes[l+i : l+i+1])
 	}
 	//拼接md5，10位以后的字符
@@ -116,7 +116,7 @@ func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64,err error) 
 	for i := 0; i < unixLen*2; i++ {
 		v := result[u.pos+i]
 		if i%2 == 0 {
-			unixArr[i/2] = v
+			unixArr[9-i/2] = v
 		} else {
 			token[u.pos+i/2] = v
 		}

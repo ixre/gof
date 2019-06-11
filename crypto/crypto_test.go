@@ -15,7 +15,7 @@ import (
 )
 
 func TestEncode(t *testing.T){
-	c := NewUnixCrypto("jarryix","12345")
+	c := NewUnixCrypto("689f8ca2f9d827bf52e1ad0c10b271dc91aea763","")
 	r:=c.Encode()
 	s:= string(r)
 	t.Log("encode:",string(s))
