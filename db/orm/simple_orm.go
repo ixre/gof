@@ -483,7 +483,6 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		return o.stmtUpdateExec(isIntPk, stmt, sql, params...)
 	}
 }
-
 func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
 	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
 	if (o.driverName == "postgres" || o.driverName == "postgresql") && (strings.Contains(sql_, "returning") || strings.Contains(sql_, "RETURNING")) {
@@ -491,6 +490,11 @@ func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, pa
 		row := stmt.QueryRow(params...)
 		if isIntPk {
 			if err := row.Scan(&lastInsertId); err != nil {
+				return 0, lastInsertId, o.err(err, sql_)
+			}
+		} else {
+			v := ""
+			if err := row.Scan(&v); err != nil {
 				return 0, lastInsertId, o.err(err, sql_)
 			}
 		}
