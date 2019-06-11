@@ -18,6 +18,15 @@ func (r *Result) Error(err error) *Result {
 	return r.ErrorText(err.Error())
 }
 
+
+func ResultWithCode(code int,message string) *Result {
+	return &Result{
+		ErrCode:code,
+		ErrMsg:message,
+		Data:nil,
+	}
+}
+
 func (r *Result) ErrorText(err string) *Result {
 	if err = strings.TrimSpace(err); err != "" {
 		r.ErrCode = 1

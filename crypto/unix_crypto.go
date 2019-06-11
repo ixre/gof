@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"strconv"
 	"time"
 )
@@ -61,7 +62,7 @@ func (u *UnixCrypto) getMd5(token, offset string) []byte {
 	src := d5.Sum([]byte(offset))
 	dst := make([]byte, hex.EncodedLen(len(src)))
 	hex.Encode(dst, src)
-	return dst
+	return dst[8:24]
 }
 
 // 获取UNIX时间戳字符串
@@ -86,24 +87,32 @@ func (u *UnixCrypto) Encode() []byte {
 		buf.WriteString(unixStr[i : i+1])
 		buf.Write(u.md5Bytes[l+i : l+i+1])
 	}
-	//拼接md5，10位以后的字付号
+	//拼接md5，10位以后的字符
 	buf.Write(u.md5Bytes[10+l:])
 	return buf.Bytes()
 }
 
 // 解码，返回Token及Unix时间
-func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64) {
-	var err error
+func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64,err error) {
 	//解码得到的token
-	token = make([]byte, len(u.md5Bytes))
-	unixArr := make([]byte, unixLen)
-	if len(result) < len(token) {
-		return nil, 0
+	l := len(u.md5Bytes)
+	token = make([]byte,l)
+	if len(result) < l{
+		return nil, 0,errors.New("decode bytes invalid length")
 	}
+	println(l,len(result))
+	unixArr := make([]byte, unixLen)
+	// 解码第一部分
 	copy(token, result[:u.pos])
-	for i, v := range result[u.pos+unixLen*2:] {
+	// 解码的二部分,如果长度不匹配
+	p2 := result[u.pos+unixLen*2:]
+	if u.pos+unixLen + len(p2) != l {
+		return nil, 0,errors.New("decode bytes sign not match")
+	}
+	for i, v := range p2 {
 		token[u.pos+unixLen+i] = byte(v)
 	}
+	// 解码第三部分
 	for i := 0; i < unixLen*2; i++ {
 		v := result[u.pos+i]
 		if i%2 == 0 {
@@ -116,11 +125,13 @@ func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64) {
 	if err != nil {
 		unix = 0
 	}
-	return token, unix
+	return token, unix,err
 }
 
-func (uc *UnixCrypto) Compare(result []byte) (b bool, token []byte, unix int64) {
-	token, unix = uc.Decode(result)
-	b = bytes.Compare(token, uc.md5Bytes) == 0
-	return b, token, unix
+func (uc *UnixCrypto) Compare(result []byte) (match bool, token []byte, unix int64) {
+	token, unix, err := uc.Decode(result)
+	if err == nil {
+		match = bytes.Compare(token, uc.md5Bytes) == 0
+	}
+	return match, token, unix
 }
