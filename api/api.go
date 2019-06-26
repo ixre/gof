@@ -419,7 +419,7 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, h *http.Request, origin stri
 	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
 	header.Add("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(200)
-	w.Write([]byte("ok"))
+	w.Write([]byte(""))
 }
 
 var _ Context = new(defaultContext)
