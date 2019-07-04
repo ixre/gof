@@ -16,3 +16,10 @@ func StringDefault(s,d string)string{
 	}
 	return s
 }
+
+func ElseString(b bool,s,s1 string)string{
+	if b{
+		return s
+	}
+	return s1
+}
