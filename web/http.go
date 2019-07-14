@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -74,7 +75,11 @@ func (m MultiServeHandler) Register(sub string, handler http.Handler) {
 }
 
 func (m MultiServeHandler) SubName(r *http.Request) string {
-	return r.Host[:len(r.Host)-m.dLen]
+	h := r.Host
+	if i:= strings.Index(h,":");i !=-1 {
+		return h[:i-m.dLen]
+	}
+	return h[:len(h)-m.dLen]
 }
 
 func (m MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
