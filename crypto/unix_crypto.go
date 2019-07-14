@@ -100,7 +100,6 @@ func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64,err error) 
 	if len(result) < l{
 		return nil, 0,errors.New("decode bytes invalid length")
 	}
-	println(l,len(result))
 	unixArr := make([]byte, unixLen)
 	// 解码第一部分
 	copy(token, result[:u.pos])
