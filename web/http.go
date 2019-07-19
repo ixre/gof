@@ -76,10 +76,13 @@ func (m MultiServeHandler) Register(sub string, handler http.Handler) {
 
 func (m MultiServeHandler) SubName(r *http.Request) string {
 	h := r.Host
-	if i:= strings.Index(h,":");i !=-1 {
-		return h[:i-m.dLen]
+	if len(h) > m.dLen {
+		if i := strings.Index(h, ":"); i != -1 {
+			return h[:i-m.dLen]
+		}
+		return h[:len(h)-m.dLen]
 	}
-	return h[:len(h)-m.dLen]
+	return "*"
 }
 
 func (m MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
