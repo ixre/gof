@@ -202,7 +202,7 @@ func (r *redisStorage) Exists(key string) bool {
 	conn := r.pool.Get()
 	defer conn.Close()
 	i, err := redis.Int(conn.Do("EXISTS", key))
-	return err != nil && i == 1
+	return err == nil && i == 1
 }
 
 func (r *redisStorage) Del(key string) {
