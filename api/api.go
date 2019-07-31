@@ -18,7 +18,6 @@ import (
 	"errors"
 	http2 "github.com/ixre/gof/net/http"
 	"hash"
-	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -295,8 +294,6 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 		if rsp[0].Data != nil {
 			switch rsp[0].Data.(type) {
 			case string:
-				log.Println("-string")
-
 				data = []byte(rsp[0].Data.(string))
 			default:
 				data, _ = s.marshal(rsp[0].Data)
