@@ -18,12 +18,11 @@ func (r *Result) Error(err error) *Result {
 	return r.ErrorText(err.Error())
 }
 
-
-func ResultWithCode(code int,message string) *Result {
+func ResultWithCode(code int, message string) *Result {
 	return &Result{
-		ErrCode:code,
-		ErrMsg:message,
-		Data:nil,
+		ErrCode: code,
+		ErrMsg:  message,
+		Data:    nil,
 	}
 }
 

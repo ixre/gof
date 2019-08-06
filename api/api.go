@@ -43,14 +43,14 @@ func NewResponse(data interface{}) *Response {
 }
 
 func NewErrorResponse(message string) *Response {
-	return ResponseWithCode(RErrorCode,message)
+	return ResponseWithCode(RErrorCode, message)
 }
 
-func ResponseWithCode(code int,message string) *Response {
+func ResponseWithCode(code int, message string) *Response {
 	return &Response{
-		Code:code,
-		Message:message,
-		Data:nil,
+		Code:    code,
+		Message: message,
+		Data:    nil,
 	}
 }
 

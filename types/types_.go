@@ -9,16 +9,15 @@ package types
  * history :
  */
 
-
-func StringDefault(s,d string)string{
-	if len(s)==0 {
+func StringDefault(s, d string) string {
+	if len(s) == 0 {
 		return d
 	}
 	return s
 }
 
-func ElseString(b bool,s,s1 string)string{
-	if b{
+func ElseString(b bool, s, s1 string) string {
+	if b {
 		return s
 	}
 	return s1

@@ -483,9 +483,8 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 }
 func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
 	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询
-	if (o.driverName == "postgres" || o.driverName == "postgresql") && (
-		strings.Contains(sql_, "returning") ||
-			strings.Contains(sql_, "RETURNING")) {
+	if (o.driverName == "postgres" || o.driverName == "postgresql") && (strings.Contains(sql_, "returning") ||
+		strings.Contains(sql_, "RETURNING")) {
 		var lastInsertId int64
 		row := stmt.QueryRow(params...)
 		if isIntPk {

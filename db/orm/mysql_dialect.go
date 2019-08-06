@@ -102,8 +102,9 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	if table.Comment != "" {
 		table.Comment = strings.Replace(table.Comment, "'", "", -1)
 	}
+
 	//获取列信息
-	colReg := regexp.MustCompile("`([^`]+)`\\s+([^\\s]+)\\s")
+	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s]+)\\s")
 	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^']+)'")
 	colArr := strings.Split(desc[i+3:j], "\n")
 	//获取主键
@@ -125,7 +126,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 				Auto:    strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
 				IsPk:    match[1] == pkField,
-				Length:  -1,
+				Length:  m.getTypeLen(dbType),
 				TypeId:  m.getTypeId(dbType),
 			}
 			comMatch := commReg.FindStringSubmatch(str)
@@ -144,19 +145,45 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return TypeInt32
 	case strings.HasPrefix(dbType, "bit"):
 		return TypeBoolean
-	case strings.HasPrefix(dbType, "int("):
-		i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
-		if i > 10 {
-			return TypeInt32
-		}
+	case dbType == "bigint":
 		return TypeInt64
+	case strings.HasPrefix(dbType, "int("):
+		//i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
+		//if i <= 11 {
+		return TypeInt32
+		//}
+		//return TypeInt64
 	case strings.HasPrefix(dbType, "float"):
 		return TypeFloat32
-	case strings.HasPrefix(dbType, "decimal"):
+	case strings.HasPrefix(dbType, "decimal"),
+		strings.HasPrefix(dbType, "double"):
 		return TypeFloat64
-	case dbType == "text", strings.HasPrefix(dbType, "varchar"):
+	case dbType == "text", dbType == "longtext",
+		strings.HasPrefix(dbType, "varchar"):
 		return TypeString
 	}
-	println("[ ORM][ Dialect][ Warning]: not support type :", dbType)
+	println("[ ORM][ MySQL][ Warning]:Dialect not support type :", dbType)
 	return TypeUnknown
+}
+
+// 获取类型长度
+func (m *MySqlDialect) getTypeLen(dbType string) int {
+	i := strings.Index(dbType, "(")
+	j := strings.LastIndex(dbType, ")")
+	if i > 0 && j > 0 {
+		s := strings.Split(dbType[i+1:j], ",")
+		i1, err := strconv.Atoi(s[0])
+		if err != nil {
+			panic(err)
+		}
+		if len(s) == 2 {
+			i2, err2 := strconv.Atoi(s[1])
+			if err2 != nil {
+				panic(err2)
+			}
+			return i1 + i2
+		}
+		return i1
+	}
+	return -1
 }

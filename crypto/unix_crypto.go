@@ -52,7 +52,7 @@ type UnixCrypto struct {
 func NewUnixCrypto(token, offset string) *UnixCrypto {
 	//log.Println(token,offset)
 	u := &UnixCrypto{}
-	u.pos = int(token[2])%6+1
+	u.pos = int(token[2])%6 + 1
 	u.md5Bytes = u.getMd5(token, offset)
 	return u
 }
@@ -80,7 +80,7 @@ func (u *UnixCrypto) GetBytes() []byte {
 // 编码
 func (u *UnixCrypto) Encode() []byte {
 	unixStr := u.getUnix()
-	l :=  u.pos
+	l := u.pos
 	buf := bytes.NewBuffer(nil)
 	buf.Write(u.md5Bytes[:l])
 	//前10位，unix反序和md5交叉
@@ -94,20 +94,20 @@ func (u *UnixCrypto) Encode() []byte {
 }
 
 // 解码，返回Token及Unix时间
-func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64,err error) {
+func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64, err error) {
 	//解码得到的token
 	l := len(u.md5Bytes)
-	token = make([]byte,l)
-	if len(result) < l{
-		return nil, 0,errors.New("decode bytes invalid length")
+	token = make([]byte, l)
+	if len(result) < l {
+		return nil, 0, errors.New("decode bytes invalid length")
 	}
 	unixArr := make([]byte, unixLen)
 	// 解码第一部分
 	copy(token, result[:u.pos])
 	// 解码的二部分,如果长度不匹配
 	p2 := result[u.pos+unixLen*2:]
-	if u.pos+unixLen + len(p2) != l {
-		return nil, 0,errors.New("decode bytes sign not match")
+	if u.pos+unixLen+len(p2) != l {
+		return nil, 0, errors.New("decode bytes sign not match")
 	}
 	for i, v := range p2 {
 		token[u.pos+unixLen+i] = byte(v)
@@ -125,7 +125,7 @@ func (u *UnixCrypto) Decode(result []byte) (token []byte, unix int64,err error) 
 	if err != nil {
 		unix = 0
 	}
-	return token, unix,err
+	return token, unix, err
 }
 
 func (uc *UnixCrypto) Compare(result []byte) (match bool, token []byte, unix int64) {

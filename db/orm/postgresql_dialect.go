@@ -156,6 +156,6 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		}
 		return TypeFloat32
 	}
-	println("[ ORM][ Dialect][ Warning]: not support type :", dbType)
+	println("[ ORM][ Postgres][ Warning]:Dialect not support type :", dbType)
 	return TypeUnknown
 }
