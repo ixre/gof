@@ -145,7 +145,7 @@ func (e *Engine) TableToForm(tb *orm.Table) *Form {
 		Fields: []*Field{},
 	}
 	for _, v := range tb.Columns {
-		if !v.Auto {
+		if !v.IsAuto {
 			fd := &Field{
 				ID:    e.title(v.Name),
 				Label: e.title(v.Comment),

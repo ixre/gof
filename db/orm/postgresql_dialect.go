@@ -101,7 +101,7 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 				c := &Column{
 					Name:    rd[1],
 					IsPk:    rd[8] == "1",
-					Auto:    rd[7] == "1",
+					IsAuto:  rd[7] == "1",
 					NotNull: rd[5] == "1",
 					Type:    rd[2],
 					Comment: rd[9],

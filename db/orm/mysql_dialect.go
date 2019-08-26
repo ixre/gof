@@ -123,7 +123,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 			col := &Column{
 				Name:    match[1],
 				Type:    dbType,
-				Auto:    strings.Index(str, "AUTO_") != -1,
+				IsAuto:    strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
 				IsPk:    match[1] == pkField,
 				Length:  m.getTypeLen(dbType),
