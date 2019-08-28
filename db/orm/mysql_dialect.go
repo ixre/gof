@@ -102,7 +102,6 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	if table.Comment != "" {
 		table.Comment = strings.Replace(table.Comment, "'", "", -1)
 	}
-
 	//获取列信息
 	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s]+)\\s")
 	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^']+)'")
