@@ -86,7 +86,7 @@ type (
 	Column struct {
 		Name    string
 		IsPk    bool
-		IsAuto    bool
+		IsAuto  bool
 		NotNull bool
 		Type    string
 		Length  int

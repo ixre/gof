@@ -41,7 +41,7 @@ func ListenAndServe(port int, debug bool) error {
 	// 创建上下文工厂
 	factory := DefaultFactory.Build(nil)
 	// 创建服务
-	s := NewServerMux(factory, apiSwapFunc)
+	s := NewServerMux(factory, swapApiKeyFunc, true)
 	hs := http.NewServeMux()
 	hs.Handle("/api", s)
 	hs.Handle("/api_v1", s)
@@ -104,23 +104,20 @@ func ListenAndServe(port int, debug bool) error {
 }
 
 // 检查接口参数
-func apiSwapFunc(key string) (userId int64, userToken string, checkSign bool) {
+func swapApiKeyFunc(ctx Context, key string) (userId int, userSecret string) {
 	//todo: return user info
 	if turnOffCheckPerm {
-		return 1, "123456", false
+		return 1, "123456"
 	}
 	if key == "test" {
-		return 1, "123456", true
+		return 1, "123456"
 	}
 	if key == "80line365mzl00" {
-		return 1, "239d2d9fb16dbe18d81c54d1764bd33b", true
+		return 1, "239d2d9fb16dbe18d81c54d1764bd33b"
 	}
-	return 0, "", false
+	return 0, ""
 }
 
-func CompareVersion(v, v1 string) int {
-	return intVer(v) - intVer(v1)
-}
 func intVer(s string) int {
 	arr := strings.Split(s, ".")
 	for i, v := range arr {

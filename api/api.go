@@ -498,11 +498,9 @@ func (d *defaultContextFactory) Factory(h *http.Request, w http.ResponseWriter, 
 			ctx.form[k] = v
 		}
 	}
-	if d.trace {
-		if h != nil {
-			ctx.form.Set("$user_ip_addr", http2.RealIp(h))
-			ctx.form.Set("$user_agent", h.UserAgent())
-		}
+	if h != nil {
+		ctx.form.Set("$user_addr", http2.RealIp(h))
+		ctx.form.Set("$user_agent", h.UserAgent())
 	}
 	return ctx
 }

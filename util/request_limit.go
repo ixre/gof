@@ -1,0 +1,67 @@
+package util
+
+import (
+	"fmt"
+	"github.com/ixre/gof/storage"
+	"github.com/ixre/gof/util/concurrent"
+	"sync"
+)
+
+/**
+ * Copyright 2009-2019 @ to2.net
+ * name : request_limit.go.go
+ * author : jarrysix (jarrysix#gmail.com)
+ * date : 2019-10-01 16:48
+ * description :
+ * history :
+ */
+
+type RequestLimit struct {
+	buckets map[string]*concurrent.TokenBucket
+	sync.Mutex
+	capacity   int     // 桶的容量
+	rate       float64 // 令牌放入速度
+	lockSecond int64
+	store      storage.Interface
+}
+
+// 创建请求限制, store存储数据,lockSecond锁定时间,单位:秒
+func NewRequestLimit(store storage.Interface, capacity int, rate float64, lockSecond int) *RequestLimit {
+	return &RequestLimit{
+		buckets:    make(map[string]*concurrent.TokenBucket, 0),
+		store:      store,
+		Mutex:      sync.Mutex{},
+		capacity:   capacity,
+		rate:       rate,
+		lockSecond: int64(lockSecond),
+	}
+}
+
+// 是否锁定
+func (i *RequestLimit) IsLock(addr string) bool {
+	k := fmt.Sprintf("sys:req-limit:%s", addr)
+	v, err := i.store.GetInt(k)
+	return err == nil && v > 0
+}
+
+// 锁定地址
+func (i *RequestLimit) lockAddr(addr string) {
+	k := fmt.Sprintf("sys:req-limit:%s", addr)
+	i.store.SetExpire(k, 1, i.lockSecond)
+}
+
+// 获取令牌
+func (i *RequestLimit) Acquire(addr string, n int) bool {
+	v, ok := i.buckets[addr]
+	if !ok {
+		i.Mutex.Lock()
+		v = concurrent.NewTokenBucket(i.capacity, i.rate)
+		i.buckets[addr] = v
+		i.Unlock()
+	}
+	b := v.Acquire(n)
+	if !b {
+		i.lockAddr(addr)
+	}
+	return b
+}
