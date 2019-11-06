@@ -255,7 +255,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, h *http.Request) {
 	if s.cors {
 		origin := h.Header.Get("ORIGIN")
 		if h.Method == "OPTIONS" {
-			s.preFlight(w, h, origin)
+			s.preFlight(w, origin)
 			return
 		}
 		w.Header().Add("Access-Control-Allow-Origin", origin)
@@ -417,7 +417,7 @@ func (s *ServeMux) marshal(d interface{}) ([]byte, interface{}) {
 	return bytes, err
 }
 
-func (s *ServeMux) preFlight(w http.ResponseWriter, h *http.Request, origin string) {
+func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 	header := w.Header()
 	header.Add("Access-Control-Allow-Origin", origin)
 	header.Add("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")

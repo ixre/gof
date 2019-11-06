@@ -25,7 +25,7 @@ type RequestLimit struct {
 	store      storage.Interface
 }
 
-// 创建请求限制, store存储数据,lockSecond锁定时间,单位:秒
+// 创建请求限制, store存储数据,lockSecond锁定时间,单位:秒,capacity: 最大容量,rate: 令牌放入速度
 func NewRequestLimit(store storage.Interface, capacity int, rate float64, lockSecond int) *RequestLimit {
 	return &RequestLimit{
 		buckets:    make(map[string]*concurrent.TokenBucket, 0),
