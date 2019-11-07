@@ -9,5 +9,3 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/pelletier/go-toml v1.4.0
 )
-
-go 1.13
