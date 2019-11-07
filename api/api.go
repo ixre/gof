@@ -350,7 +350,7 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		for _, m := range s.middleware {
 			if err := m(ctx); err != nil {
 				return s.response(apiName, ctx, &Response{
-					Code:    RInternalError.Code,
+					Code:    RAccessDenied.Code,
 					Message: err.Error(),
 				})
 			}
