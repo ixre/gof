@@ -136,7 +136,7 @@ func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {
 
 //if not defined primary key.the first key will as primary key
 func GetPKName(t reflect.Type) (pkName string, pkType int, pkIsAuto bool) {
-	var ti int = t.NumField()
+	var ti = t.NumField()
 	ffc := func(f reflect.StructField) (string, int, bool) {
 		if f.Tag != "" {
 			var isAuto bool
@@ -167,10 +167,8 @@ func GetPKName(t reflect.Type) (pkName string, pkType int, pkIsAuto bool) {
 func GetFields(driver string, t reflect.Type) (posArr []int, mapNames []string) {
 	posArr = []int{}
 	mapNames = []string{}
-
 	fNum := t.NumField()
 	var fmn string
-
 	for i := 0; i < fNum; i++ {
 		f := t.Field(i)
 		if f.Tag != "" {

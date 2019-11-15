@@ -434,7 +434,6 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		t = t.Elem()
 	}
 	val := reflect.Indirect(reflect.ValueOf(entity))
-
 	// build sql
 	meta := o.getTableMapMeta(t)
 	// pk type is int?
@@ -491,12 +490,13 @@ func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, pa
 			if err := row.Scan(&lastInsertId); err != nil {
 				return 0, lastInsertId, o.err(err, sql_)
 			}
-		} else {
-			v := ""
-			if err := row.Scan(&v); err != nil {
-				return 0, lastInsertId, o.err(err, sql_)
-			}
 		}
+		//} else {
+		//	v := ""
+		//	if err := row.Scan(&v); err != nil {
+		//		return 0, lastInsertId, o.err(err, sql_)
+		//	}
+		//}
 		return 0, lastInsertId, nil
 	}
 	result, err := stmt.Exec(params...)
@@ -586,6 +586,8 @@ func (o *simpleOrm) getUpdateSQL(meta *TableMapMeta, setCond string, fieldArr []
 
 func (o *simpleOrm) isIntPk(typeId int) bool {
 	switch typeId {
+	case int(reflect.Int):
+		return true
 	case TypeInt16, TypeInt32, TypeInt64:
 		return true
 	}
