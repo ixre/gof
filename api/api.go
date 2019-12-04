@@ -38,6 +38,8 @@ type Response struct {
 
 func NewResponse(data interface{}) *Response {
 	return &Response{
+		Code:0,
+		Message:"",
 		Data: data,
 	}
 }
@@ -291,6 +293,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 		}
 		data, _ = s.marshal(arr)
 	} else {
+		// 如果包含数据, 直接返回数据, 否则返回Response
 		if rsp[0].Data != nil {
 			switch rsp[0].Data.(type) {
 			case string:
@@ -298,6 +301,8 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 			default:
 				data, _ = s.marshal(rsp[0].Data)
 			}
+		}else{
+			data, _ = s.marshal(rsp[0])
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")

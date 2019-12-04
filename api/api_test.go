@@ -88,5 +88,10 @@ func TestParamToBytes(t *testing.T) {
 	form.Set("key", form.Get("Key"))
 	form.Del("Key")
 	t.Log("---xx = ", string(ParamsToBytes(form, "123")))
+}
+
+
+func TestMarshalResponse(t *testing.T){
+	rsp := NewResponse(map[string]string{})
 
 }
