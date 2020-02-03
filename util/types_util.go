@@ -14,8 +14,7 @@ import (
  * history :
  */
 
-
-func Str(d interface{})string{
+func Str(d interface{}) string {
 	return TypeToString(d)
 }
 

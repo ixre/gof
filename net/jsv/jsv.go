@@ -65,7 +65,7 @@ func (this *Server) registerMethods(n string, v interface{}) {
 // m is method name, arg as the arguments of method.
 // return the result bytes and error
 // example socket command like :
-// "{"user":"","pwd":"123"}>>Member.Login"
+// "{"user":"","pwd":"123"}>>Member.login"
 func (this *Server) handle(s, m, arg []byte) ([]byte, error) {
 	Println(fmt.Sprintf("[Server][Handle]:%s.%s", string(s), string(m)))
 	structName := string(s)
@@ -132,7 +132,7 @@ func (this *Server) handle(s, m, arg []byte) ([]byte, error) {
 
 // handle the socket request
 func (this *Server) HandleRequest(conn net.Conn, d []byte) {
-	// example: {"user":"","pwd":"123"}>>Member.Login
+	// example: {"user":"","pwd":"123"}>>Member.login
 	//	defer func(){
 	//		if e := recover();e!= nil{
 	//			Println(e)

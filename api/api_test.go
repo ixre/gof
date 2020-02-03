@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"go2o/app/api"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -90,8 +91,12 @@ func TestParamToBytes(t *testing.T) {
 	t.Log("---xx = ", string(ParamsToBytes(form, "123")))
 }
 
-
-func TestMarshalResponse(t *testing.T){
-	rsp := NewResponse(map[string]string{})
-
+func TestSign(t *testing.T) {
+	params := "api=member.login&key=go2o&product=app&pwd=c4ca4238a0b923820dcc509a6f75849b&user=18666398028&version=1.0.0&sign_type=sha1&sign=2933eaffccf9fe49a0ad9a97fe311a41afb6e3b2"
+	values, _ := url.ParseQuery(params)
+	sign := Sign("sha1", values, "131409")
+	if sign2 := values.Get("sign"); sign2 != sign {
+		println(sign, "/", sign2)
+		t.Failed()
+	}
 }

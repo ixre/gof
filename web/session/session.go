@@ -151,12 +151,13 @@ func (s *Session) MaxAge() int64 {
 //存储到客户端
 func (s *Session) flushToClient() {
 	d := time.Duration(s._maxAge * 1e9)
-	expires := time.Now().Local().Add(d)
+	expires := time.Now().Add(d)
 	ck := &http.Cookie{
 		Name:     s._keyName,
 		Value:    s._sessionId,
 		Path:     "/",
 		HttpOnly: true,
+		MaxAge:   int(s._maxAge),
 		Expires:  expires,
 	}
 	http.SetCookie(s._rsp, ck)
