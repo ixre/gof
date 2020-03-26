@@ -25,6 +25,10 @@ type (
 	Connector interface {
 		Driver() string
 		Raw() *sql.DB
+		// create a connection for ping test
+		Ping() error
+		// close the database connection
+		Close() error
 		GetOrm() orm.Orm
 		SetMaxOpenConns(n int)
 		SetMaxIdleConns(n int)
@@ -40,29 +44,31 @@ type (
 var _ Connector = new(defaultConnector)
 
 // create a new connector
-func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) Connector {
+func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (Connector, error) {
 	db, err := open(driverName, driverSource)
 	if err == nil {
-		err = db.Ping()
+		//	err = db.Ping()
+		//}
+		//if err != nil {
+		//	db.Close()
+		//	//如果异常，则显示并退出
+		//	log.Fatalln("[ Gof][ Connector]:" + driverName + "-" + err.Error())
+		//	return nil
+		//}
+		o := orm.NewOrm(driverName, db)
+		if debug {
+			o.SetTrace(true)
+		}
+		return &defaultConnector{
+			db:           db,
+			orm:          o,
+			driverName:   strings.ToLower(driverName),
+			driverSource: driverName,
+			logger:       l,
+			debug:        debug,
+		}, nil
 	}
-	if err != nil {
-		db.Close()
-		//如果异常，则显示并退出
-		log.Fatalln("[ Gof][ Connector]:" + driverName + "-" + err.Error())
-		return nil
-	}
-	o := orm.NewOrm(driverName, db)
-	if debug {
-		o.SetTrace(true)
-	}
-	return &defaultConnector{
-		db:           db,
-		orm:          o,
-		driverName:   strings.ToLower(driverName),
-		driverSource: driverName,
-		logger:       l,
-		debug:        debug,
-	}
+	return nil, err
 }
 
 // 创建连接
@@ -86,6 +92,14 @@ type defaultConnector struct {
 	orm          orm.Orm
 	logger       log.ILogger
 	debug        bool // 是否调试模式
+}
+
+func (t *defaultConnector) Ping() error {
+	return t.db.Ping()
+}
+
+func (t *defaultConnector) Close() error {
+	return t.db.Close()
 }
 
 func (t *defaultConnector) err(err error) error {

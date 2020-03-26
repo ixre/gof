@@ -38,9 +38,9 @@ type Response struct {
 
 func NewResponse(data interface{}) *Response {
 	return &Response{
-		Code:0,
-		Message:"",
-		Data: data,
+		Code:    0,
+		Message: "",
+		Data:    data,
 	}
 }
 
@@ -301,7 +301,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 			default:
 				data, _ = s.marshal(rsp[0].Data)
 			}
-		}else{
+		} else {
 			data, _ = s.marshal(rsp[0])
 		}
 	}
