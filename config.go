@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const confLineDelimer byte = '\n'
@@ -113,7 +114,7 @@ func (c *Config) load(file string) (err error) {
 		if regex.Match([]byte(line)) {
 			matches := regex.FindStringSubmatch(line)
 			//c.configDict[matches[1]] = matches[2]
-			c.configDict[matches[1]] = matches[2]
+			c.configDict[matches[1]] = strings.TrimSpace(matches[2])
 		}
 	}
 	return nil
