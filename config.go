@@ -16,7 +16,7 @@ import (
 const confLineDelimer byte = '\n'
 
 var (
-	regex = regexp.MustCompile("^\\s*([^#\\s]+)\\s*=\\s*\"*([^#\\s\"]*)\"*\\s*$")
+	regex = regexp.MustCompile("^\\s*([^#\\s]+)\\s*=\\s*\"*(.+)*\"*\\s*$")
 )
 
 // Config
