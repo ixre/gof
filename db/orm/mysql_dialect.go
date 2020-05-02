@@ -144,14 +144,14 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return TypeInt32
 	case strings.HasPrefix(dbType, "bit"):
 		return TypeBoolean
-	case dbType == "bigint":
+	case strings.HasPrefix(dbType, "bigint"):
 		return TypeInt64
 	case strings.HasPrefix(dbType, "int("):
-		//i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
-		//if i <= 11 {
-		return TypeInt32
-		//}
-		//return TypeInt64
+		i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
+		if i < 11 {
+			return TypeInt32
+		}
+		return TypeInt64
 	case strings.HasPrefix(dbType, "float"):
 		return TypeFloat32
 	case strings.HasPrefix(dbType, "decimal"),
