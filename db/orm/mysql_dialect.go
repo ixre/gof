@@ -121,12 +121,12 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 			dbType := match[2]
 			col := &Column{
 				Name:    match[1],
-				Type:    dbType,
+				DbType:  dbType,
 				IsAuto:  strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
 				IsPk:    match[1] == pkField,
 				Length:  m.getTypeLen(dbType),
-				TypeId:  m.getTypeId(dbType),
+				Type:    m.getTypeId(dbType),
 			}
 			comMatch := commReg.FindStringSubmatch(str)
 			if comMatch != nil {

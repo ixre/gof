@@ -88,10 +88,10 @@ type (
 		IsPk    bool
 		IsAuto  bool
 		NotNull bool
-		Type    string
+		DbType  string
 		Length  int
 		Comment string
-		TypeId  int
+		Type    int
 	}
 
 	// find some information of entity

@@ -100,7 +100,7 @@ func (m MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func HttpError(rsp http.ResponseWriter, err error) {
 	_, f, line, _ := runtime.Caller(1)
-	rsp.Header().Add("Content-Type", "text/html")
+	rsp.Header().Add("Content-DbType", "text/html")
 	rsp.WriteHeader(500)
 
 	var part1 string = `<html><head><title>HTTP ERROR</title>

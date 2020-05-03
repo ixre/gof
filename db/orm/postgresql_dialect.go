@@ -103,10 +103,10 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 					IsPk:    rd[8] == "1",
 					IsAuto:  rd[7] == "1",
 					NotNull: rd[5] == "1",
-					Type:    rd[2],
+					DbType:  rd[2],
 					Comment: rd[9],
 					Length:  len,
-					TypeId:  p.getTypeId(rd[2], len),
+					Type:    p.getTypeId(rd[2], len),
 				}
 				//if strings.HasPrefix(table, "wal_") {
 				//	println("---", rd[2], len)
