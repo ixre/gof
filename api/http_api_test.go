@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"go2o/app/api"
 	"io/ioutil"
 	"net/http"
 	"net/url"

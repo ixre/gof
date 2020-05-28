@@ -74,10 +74,11 @@ type uintPtrGetter interface {
 }
 
 func eqPtr(x, y interface{}) bool {
-	v := reflect.ValueOf(x).(uintPtrGetter)
-	w := reflect.ValueOf(y).(uintPtrGetter)
+	//v := reflect.ValueOf(x).(uintPtrGetter)
+	//w := reflect.ValueOf(y).(uintPtrGetter)
 
-	return v.Get() == w.Get()
+	//return v.Get() == w.Get()
+	return false
 }
 
 type T1 struct {
