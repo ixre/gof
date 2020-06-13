@@ -28,7 +28,7 @@ func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
 		Bytes:  x509.MarshalPKCS1PrivateKey(privateKey),
 	}
 	privateKeyStr,err = str(block)
-	if err == nil {
+	if err != nil {
 		return
 	}
 	// 生成公钥文件

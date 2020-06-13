@@ -99,12 +99,12 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 			if err = rows.Scan(&rd[0], &rd[1], &rd[2], &rd[3], &rd[4], &rd[5], &rd[6], &rd[7], &rd[8], &rd[9]); err == nil {
 				len, _ := strconv.Atoi(rd[3])
 				c := &Column{
-					Name:    rd[1],
+					Name:    strings.TrimSpace(rd[1]),
 					IsPk:    rd[8] == "1",
 					IsAuto:  rd[7] == "1",
 					NotNull: rd[5] == "1",
 					DbType:  rd[2],
-					Comment: rd[9],
+					Comment: strings.TrimSpace(rd[9]),
 					Length:  len,
 					Type:    p.getTypeId(rd[2], len),
 				}
@@ -119,7 +119,7 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 		rows.Close()
 		return &Table{
 			Name:    table,
-			Comment: comment,
+			Comment: strings.TrimSpace(comment),
 			Engine:  "",
 			Charset: "",
 			Columns: columns,

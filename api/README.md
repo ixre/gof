@@ -151,7 +151,7 @@ func serviceMiddleware(s api.Server, prefix string, tarVer string, debug bool) {
 		s.Trace()
 		// 输出请求信息
 		s.Use(func(ctx api.Context) error {
-			apiName := ctx.Form().Get("$api_name").(string)
+			apiName := ctx.Form().Get("$api").(string)
 			log.Println(prefix, "user", ctx.Key(), " calling ", apiName)
 			data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
 			log.Println(prefix, "request data = [", data, "]")

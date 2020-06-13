@@ -297,7 +297,7 @@ func (s *ServeMux) call(apiName string, ctx Context) *Response {
 		return RUndefinedApi
 	}
 	// save api name
-	ctx.Form().Set("$api_name", apiName) // 保存接口名称
+	ctx.Form().Set("$api", apiName) // 保存接口名称
 	// process api
 	entry, fn := strings.ToLower(data[0]), data[1]
 	if p, ok := s.processors[entry]; ok {

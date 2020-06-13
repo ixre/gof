@@ -62,7 +62,7 @@ func ListenAndServe(port int, debug bool) error {
 		s.Trace()
 		// 输出请求信息
 		s.Use(func(ctx Context) error {
-			apiName := ctx.Form().Get("$api_name").(string)
+			apiName := ctx.Form().Get("$api").(string)
 			log.Println("[ Api][ Log]: user", ctx.Key(), " calling ", apiName)
 			data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
 			log.Println("[ Api][ Log]: request data = [", data, "]")

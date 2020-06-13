@@ -2,14 +2,16 @@ package rsa
 
 import (
 	"fmt"
+	"github.com/ixre/gof/crypto/rsa"
 	"testing"
 )
 
 
 func TestRsaToken(t *testing.T) {
-	_,privateKey,err := GenRsaKeys(2048)
+	publicKey,privateKey,err := rsa.GenRsaKeys(2048)
 	if err != nil{
 		t.Error(err)
 	}
-	fmt.Println(privateKey)
+	fmt.Println("publicKey=",publicKey)
+	fmt.Println("privateKey=",privateKey)
 }

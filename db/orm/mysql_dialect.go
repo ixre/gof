@@ -94,7 +94,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	}
 	table := &Table{
 		Name:    name,
-		Comment: mp["COMMENT"],
+		Comment: strings.TrimSpace(mp["COMMENT"]),
 		Engine:  mp["ENGINE"],
 		Charset: mp["DEFAULT CHARSET"],
 		Columns: []*Column{},
@@ -158,6 +158,7 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		strings.HasPrefix(dbType, "double"):
 		return TypeFloat64
 	case dbType == "text", dbType == "longtext",
+		dbType=="mediumtext",dbType=="tinytext",
 		strings.HasPrefix(dbType, "varchar"):
 		return TypeString
 	}

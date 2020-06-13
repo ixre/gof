@@ -83,7 +83,7 @@ func (s *SocketServer) Printf(format string, args ...interface{}) {
 	}
 }
 
-// Register job running before server start!
+// Handle job running before server start!
 func (s *SocketServer) RegisterJob(job Job) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
