@@ -153,6 +153,10 @@ func (r *RegistryTree) Exists() bool {
 	return r.tree != nil
 }
 
+func (r *RegistryTree) Keys()[]string{
+	return r.tree.Keys()
+}
+
 // get registry pair
 func (r *RegistryTree) Get(prop string) interface{} {
 	if r.tree != nil {
