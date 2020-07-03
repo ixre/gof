@@ -154,8 +154,9 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return TypeInt64
 	case strings.HasPrefix(dbType, "float"):
 		return TypeFloat32
-	case strings.HasPrefix(dbType, "decimal"),
-		strings.HasPrefix(dbType, "double"):
+	case strings.HasPrefix(dbType, "decimal"):
+		return TypeDecimal
+	case strings.HasPrefix(dbType, "double"):
 		return TypeFloat64
 	case dbType == "text", dbType == "longtext",
 		dbType=="mediumtext",dbType=="tinytext",

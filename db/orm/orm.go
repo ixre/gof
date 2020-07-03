@@ -109,14 +109,24 @@ type (
 )
 
 var (
-	TypeUnknown = int(reflect.Invalid)
-	TypeString  = int(reflect.String)
-	TypeBoolean = int(reflect.Bool)
-	TypeInt16   = int(reflect.Int16)
-	TypeInt32   = int(reflect.Int32)
-	TypeInt64   = int(reflect.Int64)
-	TypeFloat32 = int(reflect.Float32)
-	TypeFloat64 = int(reflect.Float64)
+	//TypeUnknown = int(reflect.Invalid)
+	//TypeString  = int(reflect.String)
+	//TypeBoolean = int(reflect.Bool)
+	//TypeInt16   = int(reflect.Int16)
+	//TypeInt32   = int(reflect.Int32)
+	//TypeInt64   = int(reflect.Int64)
+	//TypeFloat32 = int(reflect.Float32)
+	//TypeFloat64 = int(reflect.Float64)
+
+	TypeUnknown = 0
+	TypeString  = 1
+	TypeBoolean = 2
+	TypeInt16   = 3
+	TypeInt32   = 4
+	TypeInt64   = 5
+	TypeFloat32 = 6
+	TypeFloat64 = 7
+	TypeDecimal = 16
 )
 
 // 获取表元数据
