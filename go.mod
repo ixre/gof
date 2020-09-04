@@ -8,5 +8,4 @@ require (
 	github.com/gomodule/redigo v1.8.2
 	github.com/lib/pq v1.8.0
 	github.com/pelletier/go-toml v1.8.0
-	golang.org/x/sys v0.0.0-20200821140526-fda516888d29 // indirect
 )

@@ -37,5 +37,4 @@ func AssignValue(d reflect.Value, s string) (err error) {
 		}
 	}
 	return err
-
 }
