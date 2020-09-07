@@ -12,8 +12,9 @@ package storage
 import "errors"
 
 const (
-	DriveHashStorage  = "hash-storage"
-	DriveRedisStorage = "redis-storage"
+	DriveHashStorage  = "hash"
+	DriveRedisStorage = "redis"
+	DriveEtcdStorage = "etcd"
 )
 
 var typeError = errors.New("type convert error")
