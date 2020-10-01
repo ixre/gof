@@ -11,6 +11,7 @@ package storage
 import (
 	"errors"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -135,10 +136,23 @@ func (h *hashStorage) GetRaw(key string) (interface{}, error) {
 	return nil, errors.New("not such key")
 }
 
-func (h *hashStorage) Del(key string) {
+func (h *hashStorage) Delete(key string) {
 	h.mux.Lock()
 	delete(h.storage, key)
 	h.mux.Unlock()
+}
+
+func (h *hashStorage) DeleteWith(prefix string) (int, error) {
+	h.mux.Lock()
+	i := 0
+	for k, _ := range h.storage {
+		if strings.HasPrefix(k, prefix) {
+			delete(h.storage, k)
+			i++
+		}
+	}
+	h.mux.Unlock()
+	return i, nil
 }
 
 // equal of h.Set(key,value)

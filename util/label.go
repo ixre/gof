@@ -8,7 +8,10 @@
  */
 package util
 
-import "regexp"
+import (
+	"github.com/ixre/gof/types"
+	"regexp"
+)
 
 var reg = regexp.MustCompile("\\{([^\\}]+)\\}")
 
@@ -17,7 +20,7 @@ func Transplate(c string, m map[string]interface{}) string {
 	return reg.ReplaceAllStringFunc(c, func(k string) string {
 		key := k[1 : len(k)-1]
 		if v, ok := m[key]; ok {
-			return Str(v)
+			return types.String(v)
 		}
 		return k
 	})

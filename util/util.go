@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/ixre/gof/types"
 	"math"
 	"math/rand"
 	"strconv"
@@ -49,28 +50,8 @@ type (
 	}
 )
 
-func threeCondition(b bool, i1, i2 interface{}) interface{} {
-	if b {
-		return i1
-	}
-	return i2
-}
-
-func (e *boolExtend) TInt(b bool, v1, v2 int) int {
-	return threeCondition(b, v1, v2).(int)
-}
-func (e *boolExtend) TInt32(b bool, v1, v2 int32) int32 {
-	return threeCondition(b, v1, v2).(int32)
-}
-func (e *boolExtend) TInt64(b bool, v1, v2 int64) int64 {
-	return threeCondition(b, v1, v2).(int64)
-}
-func (e *boolExtend) TString(b bool, v1, v2 string) string {
-	return threeCondition(b, v1, v2).(string)
-}
-
 func (e *stringExtend) String(v interface{}) string {
-	return Str(v)
+	return types.String(v)
 }
 
 // 字符串转为int32切片

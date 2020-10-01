@@ -153,7 +153,7 @@ func (r *RegistryTree) Exists() bool {
 	return r.tree != nil
 }
 
-func (r *RegistryTree) Keys()[]string{
+func (r *RegistryTree) Keys() []string {
 	return r.tree.Keys()
 }
 

@@ -14,7 +14,7 @@ import "errors"
 const (
 	DriveHashStorage  = "hash"
 	DriveRedisStorage = "redis"
-	DriveEtcdStorage = "etcd"
+	DriveEtcdStorage  = "etcd"
 )
 
 var typeError = errors.New("type convert error")
@@ -55,8 +55,9 @@ type Interface interface {
 	GetBytes(key string) ([]byte, error)
 
 	// Delete Storage
-	Del(key string)
-
+	Delete(key string)
+	// delete by key prefix
+	DeleteWith(prefix string) (int, error)
 	// Read and unmarshal from redis,if redis return err,
 	// marshal and write to redis
 	RWJson(key string, dst interface{}, src func() interface{}, second int64) error

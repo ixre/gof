@@ -15,7 +15,7 @@ func TestEngine_ParseFile(t *testing.T) {
 		t.Log("Field ", i, "- ID:", v.ID, "; Label:",
 			v.Label, "; Elem:", v.Elem, "; Class:", v.Class)
 		for k, v := range v.Attrs {
-			t.Log("   Attr:", k, "=", v)
+			t.Log("   Attrs:", k, "=", v)
 		}
 	}
 

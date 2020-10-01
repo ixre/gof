@@ -56,7 +56,6 @@ func byteHash(h hash.Hash, data []byte) string {
 	return hex.EncodeToString(b)
 }
 
-
 /*------ other support code ------*/
 var _ sort.Interface = keyArr{}
 

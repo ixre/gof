@@ -9,12 +9,12 @@
 package gof
 
 import (
+	"fmt"
 	"github.com/ixre/gof/db"
 	"github.com/ixre/gof/log"
 	"github.com/ixre/gof/shell"
 	"github.com/ixre/gof/storage"
 	"time"
-	"fmt"
 )
 
 // 应用当前的上下文
@@ -62,7 +62,6 @@ func execInstall() error {
 	return err
 }
 
-
 // 数组参数
 type ArrayFlags []string
 
@@ -77,4 +76,3 @@ func (i *ArrayFlags) Set(value string) error {
 	*i = append(*i, value)
 	return nil
 }
-

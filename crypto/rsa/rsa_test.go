@@ -6,12 +6,11 @@ import (
 	"testing"
 )
 
-
 func TestRsaToken(t *testing.T) {
-	publicKey,privateKey,err := rsa.GenRsaKeys(2048)
-	if err != nil{
+	publicKey, privateKey, err := rsa.GenRsaKeys(2048)
+	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("publicKey=",publicKey)
-	fmt.Println("privateKey=",privateKey)
+	fmt.Println("publicKey=", publicKey)
+	fmt.Println("privateKey=", privateKey)
 }

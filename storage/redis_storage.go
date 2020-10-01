@@ -9,15 +9,12 @@
 package storage
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -76,8 +73,6 @@ type IRedisStorage interface {
 	GetConn() redis.Conn
 	// get keys start with prefix
 	Keys(prefix string) ([]string, error)
-	// delete keys contain prefix
-	DelWith(prefix string) (int, error)
 }
 
 var _ Interface = new(redisStorage)
@@ -91,26 +86,6 @@ func NewRedisStorage(pool *redis.Pool) Interface {
 
 type redisStorage struct {
 	pool *redis.Pool
-}
-
-func (r *redisStorage) encodeBytes(v interface{}) ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	err := gob.NewEncoder(buf).Encode(v)
-	r.checkTypeErr(err)
-	return buf.Bytes(), err
-}
-
-func (r *redisStorage) decodeBytes(b []byte, dst interface{}) error {
-	buf := bytes.NewBuffer(b)
-	err := gob.NewDecoder(buf).Decode(dst)
-	r.checkTypeErr(err)
-	return err
-}
-
-func (r *redisStorage) checkTypeErr(err error) {
-	if err != nil && strings.Index(err.Error(), "type not registered") != -1 {
-		panic(err)
-	}
 }
 
 func (r *redisStorage) checkOutputValueType(v interface{}) bool {
@@ -138,7 +113,7 @@ func (r *redisStorage) decodeAssign(key string, dst interface{}) error {
 	if r.checkOutputValueType(dst) {
 		src, err := r.GetBytes(key)
 		if err == nil {
-			err = r.decodeBytes(src, dst)
+			err = DecodeBytes(src, dst)
 		}
 		return err
 	}
@@ -205,7 +180,7 @@ func (r *redisStorage) Exists(key string) bool {
 	return err == nil && i == 1
 }
 
-func (r *redisStorage) Del(key string) {
+func (r *redisStorage) Delete(key string) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	conn.Do("DEL", key)
@@ -258,7 +233,7 @@ func (r *redisStorage) set(key string, v interface{}, seconds int64) error {
 }
 
 func (r *redisStorage) binarySet(key string, v interface{}, seconds int64) error {
-	byteData, err := r.encodeBytes(v)
+	byteData, err := EncodeBytes(v)
 	if err == nil {
 		return r.set(key, byteData, seconds)
 	}
@@ -302,7 +277,7 @@ func (r *redisStorage) Keys(prefix string) ([]string, error) {
 }
 
 // delete keys contain prefix
-func (r *redisStorage) DelWith(prefix string) (int, error) {
+func (r *redisStorage) DeleteWith(prefix string) (int, error) {
 	keys, err := r.Keys(prefix)
 	if err != nil {
 		return 0, err

@@ -10,7 +10,7 @@ import (
 
 //RSA公钥私钥产生,bits: 1024 2048 4096
 func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
-	str := func(block *pem.Block)(s string,err error) {
+	str := func(block *pem.Block) (s string, err error) {
 		buffer := new(bytes.Buffer)
 		err = pem.Encode(buffer, block)
 		if err == nil {
@@ -25,9 +25,9 @@ func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
 	}
 	block := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
-		Bytes:  x509.MarshalPKCS1PrivateKey(privateKey),
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
-	privateKeyStr,err = str(block)
+	privateKeyStr, err = str(block)
 	if err != nil {
 		return
 	}
@@ -43,4 +43,3 @@ func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
 	}
 	return
 }
-

@@ -20,6 +20,8 @@ import (
 	"strings"
 )
 
+var _ gof.App = new(HttpApp)
+
 // 实现gof.App接口，以支持配置(config)、DB、ORM、日志(logger)、
 // 模版(template)、存储(storage)的访问。同时可以扩展,以支持自定义
 // 的需求。App接口在应用上下文中可以获取到。
@@ -28,6 +30,10 @@ type HttpApp struct {
 	dbConn   db.Connector
 	template *gof.Template
 	logger   log.ILogger
+}
+
+func (h *HttpApp) Registry() *gof.Registry {
+	return &gof.Registry{}
 }
 
 // 配置，支持从文件中加载。用于文件存储某些简单数据。

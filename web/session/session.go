@@ -29,7 +29,7 @@ var (
 	_storage           storage.Interface
 	_defaultCookieName string
 	_xsrfCookie        bool
-	_factory           *sessionFactory = &sessionFactory{}
+	_factory           = &sessionFactory{}
 )
 
 type Session struct {
@@ -95,9 +95,6 @@ func (s *Session) Get(key string) interface{} {
 // 设置键值
 func (s *Session) Set(key string, v interface{}) {
 	s.chkInit()
-	//	if reflect.TypeOf(v).Kind() == reflect.Ptr{
-	//		panic("Session value must be ptr")
-	//	}
 	s._data[key] = v
 }
 
@@ -120,7 +117,7 @@ func (s *Session) UseInstead(sessionId string) {
 // 销毁会话
 func (s *Session) Destroy() {
 	s._data = nil
-	s._storage.Del(_factory.getStorageKey(s._sessionId))
+	s._storage.Delete(_factory.getStorageKey(s._sessionId))
 	s.setMaxAge(-1e9)
 	s.flushToClient()
 }
