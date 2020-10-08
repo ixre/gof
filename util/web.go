@@ -27,7 +27,7 @@ func IsMobileAgent(userAgent string) bool {
 
 // 强制序列化为可用于HTML的JSON
 func MustHtmlJson(v interface{}) template.JS {
-	if v == nil{
+	if v == nil {
 		return "{}"
 	}
 	d, err := json.Marshal(v)

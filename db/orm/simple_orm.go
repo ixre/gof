@@ -586,7 +586,9 @@ func (o *simpleOrm) getUpdateSQL(meta *TableMapMeta, setCond string, fieldArr []
 
 func (o *simpleOrm) isIntPk(typeId int) bool {
 	switch typeId {
-	case int(reflect.Int):
+	case int(reflect.Int), int(reflect.Int32), int(reflect.Int64),
+		int(reflect.Int16), int(reflect.Uint64),
+		int(reflect.Uint32):
 		return true
 	case TypeInt16, TypeInt32, TypeInt64:
 		return true
