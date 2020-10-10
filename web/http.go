@@ -81,7 +81,7 @@ func (m MultiServeHandler) SubName(r *http.Request) string {
 	h := r.Host
 	if len(h) > m.dLen {
 		// 如果域名不包含端口号, 但使用端口号访问
-		if m.hasPort {
+		if !m.hasPort {
 			if i := strings.Index(h, ":"); i != -1 {
 				return h[:i-m.dLen]
 			}
