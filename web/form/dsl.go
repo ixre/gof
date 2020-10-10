@@ -35,7 +35,7 @@ var (
 	attrRegex  = regexp.MustCompile("\\s*([^#\\s]+)\\s*=\\s*\"*([^#\\s\"]*)\"*\\s*")
 	fieldRegex = regexp.MustCompile("field\\{([\\s\\S]+?)\\}")
 	// 默认表单HTML模板
-	TDefaultFormHtml string = `<!-- FORM Id:{{.Id}} Name:{{.Label}} -->
+	TDefaultFormHtml = `<!-- FORM Id:{{.Id}} Name:{{.Label}} -->
             {{range $i,$f := .Fields}}
             <div class="form-row">
                 <label>{{$f.Label}}</label>

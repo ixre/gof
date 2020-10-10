@@ -116,7 +116,7 @@ func (s *SocketServer) GetCli(conn net.Conn) (*Client, bool) {
 // 获取用户的客户端连接, 一个用户对应一个或多个连接
 func (s *SocketServer) GetConnections(userId int64) []net.Conn {
 	arr := strings.Split(s.userAddrs[userId], "$")
-	var connList []net.Conn = make([]net.Conn, 0)
+	var connList = make([]net.Conn, 0)
 	for _, v := range arr {
 		if i, ok := s.clients[v]; ok && i.Conn != nil {
 			connList = append(connList, i.Conn)

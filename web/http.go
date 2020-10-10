@@ -41,6 +41,7 @@ var _ MultiServe = new(MultiServeHandler)
 type MultiServeHandler struct {
 	Domain   string
 	dLen     int
+	hasPort  bool
 	handlers map[string]http.Handler
 }
 
@@ -48,6 +49,7 @@ func NewMultiServe(domain string) MultiServeHandler {
 	return MultiServeHandler{
 		Domain:   domain,
 		dLen:     len(domain),
+		hasPort:  strings.Index(domain, ":") != -1,
 		handlers: make(map[string]http.Handler),
 	}
 }
@@ -74,11 +76,15 @@ func (m MultiServeHandler) Register(sub string, handler http.Handler) {
 	m.handlers[sub] = handler
 }
 
+// Get sub name of host
 func (m MultiServeHandler) SubName(r *http.Request) string {
 	h := r.Host
 	if len(h) > m.dLen {
-		if i := strings.Index(h, ":"); i != -1 {
-			return h[:i-m.dLen]
+		// 如果域名不包含端口号, 但使用端口号访问
+		if m.hasPort {
+			if i := strings.Index(h, ":"); i != -1 {
+				return h[:i-m.dLen]
+			}
 		}
 		return h[:len(h)-m.dLen]
 	}
@@ -103,7 +109,7 @@ func HttpError(rsp http.ResponseWriter, err error) {
 	rsp.Header().Add("Content-Type", "text/html")
 	rsp.WriteHeader(500)
 
-	var part1 string = `<html><head><title>HTTP ERROR</title>
+	var part1 = `<html><head><title>HTTP ERROR</title>
 				<meta charset="utf-8"/>
 				<style>
 	body{background:#FFF;font-size:100%;margin:0 0 2em 0;}
@@ -121,7 +127,7 @@ func HttpError(rsp http.ResponseWriter, err error) {
         </head>
         <body>`
 
-	var html string = fmt.Sprintf(`
+	var html = fmt.Sprintf(`
 				<div class="tit"><h1>%s</h1></div>
 				<div class="except-panel">
 					<div class="summary">

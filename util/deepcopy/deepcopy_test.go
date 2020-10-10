@@ -15,31 +15,31 @@ import (
 
 func TestRangeAmalgamation(t *testing.T) {
 	inputs := []memRange{
-		memRange{2, 4},
-		memRange{6, 8},
-		memRange{0, 2},
-		memRange{0, 4},
-		memRange{10, 20},
-		memRange{0, 8},
+		{2, 4},
+		{6, 8},
+		{0, 2},
+		{0, 4},
+		{10, 20},
+		{0, 8},
 	}
 	outputs := [][]memRange{
-		[]memRange{
-			memRange{2, 4},
+		{
+			{2, 4},
 		},
-		[]memRange{
-			memRange{2, 4}, memRange{6, 8},
+		{
+			{2, 4}, {6, 8},
 		},
-		[]memRange{
-			memRange{0, 2}, memRange{2, 4}, memRange{6, 8},
+		{
+			{0, 2}, {2, 4}, {6, 8},
 		},
-		[]memRange{
-			memRange{0, 4}, memRange{6, 8},
+		{
+			{0, 4}, {6, 8},
 		},
-		[]memRange{
-			memRange{0, 4}, memRange{6, 8}, memRange{10, 20},
+		{
+			{0, 4}, {6, 8}, {10, 20},
 		},
-		[]memRange{
-			memRange{0, 8}, memRange{10, 20},
+		{
+			{0, 8}, {10, 20},
 		},
 	}
 
@@ -145,22 +145,22 @@ func init() {
 
 func TestDeepCopy(t *testing.T) {
 	var tests = []copyTest{
-		copyTest{
+		{
 			5,
 			simpleEq,
-		},
-		copyTest{
+				},
+		{
 			[]int{3, 5, 7},
 			simpleEq,
-		},
-		copyTest{
+				},
+		{
 			t1,
 			func(x, y interface{}) bool {
 				y1 := y.(T1)
 				return eqPtr(y1.B, y1.C) && y1.A == &y1.C[1]
 			},
-		},
-		copyTest{
+				},
+		{
 			root,
 			func(x, y interface{}) bool {
 				y1 := y.(*Tree)
@@ -169,24 +169,24 @@ func TestDeepCopy(t *testing.T) {
 					y1.R.L == y1 &&
 					y1.R.R == y1 &&
 					y1 != root
-			},
-		},
-		copyTest{
+					},
+				},
+		{
 			t2,
 			func(x, y interface{}) bool {
 				y1 := y.(*T2)
 				return y1.B == &y1.C.A &&
 					y1.C.A == 99
-			},
-		},
-		copyTest{
+					},
+				},
+		{
 			t3,
 			func(x, y interface{}) bool {
 				y1 := y.(T3)
 				return y1.A == y1.B
 			},
-		},
-		copyTest{
+				},
+		{
 			map[*T2]map[string]int{
 				t2: m,
 			},
@@ -200,26 +200,26 @@ func TestDeepCopy(t *testing.T) {
 						return false
 					}
 				}
-				return true
-			},
-		},
-		copyTest{
+						return true
+					},
+				},
+		{
 			t4,
 			func(x, y interface{}) bool {
 				y1 := y.(*T4)
 				return x != y &&
 					y1.A == &y1.B &&
 					&y1.B[0] == &y1.C[1]
-			},
-		},
-		copyTest{
+					},
+				},
+		{
 			t5,
 			func(x, y interface{}) bool {
 				y1 := y.(*T5)
 				return y1.A.(*T2).A == 88 &&
 					y1.B.(*T5) == y1
-			},
-		},
+					},
+				},
 	}
 	for i, test := range tests {
 		v1 := Copy(test.v)

@@ -73,7 +73,7 @@ func HandlePath(controller Controller, ctx *web.Context, path string, rePost boo
 	if len(path) == 0 {
 		path = r.URL.Path
 	}
-	var action string = GetAction(path, "")
+	var action = GetAction(path, "")
 	if rePost && r.Method == "POST" {
 		action += "_post"
 	}

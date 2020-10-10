@@ -64,8 +64,8 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 			command, strings.Repeat("-", len(command))))
 	}
 
-	var arr []string = strings.Split(command, " ")
-	var cmd *exec.Cmd = exec.Command(arr[0], arr[1:]...)
+	var arr = strings.Split(command, " ")
+	var cmd = exec.Command(arr[0], arr[1:]...)
 
 	stdout = newShellStdBuffer(std_out)
 	stderr = newShellStdBuffer(std_err)
@@ -124,8 +124,8 @@ func Brun(command string) (err error) {
 		return errors.New("no such command")
 	}
 
-	var arr []string = strings.Split(command, " ")
-	var cmd *exec.Cmd = exec.Command(arr[0], arr[1:]...)
+	var arr = strings.Split(command, " ")
+	var cmd = exec.Command(arr[0], arr[1:]...)
 	err = cmd.Start()
 
 	if isDebug {

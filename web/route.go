@@ -57,7 +57,7 @@ func (this *RouteMap) Handle(ctx *Context) {
 	r, w := ctx.Request, ctx.Response
 	routes := this.RouteCollection
 	path := r.URL.Path
-	var isHandled bool = false
+	var isHandled = false
 
 	//range 顺序是随机的，参见：http://golanghome.com/post/155
 	for _, routeKey := range this.UrlPatterns {
@@ -98,7 +98,7 @@ func (this *RouteMap) chkInvoke(requestPath, routeKey string,
 	}
 
 	// 如果结尾为“*”，标题匹配以前的URL
-	var j int = len(routeKey) - 1
+	var j = len(routeKey) - 1
 	if routeKey[j:] == "*" {
 		if strings.HasPrefix(requestPath, routeKey[:j]) {
 			return true, this.callHandler(routeHandler, ctx)

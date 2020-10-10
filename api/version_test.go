@@ -15,7 +15,7 @@ type MyStruct struct {
 }
 
 func TestLang(t *testing.T) {
-	arr := []*MyStruct{&MyStruct{}}
+	arr := []*MyStruct{{}}
 	do(arr)
 	t.Log(arr[0] == nil)
 }

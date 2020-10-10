@@ -12,11 +12,11 @@ import (
 var (
 	Context          gof.App
 	debugMode        bool //调试模式
-	defaultBytesSize int  = 64
-	CmdOperateBytes       = []byte(">>")
-	cmdDot                = []byte(".")
-	invalidBytes          = []byte(`{"error":"Invalid request"}`)
-	AutoResetConn         = true
+	defaultBytesSize = 64
+	CmdOperateBytes  = []byte(">>")
+	cmdDot           = []byte(".")
+	invalidBytes     = []byte(`{"error":"Invalid request"}`)
+	AutoResetConn    = true
 )
 
 func Configure(c gof.App) {

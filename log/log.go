@@ -99,7 +99,7 @@ func (t *simpleLogger) formatHeader(b *[]byte) {
 func (t *simpleLogger) appendSource(b *[]byte) {
 	_, f, l, ok := runtime.Caller(t.callerDepth)
 	if ok {
-		*b = append(*b, (" (Source:" + f)...)
+		*b = append(*b, " (Source:" + f...)
 		*b = append(*b, " - Line:"...)
 		*b = append(*b, strconv.Itoa(l)...)
 		*b = append(*b, ')')

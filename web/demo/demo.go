@@ -92,7 +92,7 @@ func (h *HttpApp) Storage() storage.Interface {
 // 日志
 func (h *HttpApp) Log() log.ILogger {
 	if h.logger == nil {
-		var flag int = 0
+		var flag = 0
 		if h.Debug() {
 			flag = log.LOpen | log.LESource | log.LStdFlags
 		}

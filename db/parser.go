@@ -7,13 +7,13 @@ import (
 //转换为字典数组
 //参考：http://my.oschina.net/nowayout/blog/143278
 func RowsToMarshalMap(rows *sql.Rows) (rowsMap []map[string]interface{}) {
-	rowsMap = [](map[string]interface{}){} //数据切片
-	var tmpInt int = 0                     //序列
-	columns, _ := rows.Columns()           //列名
+	rowsMap = []map[string]interface{}{} //数据切片
+	var tmpInt = 0                       //序列
+	columns, _ := rows.Columns()         //列名
 
 	//定义数组，数组的类型为[]byte
-	var values []interface{} = make([]interface{}, len(columns))
-	var rawBytes [][]byte = make([][]byte, len(values))
+	var values = make([]interface{}, len(columns))
+	var rawBytes = make([][]byte, len(values))
 
 	for v := range values {
 		values[v] = &rawBytes[v]
@@ -36,13 +36,13 @@ func RowsToMarshalMap(rows *sql.Rows) (rowsMap []map[string]interface{}) {
 }
 
 func RowsToMap(rows *sql.Rows) (rowsMap []map[string][]byte) {
-	rowsMap = [](map[string][]byte){} //数据切片
-	var tmpInt int = 0                //序列
-	columns, _ := rows.Columns()      //列名
+	rowsMap = []map[string][]byte{} //数据切片
+	var tmpInt = 0                  //序列
+	columns, _ := rows.Columns()    //列名
 
 	//定义数组，数组的类型为[]byte
-	var values []interface{} = make([]interface{}, len(columns))
-	var rawBytes [][]byte = make([][]byte, len(values))
+	var values = make([]interface{}, len(columns))
+	var rawBytes = make([][]byte, len(values))
 
 	for v := range values {
 		values[v] = &rawBytes[v]
@@ -71,8 +71,8 @@ func RowToMap(rows *sql.Rows) map[string][]byte {
 		row := rows
 		//数据
 		//定义数组，数组的类型为[]byte
-		var values []interface{} = make([]interface{}, len(columns))
-		var rawBytes [][]byte = make([][]byte, len(values))
+		var values = make([]interface{}, len(columns))
+		var rawBytes = make([][]byte, len(values))
 		for v := range values {
 			values[v] = &rawBytes[v]
 		}

@@ -14,7 +14,7 @@ import (
 )
 
 func Test_A(t *testing.T) {
-	var buffer []byte = make([]byte, 20480)
+	var buffer = make([]byte, 20480)
 
 	const server = "localhost:1002"
 	conn, err := Dial("tcp", server)

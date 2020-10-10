@@ -145,7 +145,7 @@ func (h *hashStorage) Delete(key string) {
 func (h *hashStorage) DeleteWith(prefix string) (int, error) {
 	h.mux.Lock()
 	i := 0
-	for k, _ := range h.storage {
+	for k := range h.storage {
 		if strings.HasPrefix(k, prefix) {
 			delete(h.storage, k)
 			i++

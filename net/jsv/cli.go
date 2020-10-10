@@ -31,8 +31,8 @@ func InShell() {
 	fmt.Println(slogan)
 	fmt.Println(strings.Repeat("*", len(slogan)))
 
-	var buffer []byte = make([]byte, 100)
-	var readerBuffer []byte = make([]byte, 204800)
+	var buffer = make([]byte, 100)
+	var readerBuffer = make([]byte, 204800)
 	var conn *TCPConn
 	var err error
 

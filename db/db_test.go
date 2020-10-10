@@ -13,7 +13,7 @@ import (
 var (
 	_conn Connector
 	_orm  orm.Orm
-	print bool = false
+	print = false
 )
 
 func repeatRun(fc func(), time int) {
