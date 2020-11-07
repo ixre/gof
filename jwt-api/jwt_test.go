@@ -3,13 +3,13 @@ package api
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/ixre/gof/crypto/rsa"
+	"github.com/ixre/gof/crypto"
 	"testing"
 	"time"
 )
 
 func TestGenRsaPair(t *testing.T) {
-	pubKey, privateKey, err := rsa.GenRsaKeys(2048)
+	pubKey, privateKey, err := crypto.GenRsaKeys(2048)
 	if err != nil {
 		t.Error(err)
 	}
@@ -18,7 +18,7 @@ func TestGenRsaPair(t *testing.T) {
 }
 
 func TestJwtToken(t *testing.T) {
-	_, privateKey, err := rsa.GenRsaKeys(2048)
+	_, privateKey, err := crypto.GenRsaKeys(2048)
 	if err != nil {
 		t.Error(err)
 	}
