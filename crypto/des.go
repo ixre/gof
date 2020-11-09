@@ -17,7 +17,6 @@ import (
  * history :
  */
 
-
 func DesEncrypt(origData, key []byte) ([]byte, error) {
 	block, err := des.NewCipher(key)
 	if err != nil {
@@ -101,35 +100,34 @@ func PKCS5UnPadding(origData []byte) []byte {
 	return origData[:(length - unpadding)]
 }
 
-
 func padding(src []byte, blockSize int) []byte {
-	padNum := blockSize -len(src)%blockSize
-	pad:=bytes.Repeat([]byte{byte(padNum)}, padNum)
-	return append(src,pad...)
+	padNum := blockSize - len(src)%blockSize
+	pad := bytes.Repeat([]byte{byte(padNum)}, padNum)
+	return append(src, pad...)
 }
 
 func unPadding(src []byte) []byte {
-	n:=len(src)
-	unPadNum :=int(src[n-1])
+	n := len(src)
+	unPadNum := int(src[n-1])
 	return src[:n-unPadNum]
 }
 
-func Encrypt3DES(src []byte,key []byte) []byte {
-	block,_:=des.NewTripleDESCipher(key)
-	src=padding(src,block.BlockSize())
-	blockMode :=cipher.NewCBCEncrypter(block,key[:block.BlockSize()])
-	blockMode.CryptBlocks(src,src)
+func Encrypt3DES(src []byte, key []byte) []byte {
+	block, _ := des.NewTripleDESCipher(key)
+	src = padding(src, block.BlockSize())
+	blockMode := cipher.NewCBCEncrypter(block, key[:block.BlockSize()])
+	blockMode.CryptBlocks(src, src)
 	return src
 }
 
-func Encrypt3DESHex(src []byte,key []byte)string{
-	return hex.EncodeToString(Encrypt3DES(src,key))
+func Encrypt3DESHex(src []byte, key []byte) string {
+	return hex.EncodeToString(Encrypt3DES(src, key))
 }
 
-func Decrypt3DES(src []byte,key []byte) []byte {
-	block,_:=des.NewTripleDESCipher(key)
-	blockMode :=cipher.NewCBCDecrypter(block,key[:block.BlockSize()])
-	blockMode.CryptBlocks(src,src)
-	src= unPadding(src)
+func Decrypt3DES(src []byte, key []byte) []byte {
+	block, _ := des.NewTripleDESCipher(key)
+	blockMode := cipher.NewCBCDecrypter(block, key[:block.BlockSize()])
+	blockMode.CryptBlocks(src, src)
+	src = unPadding(src)
 	return src
 }

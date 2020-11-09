@@ -37,7 +37,7 @@ type (
 		SetTrace(b bool)
 
 		// create the mapping data table
-		Mapping(v interface{}, table string)
+		Mapping(v interface{}, table string) error
 
 		Get(primaryVal interface{}, dst interface{}) error
 

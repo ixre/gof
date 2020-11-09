@@ -134,7 +134,7 @@ func Test_to(t *testing.T) {
 
 func initTest() {
 	log.SetOutput(os.Stdout)
-	_conn,_ = NewConnector("mysql", "root:@tcp(127.0.0.1:3306)/go2o?charset=utf8", nil, false)
+	_conn, _ = NewConnector("mysql", "root:@tcp(127.0.0.1:3306)/go2o?charset=utf8", nil, false)
 	_conn.SetMaxIdleConns(0)
 	_conn.SetMaxIdleConns(0)
 	_conn.SetConnMaxLifetime(time.Second * 10)

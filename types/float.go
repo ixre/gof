@@ -16,7 +16,7 @@ import (
  */
 
 // parse to money string like '0.60'
-func FixedMoney(f float64)string{
+func FixedMoney(f float64) string {
 	return fmt.Sprintf("%.2f", f)
 }
 

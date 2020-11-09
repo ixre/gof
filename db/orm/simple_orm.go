@@ -114,12 +114,15 @@ func (o *simpleOrm) SetTrace(b bool) {
 }
 
 //create a fixed table map
-func (o *simpleOrm) Mapping(v interface{}, table string) {
+func (o *simpleOrm) Mapping(v interface{}, table string) error {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 	entityName := t.String()
+	if _, b := o.tableMap[entityName]; b {
+		return errors.New("Entity " + entityName + " has mapped")
+	}
 	m := o.getTableMapMeta(t)
 	m.TableName = table
 	o.tableMap[entityName] = m
@@ -128,6 +131,7 @@ func (o *simpleOrm) Mapping(v interface{}, table string) {
 			m.TableName, len(m.FieldMapNames), m.PkFieldName, m.PkIsAuto)
 		log.Println("[ ORM][ Mapping]:", entityName, "->", logTxt)
 	}
+	return nil
 }
 
 func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {

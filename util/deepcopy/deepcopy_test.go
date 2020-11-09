@@ -148,18 +148,18 @@ func TestDeepCopy(t *testing.T) {
 		{
 			5,
 			simpleEq,
-				},
+		},
 		{
 			[]int{3, 5, 7},
 			simpleEq,
-				},
+		},
 		{
 			t1,
 			func(x, y interface{}) bool {
 				y1 := y.(T1)
 				return eqPtr(y1.B, y1.C) && y1.A == &y1.C[1]
 			},
-				},
+		},
 		{
 			root,
 			func(x, y interface{}) bool {
@@ -169,23 +169,23 @@ func TestDeepCopy(t *testing.T) {
 					y1.R.L == y1 &&
 					y1.R.R == y1 &&
 					y1 != root
-					},
-				},
+			},
+		},
 		{
 			t2,
 			func(x, y interface{}) bool {
 				y1 := y.(*T2)
 				return y1.B == &y1.C.A &&
 					y1.C.A == 99
-					},
-				},
+			},
+		},
 		{
 			t3,
 			func(x, y interface{}) bool {
 				y1 := y.(T3)
 				return y1.A == y1.B
 			},
-				},
+		},
 		{
 			map[*T2]map[string]int{
 				t2: m,
@@ -200,9 +200,9 @@ func TestDeepCopy(t *testing.T) {
 						return false
 					}
 				}
-						return true
-					},
-				},
+				return true
+			},
+		},
 		{
 			t4,
 			func(x, y interface{}) bool {
@@ -210,16 +210,16 @@ func TestDeepCopy(t *testing.T) {
 				return x != y &&
 					y1.A == &y1.B &&
 					&y1.B[0] == &y1.C[1]
-					},
-				},
+			},
+		},
 		{
 			t5,
 			func(x, y interface{}) bool {
 				y1 := y.(*T5)
 				return y1.A.(*T2).A == 88 &&
 					y1.B.(*T5) == y1
-					},
-				},
+			},
+		},
 	}
 	for i, test := range tests {
 		v1 := Copy(test.v)

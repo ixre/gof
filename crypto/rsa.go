@@ -47,58 +47,57 @@ func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
 	return
 }
 
-
 // 转换私钥
-func ParsePrivateKey(pemKey string)(*rsa.PrivateKey,error){
-	if !strings.HasPrefix(pemKey,"-----BEGIN PRIVATE KEY-----"){
-		pemKey = "-----BEGIN PRIVATE KEY-----\n" + pemKey+"\n-----END PRIVATE KEY-----"
+func ParsePrivateKey(pemKey string) (*rsa.PrivateKey, error) {
+	if !strings.HasPrefix(pemKey, "-----BEGIN PRIVATE KEY-----") {
+		pemKey = "-----BEGIN PRIVATE KEY-----\n" + pemKey + "\n-----END PRIVATE KEY-----"
 	}
 	block, _ := pem.Decode([]byte(pemKey))
-	if block == nil{
-		return nil,errors.New("pem private key not incorrect")
+	if block == nil {
+		return nil, errors.New("pem private key not incorrect")
 	}
-	e,err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err == nil{
-		return e.(*rsa.PrivateKey),err
+	e, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err == nil {
+		return e.(*rsa.PrivateKey), err
 	}
-	return nil,err
+	return nil, err
 }
 
 // 转换公钥
-func ParsePublicKey(pemKey string)(*rsa.PublicKey,error){
-	if !strings.HasPrefix(pemKey,"-----BEGIN PUBLIC KEY-----"){
-		pemKey = "-----BEGIN PUBLIC KEY-----\n" + pemKey+"\n-----END PUBLIC KEY-----"
+func ParsePublicKey(pemKey string) (*rsa.PublicKey, error) {
+	if !strings.HasPrefix(pemKey, "-----BEGIN PUBLIC KEY-----") {
+		pemKey = "-----BEGIN PUBLIC KEY-----\n" + pemKey + "\n-----END PUBLIC KEY-----"
 	}
 	block, _ := pem.Decode([]byte(pemKey))
-	if block == nil{
-		return nil,errors.New("pem public key not incorrect")
+	if block == nil {
+		return nil, errors.New("pem public key not incorrect")
 	}
-	e,err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err == nil{
-		return e.(*rsa.PublicKey),err
+	e, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err == nil {
+		return e.(*rsa.PublicKey), err
 	}
-	return nil,err
+	return nil, err
 }
 
 // RSA加密
-func EncryptRSA( publicKey *rsa.PublicKey,data []byte) ([]byte, error) {
-	return rsa.EncryptPKCS1v15(rand.Reader,publicKey,data)
+func EncryptRSA(publicKey *rsa.PublicKey, data []byte) ([]byte, error) {
+	return rsa.EncryptPKCS1v15(rand.Reader, publicKey, data)
 }
 
 // RSA加密为BASE64
-func EncryptRSAToBase64(publicKey *rsa.PublicKey,data []byte) (string, error){
-	bytes,err := rsa.EncryptPKCS1v15(rand.Reader,publicKey,data)
-	if err == nil{
-		return base64.StdEncoding.EncodeToString(bytes),nil
+func EncryptRSAToBase64(publicKey *rsa.PublicKey, data []byte) (string, error) {
+	bytes, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, data)
+	if err == nil {
+		return base64.StdEncoding.EncodeToString(bytes), nil
 	}
-	return "",err
+	return "", err
 }
 
 // 根据BASE64进行RSA加密
-func DecryptRSAFromBase64(privateKey *rsa.PrivateKey,encryptData string)([]byte,error){
-	bytes,err := base64.StdEncoding.DecodeString(encryptData)
+func DecryptRSAFromBase64(privateKey *rsa.PrivateKey, encryptData string) ([]byte, error) {
+	bytes, err := base64.StdEncoding.DecodeString(encryptData)
 	if err == nil {
 		return rsa.DecryptPKCS1v15(rand.Reader, privateKey, bytes)
 	}
-	return nil,err
+	return nil, err
 }

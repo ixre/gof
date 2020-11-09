@@ -15,7 +15,6 @@ import (
  * history :
  */
 
-
 //Des加密
 func encrypt(origData, key []byte) ([]byte, error) {
 	if len(origData) < 1 || len(key) < 1 {
@@ -38,6 +37,7 @@ func encrypt(origData, key []byte) ([]byte, error) {
 	}
 	return out, nil
 }
+
 //Des解密
 func decrypt(crypted, key []byte) ([]byte, error) {
 	if len(crypted) < 1 || len(key) < 1 {
@@ -62,7 +62,7 @@ func decrypt(crypted, key []byte) ([]byte, error) {
 }
 
 // ECB模式3DES加密
-func EncryptECB3DES(origData []byte,key []byte)([]byte,error) {
+func EncryptECB3DES(origData []byte, key []byte) ([]byte, error) {
 	tkey := make([]byte, 24, 24)
 	copy(tkey, key)
 	k1 := tkey[:8]

@@ -12,7 +12,6 @@ import (
 	"fmt"
 )
 
-
 // MD5
 func Md5(b []byte) string {
 	c := md5.New()
@@ -26,7 +25,7 @@ func Sha1(b []byte) string {
 }
 
 // 使用私钥Sha1WithRSA签名
-func Sha1WithRSA(privateKey *rsa.PrivateKey,data []byte)(string,error){
+func Sha1WithRSA(privateKey *rsa.PrivateKey, data []byte) (string, error) {
 	h := sha1.New()
 	h.Write(data)
 	digest := h.Sum(nil)
@@ -36,5 +35,5 @@ func Sha1WithRSA(privateKey *rsa.PrivateKey,data []byte)(string,error){
 		fmt.Errorf("rsaSign SignPKCS1v15 error")
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(bytes),nil
+	return base64.StdEncoding.EncodeToString(bytes), nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 // 参数首字母小写后排序，排除sign和sign_type，secret，转换为字节
-func ParamsToBytes(r url.Values, secret string,attach bool) []byte {
+func ParamsToBytes(r url.Values, secret string, attach bool) []byte {
 	keys := keyArr{}
 	for k := range r {
 		keys = append(keys, k)
@@ -41,7 +41,7 @@ func ParamsToBytes(r url.Values, secret string,attach bool) []byte {
 
 // 签名
 func Sign(signType string, r url.Values, secret string) string {
-	data := ParamsToBytes(r, secret,true)
+	data := ParamsToBytes(r, secret, true)
 	switch signType {
 	case "md5":
 		return byteHash(md5.New(), data)
