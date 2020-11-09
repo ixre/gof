@@ -224,6 +224,28 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 	return assignValues(meta, &val, rawBytes)
 }
 
+func (o *simpleOrm) Count(entity interface{}, where string, args ...interface{}) (int, error) {
+	t := reflect.TypeOf(entity)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	/* build sqlQuery */
+	meta := o.getTableMapMeta(t)
+	sqlQuery := o.buildCountQuery(meta.TableName, where)
+	if o.useTrace {
+		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sqlQuery, where, args))
+	}
+	/* query */
+	count := 0
+	stmt, err := o.DB.Prepare(sqlQuery)
+	if err == nil {
+		defer stmt.Close()
+		row := stmt.QueryRow(args...)
+		err = row.Scan(&count)
+	}
+	return count, err
+}
+
 func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	args ...interface{}) error {
 	var fieldLen int
@@ -516,6 +538,19 @@ func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, pa
 	return rowNum, lastInsertId, o.err(err, sql_)
 }
 
+// 创建查询记录数的SQL
+func (o *simpleOrm) buildCountQuery(table string, where string) string {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT COUNT(0)")
+	buf.WriteString(" FROM ")
+	buf.WriteString(table)
+	if len(where) > 0 {
+		buf.WriteString(" WHERE ")
+		buf.WriteString(where)
+	}
+	return buf.String()
+}
+
 func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where string) string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT ")
@@ -528,14 +563,8 @@ func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where st
 	if len(where) > 0 {
 		buf.WriteString(" WHERE ")
 		buf.WriteString(where)
-		if o.driverName == "mysql" && strings.Index(
-			strings.ToLower(where), " limit ") == -1 {
-			buf.WriteString(" LIMIT 1")
-		}
-	} else {
-		//if o.driverName == "postgresql" || o.driverName =="postgres"{
-		//	buf.WriteString("LIMIT 1")
-		//}
+	}
+	if strings.Index(strings.ToUpper(where), " LIMIT ") == -1 {
 		buf.WriteString(" LIMIT 1")
 	}
 	return buf.String()

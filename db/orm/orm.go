@@ -41,10 +41,13 @@ type (
 
 		Get(primaryVal interface{}, dst interface{}) error
 
-		//get entity by condition
-		GetBy(dst interface{}, where string, args ...interface{}) error
+		// get entity by condition
+		GetBy(entity interface{}, where string, args ...interface{}) error
 
-		//get entity by sql query result
+		// count rows
+		Count(dst interface{}, where string, args ...interface{}) (int, error)
+
+		// get entity by sql query result
 		GetByQuery(dst interface{}, sql string, args ...interface{}) error
 
 		//Select more than 1 entity list
