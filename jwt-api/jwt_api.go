@@ -101,6 +101,7 @@ type SwapUserInfoFunc func(ctx Context) (privateKey string, err error)
 type Claims = jwt.Claims
 type MapClaims = jwt.MapClaims
 
+// 创建凭据
 func CreateClaims(aud string, iss string, sub string, expires int64) Claims {
 	return jwt.MapClaims{
 		"aud": aud,
@@ -367,7 +368,7 @@ func (s *ServeMux) jwtVerify(token string, privateKey string) (Claims, int) {
 		if ve.Errors&jwt.ValidationErrorExpired != 0 {
 			return nil, RCTokenExpires
 		} else {
-			println("--", ve.Errors)
+			//println("--", ve.Errors)
 			return nil, RCInvalidToken
 		}
 	}

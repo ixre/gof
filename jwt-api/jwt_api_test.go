@@ -15,6 +15,7 @@ func testApi(t *testing.T, apiName string, params url.Values) {
 	params["user_key"] = []string{key}
 	cli := http.Client{}
 	req, _ := http.NewRequest("POST", serverUrl+"/app/info", bytes.NewReader([]byte(params.Encode())))
+	req.Header.Add("User-Agent","Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:82.0) Gecko/20100101 Firefox/82.0")
 	rsp, err := cli.Do(req)
 	if err != nil {
 		t.Error(err)
