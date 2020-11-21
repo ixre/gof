@@ -1,4 +1,4 @@
-package types
+package typeconv
 
 import (
 	"fmt"
@@ -8,16 +8,44 @@ import (
 /**
  * Copyright (C) 2007-2020 56X.NET,All rights reserved.
  *
- * name : strings.go
+ * name : typeconv.go
  * author : jarrysix (jarrysix#gmail.com)
- * date : 2020-09-13 10:28
+ * date : 2020-11-21 20:19
  * description :
  * history :
  */
 
+// 将类型转为string
+func MustInt(d interface{}) int {
+	switch d.(type) {
+	case string:
+		i, err := strconv.Atoi(d.(string))
+		if err != nil {
+			panic("parse string to int fail:" + err.Error())
+		}
+		return i
+	case float32:
+		return int(d.(float32))
+	case float64:
+		return int(d.(float64))
+	case int:
+		return d.(int)
+	case int8:
+		return d.(int)
+	case int16:
+		return d.(int)
+	case int32:
+		return d.(int)
+	case int64:
+		return d.(int)
+	}
+	panic("not support type:" + fmt.Sprintf("%+v", d))
+}
+
+
 // Get string of interface, if can't converted,
 // will return false
-func ToString(d interface{}) (string, bool) {
+func String(d interface{}) (string, bool) {
 	switch d.(type) {
 	case string:
 		return d.(string), true
@@ -51,12 +79,4 @@ func ToString(d interface{}) (string, bool) {
 		return strconv.FormatBool(d.(bool)), true
 	}
 	return "", false
-}
-
-func String(d interface{}) string {
-	s, b := ToString(d)
-	if !b {
-		s = fmt.Sprintf("%+v", d)
-	}
-	return s
 }

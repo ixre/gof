@@ -51,7 +51,7 @@ type (
 )
 
 func (e *stringExtend) String(v interface{}) string {
-	return types.String(v)
+	return types.Stringify(v)
 }
 
 // 字符串转为int32切片

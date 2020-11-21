@@ -20,7 +20,7 @@ func Transplate(c string, m map[string]interface{}) string {
 	return reg.ReplaceAllStringFunc(c, func(k string) string {
 		key := k[1 : len(k)-1]
 		if v, ok := m[key]; ok {
-			return types.String(v)
+			return types.Stringify(v)
 		}
 		return k
 	})
