@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/ixre/gof/db"
 	"github.com/ixre/gof/util"
 	"reflect"
 	"strconv"
@@ -30,7 +31,9 @@ type (
 	Orm interface {
 		// version of orm
 		Version() string
-
+		// get connector of db
+		Connector()db.Connector
+		// db dialect
 		Dialect() Dialect
 
 		//Set orm output information

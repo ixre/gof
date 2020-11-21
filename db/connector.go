@@ -14,7 +14,6 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/ixre/gof/db/orm"
 	"github.com/ixre/gof/log"
 	"github.com/lib/pq"
 	"strings"
@@ -29,7 +28,6 @@ type (
 		Ping() error
 		// close the database connection
 		Close() error
-		GetOrm() orm.Orm
 		SetMaxOpenConns(n int)
 		SetMaxIdleConns(n int)
 		SetConnMaxLifetime(d time.Duration)
@@ -55,15 +53,9 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (C
 		//	log.Fatalln("[ Gof][ Connector]:" + driverName + "-" + err.Error())
 		//	return nil
 		//}
-		o := orm.NewOrm(driverName, db)
-		if debug {
-			o.SetTrace(true)
-		}
 		return &defaultConnector{
 			db:           db,
-			orm:          o,
 			driverName:   strings.ToLower(driverName),
-			driverSource: driverName,
 			logger:       l,
 			debug:        debug,
 		}, nil
@@ -87,11 +79,18 @@ func open(driverName string, driverSource string) (*sql.DB, error) {
 //数据库连接器
 type defaultConnector struct {
 	driverName   string  //驱动名称
-	driverSource string  //驱动连接地址
 	db           *sql.DB //golang db只需要open一次即可
-	orm          orm.Orm
 	logger       log.ILogger
 	debug        bool // 是否调试模式
+}
+
+func NewDefaultConnector(driver string,db *sql.DB,logger log.ILogger)Connector {
+	return &defaultConnector{
+		driverName: driver,
+		db:         db,
+		logger:     logger,
+		debug:      false,
+	}
 }
 
 func (t *defaultConnector) Ping() error {
@@ -127,9 +126,6 @@ func (t *defaultConnector) Raw() *sql.DB {
 	return t.db
 }
 
-func (t *defaultConnector) GetOrm() orm.Orm {
-	return t.orm
-}
 
 // 设置最大打开的连接数
 func (t *defaultConnector) SetMaxOpenConns(n int) {

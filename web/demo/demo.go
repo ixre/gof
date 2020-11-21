@@ -195,7 +195,7 @@ func main() {
 
 		// 使用DB和ORM
 		db := ctx.App.Db()
-		orm := db.GetOrm()
+		orm := db.o
 		_ = orm.Version()
 	})
 

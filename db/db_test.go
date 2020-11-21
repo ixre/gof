@@ -138,7 +138,4 @@ func initTest() {
 	_conn.SetMaxIdleConns(0)
 	_conn.SetMaxIdleConns(0)
 	_conn.SetConnMaxLifetime(time.Second * 10)
-	_orm = _conn.GetOrm()
-	_orm.SetTrace(true)
-	_orm.Mapping(User{}, "user")
 }

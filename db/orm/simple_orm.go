@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/ixre/gof/db"
 	"github.com/ixre/gof/storage"
 	"log"
 	"reflect"
@@ -19,11 +20,13 @@ var _ Orm = new(simpleOrm)
 type simpleOrm struct {
 	tableMap map[string]*TableMapMeta
 	*sql.DB
+	connector db.Connector
 	driverName string
 	useTrace   bool
 	dialect    Dialect
 	tmLock     *sync.RWMutex
 }
+
 
 func NewOrm(driver string, db *sql.DB) Orm {
 	var dialect Dialect
@@ -52,6 +55,13 @@ func NewCachedOrm(driver string, db *sql.DB, s storage.Interface) Orm {
 
 func (o *simpleOrm) Version() string {
 	return "1.0.2"
+}
+
+func (o *simpleOrm) Connector() db.Connector {
+	if o.connector == nil{
+		o.connector = db.NewDefaultConnector(o.driverName,o.DB,nil)
+	}
+	return o.connector
 }
 
 func (o *simpleOrm) Dialect() Dialect {
