@@ -132,6 +132,9 @@ var (
 	TypeInt64   = 5
 	TypeFloat32 = 6
 	TypeFloat64 = 7
+
+	TypeBytes = 14
+	TypeDateTime = 15
 	TypeDecimal = 16
 )
 

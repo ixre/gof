@@ -146,6 +146,8 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		} else {
 			return TypeInt32
 		}
+	case "date","time":
+		return TypeDateTime
 	}
 	if strings.HasPrefix(dbType, "character") {
 		return TypeString

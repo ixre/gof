@@ -10,12 +10,35 @@ package orm
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 )
 
 type dialectSession struct {
 	conn    *sql.DB
 	dialect Dialect
+	driver  string
+}
+
+func NewDialectSession(db string,conn *sql.DB)(*dialectSession,error){
+	dst := &dialectSession{conn:conn}
+	switch db {
+	case "mysql","mariadb":
+		dst.driver = "mysql"
+		dst.dialect = &MySqlDialect{}
+	case "postgres", "postgresql","pgsql":
+		dst.driver = "pgsql"
+		dst.dialect = &PostgresqlDialect{}
+	case "sqlserver","mssql":
+		dst.driver = "mssql"
+		dst.dialect = &MsSqlDialect{}
+	case "sqlite":
+		dst.driver = "sqlite"
+		dst.dialect = &SqLiteDialect{}
+	default:
+		return nil,errors.New("不支持的数据库类型"+db)
+	}
+	return dst,nil
 }
 
 func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
@@ -23,6 +46,10 @@ func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
 		conn:    conn,
 		dialect: dialect,
 	}
+}
+
+func (d *dialectSession) Driver()string{
+	return d.driver
 }
 
 // 获取所有的表
