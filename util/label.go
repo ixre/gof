@@ -9,7 +9,7 @@
 package util
 
 import (
-	"github.com/ixre/gof/types"
+	"github.com/ixre/gof/types/typeconv"
 	"regexp"
 )
 
@@ -20,7 +20,7 @@ func Transplate(c string, m map[string]interface{}) string {
 	return reg.ReplaceAllStringFunc(c, func(k string) string {
 		key := k[1 : len(k)-1]
 		if v, ok := m[key]; ok {
-			return types.Stringify(v)
+			return typeconv.Stringify(v)
 		}
 		return k
 	})

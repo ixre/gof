@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/ixre/gof/types"
+	"github.com/ixre/gof/types/typeconv"
 	"math"
 	"math/rand"
 	"strconv"
@@ -51,7 +51,7 @@ type (
 )
 
 func (e *stringExtend) String(v interface{}) string {
-	return types.Stringify(v)
+	return typeconv.Stringify(v)
 }
 
 // 字符串转为int32切片

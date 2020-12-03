@@ -80,3 +80,14 @@ func String(d interface{}) (string, bool) {
 	}
 	return "", false
 }
+
+// get object string
+func Stringify(d interface{}) string {
+	if s,b := String(d);b {
+		return s
+	}
+	if d ==nil{
+		return "nil"
+	}
+	return fmt.Sprintf("%+v", d)
+}

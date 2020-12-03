@@ -1,10 +1,5 @@
 package types
 
-import (
-	"fmt"
-	"github.com/ixre/gof/types/typeconv"
-)
-
 /**
  * Copyright (C) 2007-2020 56X.NET,All rights reserved.
  *
@@ -15,13 +10,6 @@ import (
  * history :
  */
 
-// get object string
-func Stringify(d interface{}) string {
-	if s,b := typeconv.String(d);b {
-		return s
-	}
-	return fmt.Sprintf("%+v", d)
-}
 
 func threeCondition(b bool, i1, i2 interface{}) interface{} {
 	if b {
