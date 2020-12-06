@@ -91,3 +91,11 @@ func Stringify(d interface{}) string {
 	}
 	return fmt.Sprintf("%+v", d)
 }
+
+func Int64Array(src []int64)[]int{
+	dst := make([]int,len(src))
+	for i,v := range src{
+		dst[i] = int(v)
+	}
+	return dst
+}
