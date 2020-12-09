@@ -53,7 +53,7 @@ func TestGenApiSign(t *testing.T) {
 		"sign_type":    []string{signType},
 	}
 	sign := Sign(signType, form, secret)
-	t.Log("-- Sort params:", string(ParamsToBytes(form, secret,true)))
+	t.Log("-- Sort params:", string(ParamsToBytes(form, secret, true)))
 	t.Log("-- Sign:", sign)
 	form["sign"] = []string{sign}
 	cli := http.Client{}
@@ -84,10 +84,10 @@ func TestParamToBytes(t *testing.T) {
 		"checkCode": []string{""},
 	}
 
-	t.Log("---xx = ", string(ParamsToBytes(form, "123",true)))
+	t.Log("---xx = ", string(ParamsToBytes(form, "123", true)))
 	form.Set("key", form.Get("Key"))
 	form.Del("Key")
-	t.Log("---xx = ", string(ParamsToBytes(form, "123",true)))
+	t.Log("---xx = ", string(ParamsToBytes(form, "123", true)))
 }
 
 func TestSign(t *testing.T) {

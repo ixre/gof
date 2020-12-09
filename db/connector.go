@@ -54,10 +54,10 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (C
 		//	return nil
 		//}
 		return &defaultConnector{
-			db:           db,
-			driverName:   strings.ToLower(driverName),
-			logger:       l,
-			debug:        debug,
+			db:         db,
+			driverName: strings.ToLower(driverName),
+			logger:     l,
+			debug:      debug,
 		}, nil
 	}
 	return nil, err
@@ -78,13 +78,13 @@ func open(driverName string, driverSource string) (*sql.DB, error) {
 
 //数据库连接器
 type defaultConnector struct {
-	driverName   string  //驱动名称
-	db           *sql.DB //golang db只需要open一次即可
-	logger       log.ILogger
-	debug        bool // 是否调试模式
+	driverName string  //驱动名称
+	db         *sql.DB //golang db只需要open一次即可
+	logger     log.ILogger
+	debug      bool // 是否调试模式
 }
 
-func NewDefaultConnector(driver string,db *sql.DB,logger log.ILogger)Connector {
+func NewDefaultConnector(driver string, db *sql.DB, logger log.ILogger) Connector {
 	return &defaultConnector{
 		driverName: driver,
 		db:         db,
@@ -125,7 +125,6 @@ func (t *defaultConnector) Driver() string {
 func (t *defaultConnector) Raw() *sql.DB {
 	return t.db
 }
-
 
 // 设置最大打开的连接数
 func (t *defaultConnector) SetMaxOpenConns(n int) {

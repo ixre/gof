@@ -8,11 +8,18 @@
  */
 package orm
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 var _ Dialect = new(SqLiteDialect)
 
 type SqLiteDialect struct {
+}
+
+func (s *SqLiteDialect) GetField(f string) string {
+	return fmt.Sprintf("[%s]", f)
 }
 
 func (s *SqLiteDialect) Name() string {

@@ -20,13 +20,12 @@ var _ Orm = new(simpleOrm)
 type simpleOrm struct {
 	tableMap map[string]*TableMapMeta
 	*sql.DB
-	connector db.Connector
+	connector  db.Connector
 	driverName string
 	useTrace   bool
 	dialect    Dialect
 	tmLock     *sync.RWMutex
 }
-
 
 func NewOrm(driver string, db *sql.DB) Orm {
 	var dialect Dialect
@@ -58,8 +57,8 @@ func (o *simpleOrm) Version() string {
 }
 
 func (o *simpleOrm) Connector() db.Connector {
-	if o.connector == nil{
-		o.connector = db.NewDefaultConnector(o.driverName,o.DB,nil)
+	if o.connector == nil {
+		o.connector = db.NewDefaultConnector(o.driverName, o.DB, nil)
 	}
 	return o.connector
 }
@@ -498,9 +497,14 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		var setCond string
 		for i, k := range fieldArr {
 			if i == 0 {
-				setCond = fmt.Sprintf("%s = %s", k, o.getParamHolder(i))
+				setCond = fmt.Sprintf("%s = %s",
+					o.dialect.GetField(k),
+					o.getParamHolder(i))
 			} else {
-				setCond = fmt.Sprintf("%s,%s = %s", setCond, k, o.getParamHolder(i))
+				setCond = fmt.Sprintf("%s,%s = %s",
+					setCond,
+					o.dialect.GetField(k),
+					o.getParamHolder(i))
 			}
 		}
 		sql = o.getUpdateSQL(meta, setCond, fieldArr)
@@ -595,7 +599,12 @@ func (o *simpleOrm) getInsertSQL(meta *TableMapMeta, fieldArr []string, pArr []s
 	buf := bytes.NewBufferString("INSERT INTO ")
 	buf.WriteString(meta.TableName)
 	buf.WriteString(" (")
-	buf.WriteString(strings.Join(fieldArr, ","))
+	for i, v := range fieldArr {
+		if i > 0 {
+			buf.WriteString(",")
+		}
+		buf.WriteString(o.dialect.GetField(v))
+	}
 	buf.WriteString(" ) VALUES (")
 	buf.WriteString(strings.Join(pArr, ","))
 	buf.WriteString(" )")

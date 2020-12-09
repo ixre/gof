@@ -81,7 +81,7 @@ func (e *stringExtend) IntSlice(s string, delimer string) []int {
 }
 
 // 数组拼接字符串
-func JoinIntArray(arr []int,sep string) string {
+func JoinIntArray(arr []int, sep string) string {
 	var strIds = make([]string, len(arr))
 	for i, v := range arr {
 		strIds[i] = strconv.Itoa(v)
@@ -90,10 +90,10 @@ func JoinIntArray(arr []int,sep string) string {
 }
 
 // 比较数组差异
-func IntArrayDiff(o []int, n []int,fn func(v int, add bool)) (created []int,deleted []int) {
-	isExists := func(arr []int,v int)bool{
-		for _, x := range arr{
-			if x == v{
+func IntArrayDiff(o []int, n []int, fn func(v int, add bool)) (created []int, deleted []int) {
+	isExists := func(arr []int, v int) bool {
+		for _, x := range arr {
+			if x == v {
 				return true
 			}
 		}
@@ -101,7 +101,7 @@ func IntArrayDiff(o []int, n []int,fn func(v int, add bool)) (created []int,dele
 	}
 	exists := []int{}
 	// 旧数组查找已删除
-	for _,v := range o {
+	for _, v := range o {
 		if !isExists(n, v) {
 			deleted = append(deleted, v)
 		} else {
@@ -109,18 +109,18 @@ func IntArrayDiff(o []int, n []int,fn func(v int, add bool)) (created []int,dele
 		}
 	}
 	// 查找新增
-	for _,v := range n {
+	for _, v := range n {
 		if !isExists(o, v) {
 			created = append(created, v)
 		}
 	}
-	if fn != nil{
-		for _, v := range exists{
-			fn(v,false)
+	if fn != nil {
+		for _, v := range exists {
+			fn(v, false)
 		}
-		for _, v := range created{
-			fn(v,true)
+		for _, v := range created {
+			fn(v, true)
 		}
 	}
-	return created,deleted
+	return created, deleted
 }

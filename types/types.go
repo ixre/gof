@@ -10,7 +10,6 @@ package types
  * history :
  */
 
-
 func threeCondition(b bool, i1, i2 interface{}) interface{} {
 	if b {
 		return i1

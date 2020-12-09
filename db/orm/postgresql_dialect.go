@@ -3,6 +3,7 @@ package orm
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -11,6 +12,10 @@ var _ Dialect = new(PostgresqlDialect)
 
 //select datname from pg_database
 type PostgresqlDialect struct {
+}
+
+func (p *PostgresqlDialect) GetField(f string) string {
+	return fmt.Sprintf("\"%s\"", f)
 }
 
 func (p *PostgresqlDialect) Name() string {
@@ -146,7 +151,7 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		} else {
 			return TypeInt32
 		}
-	case "date","time":
+	case "date", "time":
 		return TypeDateTime
 	}
 	if strings.HasPrefix(dbType, "character") {

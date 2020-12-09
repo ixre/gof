@@ -50,7 +50,7 @@ type PGMember struct {
 
 func initPGTest() {
 	log.SetOutput(os.Stdout)
-	_conn,_ = NewConnector("postgresql", "postgres://postgres:123456@127.0.0.1:5432/go2o?sslmode=disable", nil, false)
+	_conn, _ = NewConnector("postgresql", "postgres://postgres:123456@127.0.0.1:5432/go2o?sslmode=disable", nil, false)
 	_conn.SetMaxIdleConns(0)
 	_conn.SetMaxIdleConns(0)
 	_conn.SetConnMaxLifetime(time.Second * 10)

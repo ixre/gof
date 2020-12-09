@@ -32,7 +32,7 @@ type (
 		// version of orm
 		Version() string
 		// get connector of db
-		Connector()db.Connector
+		Connector() db.Connector
 		// db dialect
 		Dialect() Dialect
 
@@ -111,6 +111,8 @@ type (
 		Tables(db *sql.DB, database string, schema string) ([]*Table, error)
 		// 获取表结构
 		Table(db *sql.DB, table string) (*Table, error)
+		// 获取数据库字段,如果有保留字,则添加引号
+		GetField(v string) string
 	}
 )
 
@@ -133,9 +135,9 @@ var (
 	TypeFloat32 = 6
 	TypeFloat64 = 7
 
-	TypeBytes = 14
+	TypeBytes    = 14
 	TypeDateTime = 15
-	TypeDecimal = 16
+	TypeDecimal  = 16
 )
 
 // 获取表元数据

@@ -87,7 +87,7 @@ func ListenAndServe(port int, debug bool) error {
 			)
 			if rsp.Code == RAccessDenied.Code {
 				data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
-				sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_secret"),true)
+				sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_secret"), true)
 				log.Println("[ Api][ Log]: request data = [", data, "]")
 				log.Println(" sign not match ! key =", form.Get("key"),
 					"\r\n   server_sign=", form.GetString("$server_sign"),

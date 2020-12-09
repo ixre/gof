@@ -8,11 +8,18 @@
  */
 package orm
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
-var _ Dialect = new(MySqlDialect)
+var _ Dialect = new(MsSqlDialect)
 
 type MsSqlDialect struct {
+}
+
+func (m *MsSqlDialect) GetField(f string) string {
+	return fmt.Sprintf("[%s]", f)
 }
 
 func (m *MsSqlDialect) Name() string {

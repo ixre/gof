@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,6 +21,10 @@ import (
 var _ Dialect = new(MySqlDialect)
 
 type MySqlDialect struct {
+}
+
+func (m *MySqlDialect) GetField(f string) string {
+	return fmt.Sprintf("`%s`", f)
 }
 
 func (m *MySqlDialect) Name() string {
@@ -140,7 +145,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 
 func (m *MySqlDialect) getTypeId(dbType string) int {
 	switch true {
-	case strings.HasPrefix(dbType,"smallint"):
+	case strings.HasPrefix(dbType, "smallint"):
 		return TypeInt16
 	case strings.HasPrefix(dbType, "tinyint"):
 		return TypeInt32
@@ -160,7 +165,7 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return TypeDecimal
 	case strings.HasPrefix(dbType, "double"):
 		return TypeFloat64
-	case dbType == "datetime",dbType =="date":
+	case dbType == "datetime", dbType == "date":
 		return TypeDateTime
 	case dbType == "timestamp":
 		return TypeInt64
@@ -169,7 +174,7 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 	case dbType == "text", dbType == "longtext",
 		dbType == "mediumtext", dbType == "tinytext",
 		strings.HasPrefix(dbType, "varchar"),
-			strings.HasPrefix(dbType,"char"):
+		strings.HasPrefix(dbType, "char"):
 		return TypeString
 	}
 	println("[ ORM][ MySQL][ Warning]:Dialect not support type :", dbType)

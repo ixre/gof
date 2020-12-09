@@ -42,7 +42,6 @@ func MustInt(d interface{}) int {
 	panic("not support type:" + fmt.Sprintf("%+v", d))
 }
 
-
 // Get string of interface, if can't converted,
 // will return false
 func String(d interface{}) (string, bool) {
@@ -83,18 +82,18 @@ func String(d interface{}) (string, bool) {
 
 // get object string
 func Stringify(d interface{}) string {
-	if s,b := String(d);b {
+	if s, b := String(d); b {
 		return s
 	}
-	if d ==nil{
+	if d == nil {
 		return "nil"
 	}
 	return fmt.Sprintf("%+v", d)
 }
 
-func Int64Array(src []int64)[]int{
-	dst := make([]int,len(src))
-	for i,v := range src{
+func Int64Array(src []int64) []int {
+	dst := make([]int, len(src))
+	for i, v := range src {
 		dst[i] = int(v)
 	}
 	return dst

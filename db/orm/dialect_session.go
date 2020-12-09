@@ -20,25 +20,25 @@ type dialectSession struct {
 	driver  string
 }
 
-func NewDialectSession(db string,conn *sql.DB)(*dialectSession,error){
-	dst := &dialectSession{conn:conn}
+func NewDialectSession(db string, conn *sql.DB) (*dialectSession, error) {
+	dst := &dialectSession{conn: conn}
 	switch db {
-	case "mysql","mariadb":
+	case "mysql", "mariadb":
 		dst.driver = "mysql"
 		dst.dialect = &MySqlDialect{}
-	case "postgres", "postgresql","pgsql":
+	case "postgres", "postgresql", "pgsql":
 		dst.driver = "pgsql"
 		dst.dialect = &PostgresqlDialect{}
-	case "sqlserver","mssql":
+	case "sqlserver", "mssql":
 		dst.driver = "mssql"
 		dst.dialect = &MsSqlDialect{}
 	case "sqlite":
 		dst.driver = "sqlite"
 		dst.dialect = &SqLiteDialect{}
 	default:
-		return nil,errors.New("不支持的数据库类型"+db)
+		return nil, errors.New("不支持的数据库类型" + db)
 	}
-	return dst,nil
+	return dst, nil
 }
 
 func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
@@ -48,7 +48,7 @@ func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
 	}
 }
 
-func (d *dialectSession) Driver()string{
+func (d *dialectSession) Driver() string {
 	return d.driver
 }
 
