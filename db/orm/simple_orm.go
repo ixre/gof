@@ -350,7 +350,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	}
 	if fullSql {
 		if strings.Index(sql, "*") != -1 {
-			sql = strings.Replace(sql, "*", o.getSQLFields(fieldArr), 1)
+			sql = strings.Replace(sql, "*", strings.Join(fieldArr,","), 1)
 		}
 	} else {
 		where := sql
