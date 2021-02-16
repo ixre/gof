@@ -376,6 +376,9 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 
 // valid jwt token, if not right return error responseMiddleware
 func (s *ServeMux) jwtVerify(token string, privateKey []byte) (Claims, int) {
+	if strings.HasPrefix(token,"Bearer"){
+		token = token[7:]
+	}
 	// 转换token
 	dstClaims := jwt.MapClaims{} // 可以用实现了Claim接口的自定义结构
 	tk, err := jwt.ParseWithClaims(token, &dstClaims, func(t *jwt.Token) (interface{}, error) {
