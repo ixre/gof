@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -47,8 +46,8 @@ func ListenAndServe(port int, debug bool) error {
 	tarVer := "1.0"
 	// 校验版本
 	s.Use(func(ctx Context) error {
-		prod := ctx.Params().GetString("product")
-		prodVer := ctx.Params().GetString("version")
+		prod := ctx.Request().Params.GetString("product")
+		prodVer :=  ctx.Request().Params.GetString("version")
 		if prod == "mzl" && CompareVersion(prodVer, tarVer) < 0 {
 			return errors.New(fmt.Sprintf("%d:%s,require version=%s",
 				RErrDeprecated.Code, RErrDeprecated.Message, tarVer))
@@ -60,37 +59,37 @@ func ListenAndServe(port int, debug bool) error {
 		s.Trace()
 		// 输出请求信息
 		s.Use(func(ctx Context) error {
-			apiName := ctx.Params().Get("$api").(string)
+			apiName :=  ctx.Request().Params.Get("$api").(string)
 			log.Println("[ Api][ Log]: user", " calling ", apiName)
-			data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
-			log.Println("[ Api][ Log]: request data = [", data, "]")
+			//data, _ := url.QueryUnescape(ctx.Request().Params)
+			//log.Println("[ Api][ Log]: request data = [", data, "]")
 			// 记录服务端请求时间
-			ctx.Params().Set("$rpc_begin_time", time.Now().UnixNano())
+			 ctx.Request().Params.Set("$rpc_begin_time", time.Now().UnixNano())
 			return nil
 		})
 		// 输出响应结果
 		s.After(func(ctx Context) error {
-			form := ctx.Params()
+			form :=  ctx.Request().Params
 			rsp := form.Get("$api_response").(*Response)
 			data := ""
 			if rsp.Data != nil {
 				d, _ := json.Marshal(rsp.Data)
 				data = string(d)
 			}
-			reqTime := int64(ctx.Params().GetInt("$rpc_begin_time"))
+			reqTime := int64(form.GetInt("$rpc_begin_time"))
 			elapsed := float32(time.Now().UnixNano()-reqTime) / 1000000000
 			log.Println("[ Api][ Log]: responseMiddleware : ", rsp.Code, rsp.Message,
 				fmt.Sprintf("; elapsed time ：%.4fs ; ", elapsed),
 				"result = [", data, "]",
 			)
 			if rsp.Code == RCAccessDenied {
-				data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
-				sortData := ParamsToBytes(ctx.Request().Form, form.GetString("$user_secret"))
-				log.Println("[ Api][ Log]: request data = [", data, "]")
-				log.Println(" sign not match ! key =", form.Get("key"),
-					"\r\n   server_sign=", form.GetString("$server_sign"),
-					"\r\n   client_sign=", form.GetString("$client_sign"),
-					"\r\n   sort_params=", string(sortData))
+				////data, _ := url.QueryUnescape(ctx.Request().Form.Encode())
+				////sortData := ParamsToBytes(form, form.GetString("$user_secret"))
+				//log.Println("[ Api][ Log]: request data = [", data, "]")
+				//log.Println(" sign not match ! key =", form.Get("key"),
+				//	"\r\n   server_sign=", form.GetString("$server_sign"),
+				//	"\r\n   client_sign=", form.GetString("$client_sign"),
+				//	"\r\n   sort_params=", string(sortData))
 			}
 			return nil
 		})

@@ -133,6 +133,20 @@ type Server interface {
 	ServeHTTP(w http.ResponseWriter, h *http.Request)
 }
 
+type RequestWrapper struct {
+	Request *http.Request
+	// receive posted query and form params
+	Params  StoredValues
+	UserAddr   string
+	UserAgent  string
+	RequestApi string
+}
+
+type ResponseWrapper struct{
+	Response *Response
+	http.ResponseWriter
+}
+
 // 上下文
 type Context interface {
 	// Api user key
@@ -140,13 +154,9 @@ type Context interface {
 	// claims
 	Claims() Claims
 	// 请求
-	Request() *http.Request
+	Request() *RequestWrapper
 	// 响应
-	Response() http.ResponseWriter
-	// query params
-	Query() StoredValues
-	// 表单数据
-	Params() StoredValues
+	Response() *ResponseWrapper
 }
 
 // 处理接口方法
@@ -176,6 +186,7 @@ type handlerWrapper struct {
 type ServeMux struct {
 	trace           bool
 	cors            bool
+	prefix          string
 	processors      map[string]*handlerWrapper
 	mux             sync.Mutex
 	swap            ClaimCheckFunc
@@ -184,9 +195,10 @@ type ServeMux struct {
 	swapUserInfo    SwapUserInfoFunc
 }
 
-func NewServerMux(spk SwapUserInfoFunc, swap ClaimCheckFunc, cors bool) Server {
+func NewServerMux(spk SwapUserInfoFunc, swap ClaimCheckFunc,prefix string, cors bool) Server {
 	return &ServeMux{
 		cors:            cors,
+		prefix: prefix,
 		swap:            swap,
 		swapUserInfo:    spk,
 		processors:      map[string]*handlerWrapper{},
@@ -329,7 +341,7 @@ func (s *ServeMux) Trace() {
 // use response middleware
 func (s *ServeMux) responseMiddleware(ctx Context, rsp *Response) *Response {
 	if len(s.afterMiddleware) > 0 {
-		ctx.Params().Set("$api_response", rsp) // 保存响应
+		ctx.Response().Response = rsp // 保存响应
 		for _, m := range s.afterMiddleware {
 			_ = m(ctx)
 		}
@@ -376,7 +388,7 @@ func (s *ServeMux) jwtVerify(token string, privateKey string) (Claims, int) {
 }
 
 func (s *ServeMux) getEntry(ctx Context) (entry, action string) {
-	if v := ctx.Params().Get("$api"); v != nil {
+	if v := ctx.Request().Params["$api"]; v != nil {
 		s := strings.Replace(v.(string), "/", ".", -1)
 		a := strings.Split(s, ".")
 		if len(a) == 0 {
@@ -384,9 +396,12 @@ func (s *ServeMux) getEntry(ctx Context) (entry, action string) {
 		}
 		return a[0], a[1]
 	}
-	path := ctx.Request().URL.Path
-	if strings.HasPrefix(path, "/api") {
-		path = path[5:]
+	path := ctx.Request().Request.URL.Path
+	if s.prefix!=""{
+		path = path[len(s.prefix):]
+	}
+	if path[0]=='/'{
+		path = path[1:]
 	}
 	arr := strings.Split(path, "/")
 	entry = arr[0]
@@ -395,9 +410,9 @@ func (s *ServeMux) getEntry(ctx Context) (entry, action string) {
 	}
 	// save api name
 	if action == "" {
-		ctx.Params().Set("$api", entry)
+		ctx.Request().RequestApi = entry
 	} else {
-		ctx.Params().Set("$api", entry+"."+action)
+		ctx.Request().RequestApi = entry+"."+action
 	}
 	return entry, action
 }
@@ -414,32 +429,36 @@ func (s *ServeMux) factoryContext(h *http.Request, w http.ResponseWriter) *defau
 var _ Context = new(defaultContext)
 
 type defaultContext struct {
-	h       *http.Request
-	w       http.ResponseWriter
+	r 		*RequestWrapper
+	w       *ResponseWrapper
 	userKey string
-	query   StoredValues
-	form    StoredValues
 	claims  Claims
 }
 
+func (c *defaultContext) Request() *RequestWrapper {
+	return c.r
+}
+
 func createContext(h *http.Request, w http.ResponseWriter, userKey string) *defaultContext {
+	r := &RequestWrapper{
+		Request: h,
+		Params:  map[string]interface{}{},
+	}
 	ctx := &defaultContext{
-		h:       h,
-		w:       w,
+		w:       &ResponseWrapper{ResponseWriter:w},
 		userKey: userKey,
-		query:   map[string]interface{}{},
-		form:    map[string]interface{}{},
+		r: r,
 	}
 	if h != nil {
-		ctx.form.Set("$user_addr", http2.RealIp(h))
-		ctx.form.Set("$user_agent", h.UserAgent())
+		r.UserAddr = http2.RealIp(h)
+		r.UserAgent =  h.UserAgent()
 		// parseForm query params
 		for i, v := range h.URL.Query() {
-			ctx.query[i] = v[0]
+			r.Params.Set(i,v[0])
 		}
 		// parseForm form data
 		for i, v := range h.Form {
-			ctx.Params().Set(i, v[0])
+			r.Params.Set(i,v[0])
 		}
 	}
 	return ctx
@@ -457,20 +476,8 @@ func (c *defaultContext) Claims() Claims {
 	return c.claims
 }
 
-func (c *defaultContext) Request() *http.Request {
-	return c.h
-}
-
-func (c *defaultContext) Response() http.ResponseWriter {
+func (c *defaultContext) Response() *ResponseWrapper {
 	return c.w
-}
-
-func (c *defaultContext) Query() StoredValues {
-	return c.query
-}
-
-func (c *defaultContext) Params() StoredValues {
-	return c.form
 }
 
 // 数据
