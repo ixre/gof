@@ -92,11 +92,9 @@ type HandlerFunc func(ctx Context) interface{}
 // 中间件
 type MiddlewareFunc func(ctx Context) error
 
-// 检查用户凭据,返回错误后将直接输出到客户端
-type ClaimCheckFunc func(ctx Context) error
+// 获取用户私钥,返回错误后将直接输出到客户端
+type SwapPrivateKeyFunc func(ctx Context)(privateKey []byte, err error)
 
-// swap user private key
-type SwapUserInfoFunc func(ctx Context) (privateKey string, err error)
 
 type Claims = jwt.Claims
 type MapClaims = jwt.MapClaims
@@ -189,18 +187,16 @@ type ServeMux struct {
 	prefix          string
 	processors      map[string]*handlerWrapper
 	mux             sync.Mutex
-	swap            ClaimCheckFunc
+	swapKey         SwapPrivateKeyFunc
 	middleware      []MiddlewareFunc
 	afterMiddleware []MiddlewareFunc
-	swapUserInfo    SwapUserInfoFunc
 }
 
-func NewServerMux(spk SwapUserInfoFunc, swap ClaimCheckFunc,prefix string, cors bool) Server {
+func NewServerMux(swap SwapPrivateKeyFunc,prefix string, cors bool) Server {
 	return &ServeMux{
 		cors:            cors,
-		prefix: prefix,
-		swap:            swap,
-		swapUserInfo:    spk,
+		prefix:          prefix,
+		swapKey:         swap,
 		processors:      map[string]*handlerWrapper{},
 		middleware:      []MiddlewareFunc{},
 		afterMiddleware: []MiddlewareFunc{},
@@ -262,20 +258,18 @@ func (s *ServeMux) serve(w http.ResponseWriter, h *http.Request) *Response {
 	entry, fn := s.getEntry(ctx)
 	// 获取处理器
 	proc, ok := s.processors[entry]
-	if !ok {
-		return parseErrResp(RCUndefinedApi)
-	}
+
 	// require authorized
-	if !proc.pub {
+	if proc == nil || !proc.pub {
 		// check headers
 		accessToken := h.Header.Get("Authorization")
 		if len(accessToken) == 0 {
 			return parseErrResp(RCAccessDenied)
 		}
-		// swap private key
-		privateKey, err := s.swapUserInfo(ctx)
+		// swapKey private key
+		privateKey, err := s.swapKey(ctx)
 		if err != nil {
-			return ResponseWithCode(RCInternalError, err.Error())
+			return ResponseWithCode(RCNotAuthorized, err.Error())
 		}
 		// valid jwt token
 		claims, code := s.jwtVerify(accessToken, privateKey)
@@ -283,6 +277,9 @@ func (s *ServeMux) serve(w http.ResponseWriter, h *http.Request) *Response {
 			return parseErrResp(code)
 		}
 		ctx.SetClaims(claims)
+	}
+	if !ok {
+		return parseErrResp(RCUndefinedApi)
 	}
 	return s.serveFunc(ctx, proc.handler, fn)
 }
@@ -365,11 +362,11 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 }
 
 // valid jwt token, if not right return error responseMiddleware
-func (s *ServeMux) jwtVerify(token string, privateKey string) (Claims, int) {
+func (s *ServeMux) jwtVerify(token string, privateKey []byte) (Claims, int) {
 	// 转换token
 	dstClaims := jwt.MapClaims{} // 可以用实现了Claim接口的自定义结构
 	tk, err := jwt.ParseWithClaims(token, &dstClaims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(privateKey), nil
+		return privateKey, nil
 	})
 	if tk == nil {
 		return nil, RCNotAuthorized
