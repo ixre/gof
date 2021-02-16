@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	http2 "github.com/ixre/gof/net/http"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -93,8 +94,7 @@ type HandlerFunc func(ctx Context) interface{}
 type MiddlewareFunc func(ctx Context) error
 
 // 获取用户私钥,返回错误后将直接输出到客户端
-type SwapPrivateKeyFunc func(ctx Context)(privateKey []byte, err error)
-
+type SwapPrivateKeyFunc func(ctx Context) (privateKey []byte, err error)
 
 type Claims = jwt.Claims
 type MapClaims = jwt.MapClaims
@@ -134,13 +134,22 @@ type Server interface {
 type RequestWrapper struct {
 	Request *http.Request
 	// receive posted query and form params
-	Params  StoredValues
+	Params     StoredValues
 	UserAddr   string
 	UserAgent  string
 	RequestApi string
 }
 
-type ResponseWrapper struct{
+func (w RequestWrapper) Bind(e interface{}) error {
+	buf, err := ioutil.ReadAll(w.Request.Body)
+	//w.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+	if err == nil {
+		return json.Unmarshal(buf, &e)
+	}
+	return nil
+}
+
+type ResponseWrapper struct {
 	Response *Response
 	http.ResponseWriter
 }
@@ -192,7 +201,7 @@ type ServeMux struct {
 	afterMiddleware []MiddlewareFunc
 }
 
-func NewServerMux(swap SwapPrivateKeyFunc,prefix string, cors bool) Server {
+func NewServerMux(swap SwapPrivateKeyFunc, prefix string, cors bool) Server {
 	return &ServeMux{
 		cors:            cors,
 		prefix:          prefix,
@@ -394,10 +403,10 @@ func (s *ServeMux) getEntry(ctx Context) (entry, action string) {
 		return a[0], a[1]
 	}
 	path := ctx.Request().Request.URL.Path
-	if s.prefix!=""{
+	if s.prefix != "" {
 		path = path[len(s.prefix):]
 	}
-	if path[0]=='/'{
+	if path[0] == '/' {
 		path = path[1:]
 	}
 	arr := strings.Split(path, "/")
@@ -409,7 +418,7 @@ func (s *ServeMux) getEntry(ctx Context) (entry, action string) {
 	if action == "" {
 		ctx.Request().RequestApi = entry
 	} else {
-		ctx.Request().RequestApi = entry+"."+action
+		ctx.Request().RequestApi = entry + "." + action
 	}
 	return entry, action
 }
@@ -426,7 +435,7 @@ func (s *ServeMux) factoryContext(h *http.Request, w http.ResponseWriter) *defau
 var _ Context = new(defaultContext)
 
 type defaultContext struct {
-	r 		*RequestWrapper
+	r       *RequestWrapper
 	w       *ResponseWrapper
 	userKey string
 	claims  Claims
@@ -442,20 +451,20 @@ func createContext(h *http.Request, w http.ResponseWriter, userKey string) *defa
 		Params:  map[string]interface{}{},
 	}
 	ctx := &defaultContext{
-		w:       &ResponseWrapper{ResponseWriter:w},
+		w:       &ResponseWrapper{ResponseWriter: w},
 		userKey: userKey,
-		r: r,
+		r:       r,
 	}
 	if h != nil {
 		r.UserAddr = http2.RealIp(h)
-		r.UserAgent =  h.UserAgent()
+		r.UserAgent = h.UserAgent()
 		// parseForm query params
 		for i, v := range h.URL.Query() {
-			r.Params.Set(i,v[0])
+			r.Params.Set(i, v[0])
 		}
 		// parseForm form data
 		for i, v := range h.Form {
-			r.Params.Set(i,v[0])
+			r.Params.Set(i, v[0])
 		}
 	}
 	return ctx
@@ -488,7 +497,7 @@ func (f StoredValues) Contains(key string) bool {
 // 获取数值
 func (f StoredValues) GetInt(key string) int {
 	o := f.Get(key)
-	if o == nil{
+	if o == nil {
 		return 0
 	}
 	switch o.(type) {

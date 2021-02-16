@@ -1,4 +1,5 @@
 # HTTP API
+
 接口通过HTTP暴露给外部应用，采用签名鉴权，接口请求方需要使用KEY和SECRET方可调用>接口，SECRET用于参数签名。
 
 ## 接口测试数据
@@ -6,14 +7,13 @@
         接口地址：http://localhost:7020/api
         接口KEY：test
         接口SECRET: 123456
-        
+
 ## 接口签名规则
 
-接口采用POST请求，将参数集合按字母排序后，排除sign_type，拼接token
-然后进行MD5或SHA1进行加密得到sign,并将sign添加到请求参数集合。
+接口采用POST请求，将参数集合按字母排序后，排除sign_type，拼接token 然后进行MD5或SHA1进行加密得到sign,并将sign添加到请求参数集合。
 
 签名示例代码(go):
-    
+
     // 参数排序后，排除sign和sign_type，拼接token，转换为字节
     func paramsToBytes(r url.Values, token string) []byte {
 	    i := 0
@@ -69,14 +69,15 @@
     }
 
 ## 接口返回
+
 接口返回错误格式为:"#错误码#错误消息"，如：
+
 ```
 #10091#api access denied
 ```
 
-
 ## 接口请求示例代码(go)
-    
+
     key := "test"
     secret := "123456"
     signType := "sha1"
@@ -95,9 +96,11 @@
         data, _ := ioutil.ReadAll(rsp.Body)
         log.Println("接口响应：", string(data))
     }
-    
+
 ## 创建服务
+
 创建处理程序
+
 ```
 var _ api.Handler = new(MemberApi)
 type MemberApi struct {}
@@ -112,7 +115,9 @@ func (m MemberApi) login(ctx api.Context)interface{}{
 	return 1
 }
 ```
+
 创建服务
+
 ```
 // 服务
 func NewServe(debug bool,version string) http.Handler {

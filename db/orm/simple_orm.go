@@ -280,7 +280,7 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 		scanVal[i] = &rawBytes[i]
 	}
 	if strings.Index(sql, "*") != -1 {
-		sql = strings.Replace(sql, "*",o.getSQLFields(fieldArr), 1)
+		sql = strings.Replace(sql, "*", o.getSQLFields(fieldArr), 1)
 	}
 	if o.useTrace {
 		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s", sql))
@@ -350,7 +350,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 	}
 	if fullSql {
 		if strings.Index(sql, "*") != -1 {
-			sql = strings.Replace(sql, "*", strings.Join(fieldArr,","), 1)
+			sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
 		}
 	} else {
 		where := sql
@@ -582,8 +582,8 @@ func (o *simpleOrm) fmtSelectSingleQuery(fields []string, table string, where st
 	if o.driverName == "mssql" {
 		buf.WriteString("TOP 1 ")
 	}
-	for i,v := range fields{
-		if i > 0{
+	for i, v := range fields {
+		if i > 0 {
 			buf.WriteString(",")
 		}
 		buf.WriteString(o.dialect.GetField(v))

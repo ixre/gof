@@ -117,16 +117,6 @@ func (c *Client) Request(apiPath string, method string, data interface{}, timeou
 	return []byte{}, err
 }
 
-func (c Client) parseForm(data map[string]string) url.Values {
-	values := url.Values{}
-	if data != nil {
-		for k, v := range data {
-			values[k] = []string{v}
-		}
-	}
-	return values
-}
-
 func (c Client) path(path string) string {
 	if len(path) > 0 && path[0] != '/' {
 		path = "/" + path
@@ -137,9 +127,6 @@ func (c Client) path(path string) string {
 func (c *Client) parseBody(data interface{}) (io.Reader, string, error) {
 	if data == nil {
 		return nil, "", nil
-	}
-	if d, ok := data.(map[string]string); ok {
-		return strings.NewReader(c.parseForm(d).Encode()), "", nil
 	}
 	if d, ok := data.(url.Values); ok {
 		return strings.NewReader(d.Encode()), "", nil

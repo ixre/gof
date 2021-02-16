@@ -2,13 +2,14 @@ package api
 
 import (
 	"errors"
+	http2 "github.com/ixre/gof/util/http"
 	"io/ioutil"
 	"net/http"
 	"testing"
 )
 
 var (
-	tc      *Client
+	tc *Client
 )
 
 var (
@@ -57,7 +58,6 @@ func init() {
 
 // 测试提交
 func testPost(t *testing.T, apiName string, params map[string]string) ([]byte, error) {
-	params["version"] = "1.0.0"
 	rsp, err := tc.Post(apiName, params)
 	t.Log("[ Response]:", string(rsp))
 	if err != nil {
@@ -65,4 +65,35 @@ func testPost(t *testing.T, apiName string, params map[string]string) ([]byte, e
 		//t.FailNow()
 	}
 	return rsp, err
+}
+
+// 测试提交
+func testPostForm(t *testing.T, apiName string, params map[string]string) ([]byte, error) {
+	rsp, err := tc.Post(apiName, params)
+	t.Log("[ Response]:", string(rsp))
+	if err != nil {
+		t.Error(err)
+		//t.FailNow()
+	}
+	return rsp, err
+}
+
+// 测试提交
+func testGET(t *testing.T, apiName string, params map[string]string) ([]byte, error) {
+	query := http2.ParseUrlValues(params).Encode()
+	rsp, err := tc.Get(apiName+"?"+query, nil)
+	t.Log("[ Response]:", string(rsp))
+	if err != nil {
+		t.Error(err)
+		//t.FailNow()
+	}
+	return rsp, err
+}
+
+func TestReplaceSensitive(t *testing.T) {
+	mp := map[string]string{
+		"text":        "共产党是中华人民共和国的执政党",
+		"replacement": "*",
+	}
+	testPost(t, "/fd/replace_sensitive", mp)
 }
