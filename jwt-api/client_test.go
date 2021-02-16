@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	http2 "github.com/ixre/gof/util/http"
 	"io/ioutil"
@@ -41,7 +42,9 @@ func init() {
 			return ""
 		}
 		bytes, _ := ioutil.ReadAll(r.Body)
-		return string(bytes)
+		rsp := Response{}
+		json.Unmarshal(bytes, &rsp)
+		return rsp.Data.(string)
 	}, 30000)
 	tc.HandleError(func(code int, message string) error {
 		switch code {

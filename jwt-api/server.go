@@ -306,7 +306,11 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp *Response) {
 		_, _ = w.Write([]byte(ret))
 		return
 	}
+	//note: 直接返回包含状态码的接口
 	var data []byte
+	data = s.marshal(rsp)
+	_, _ = w.Write(data)
+	return
 
 	// 如果包含数据, 直接返回数据, 否则返回Response
 	if rsp.Data != nil {
