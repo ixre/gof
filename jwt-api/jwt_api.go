@@ -110,9 +110,9 @@ func CreateClaims(aud string, iss string, sub string, expires int64) Claims {
 }
 
 // 生成访问token
-func AccessToken(claims Claims, privateKey string) (string, error) {
+func AccessToken(claims Claims, privateKey []byte) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(privateKey))
+	return token.SignedString(privateKey)
 }
 
 // api server
@@ -488,6 +488,9 @@ func (f StoredValues) Contains(key string) bool {
 // 获取数值
 func (f StoredValues) GetInt(key string) int {
 	o := f.Get(key)
+	if o == nil{
+		return 0
+	}
 	switch o.(type) {
 	case int:
 		return o.(int)
