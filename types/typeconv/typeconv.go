@@ -31,13 +31,13 @@ func MustInt(d interface{}) int {
 	case int:
 		return d.(int)
 	case int8:
-		return d.(int)
+		return int(d.(int8))
 	case int16:
-		return d.(int)
+		return int(d.(int16))
 	case int32:
-		return d.(int)
+		return int(d.(int32))
 	case int64:
-		return d.(int)
+		return int(d.(int64))
 	}
 	panic("not support type:" + fmt.Sprintf("%+v", d))
 }
