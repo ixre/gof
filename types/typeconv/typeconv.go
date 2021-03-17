@@ -43,18 +43,46 @@ func MustInt(d interface{}) int {
 }
 
 // 将类型转换为bool
-func MustBool(d interface{})bool{
-	switch d.(type){
+func MustBool(d interface{}) bool {
+	switch d.(type) {
 	case bool:
 		return d.(bool)
-	case int,int8,int16,int32,int64:
+	case int, int8, int16, int32, int64:
 		return MustInt(d) == 1
 	case string:
-		b,_:= strconv.ParseBool(d.(string))
+		b, _ := strconv.ParseBool(d.(string))
 		return b
 	}
 	return false
 }
+
+// 将类型转换为float
+func MustFloat(d interface{}) float64 {
+	switch d.(type) {
+	case string:
+		i, err := strconv.ParseFloat(d.(string), 64)
+		if err != nil {
+			panic("parse string to int fail:" + err.Error())
+		}
+		return i
+	case float32:
+		return float64(d.(float32))
+	case float64:
+		return d.(float64)
+	case int:
+		return float64(d.(int))
+	case int8:
+		return float64(d.(int8))
+	case int16:
+		return float64(d.(int16))
+	case int32:
+		return float64(d.(int32))
+	case int64:
+		return float64(d.(int64))
+	}
+	panic("not support type:" + fmt.Sprintf("%+v", d))
+}
+
 // Get string of interface, if can't converted,
 // will return false
 func String(d interface{}) (string, bool) {
