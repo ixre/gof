@@ -42,6 +42,19 @@ func MustInt(d interface{}) int {
 	panic("not support type:" + fmt.Sprintf("%+v", d))
 }
 
+// 将类型转换为bool
+func MustBool(d interface{})bool{
+	switch d.(type){
+	case bool:
+		return d.(bool)
+	case int,int8,int16,int32,int64:
+		return MustInt(d) == 1
+	case string:
+		b,_:= strconv.ParseBool(d.(string))
+		return b
+	}
+	return false
+}
 // Get string of interface, if can't converted,
 // will return false
 func String(d interface{}) (string, bool) {
