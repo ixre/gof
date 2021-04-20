@@ -376,7 +376,7 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 
 // valid jwt token, if not right return error responseMiddleware
 func (s *ServeMux) jwtVerify(token string, privateKey []byte) (Claims, int) {
-	if strings.HasPrefix(token,"Bearer"){
+	if strings.HasPrefix(token, "Bearer") {
 		token = token[7:]
 	}
 	// 转换token

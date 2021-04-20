@@ -225,7 +225,7 @@ func checkMysqlInternalKeys(field *string) {
 
 func assignValues(meta *TableMapMeta, dst *reflect.Value, rawBytes [][]byte) error {
 	for i, fi := range meta.FieldsIndex {
-		assignValue(dst.Field(fi), rawBytes[i])
+		_ = assignValue(dst.Field(fi), rawBytes[i])
 	}
 	return nil
 }

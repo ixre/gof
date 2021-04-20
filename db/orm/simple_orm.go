@@ -472,7 +472,7 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 }
 
 func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, lastInsertId int64, err error) {
-	var sql string
+	var query string
 	//var condition string
 	//var fieldLen int
 	t := reflect.TypeOf(entity)
@@ -480,7 +480,7 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		t = t.Elem()
 	}
 	val := reflect.Indirect(reflect.ValueOf(entity))
-	// build sql
+	// build query
 	meta := o.getTableMapMeta(t)
 	// pk type is int?
 	isIntPk := o.isIntPk(meta.PkFieldTypeId)
@@ -492,17 +492,22 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		for i := range pArr {
 			pArr[i] = o.getParamHolder(i)
 		}
-		sql = o.getInsertSQL(meta, fieldArr, pArr)
+		query = o.getInsertSQL(meta, fieldArr, pArr)
 		if o.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
+			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", query, params))
 		}
 		/* query */
-		stmt, err := o.DB.Prepare(sql)
+		stmt, err := o.DB.Prepare(query)
 		if err != nil {
-			return 0, 0, o.err(err, sql)
+			return 0, 0, o.err(err, query)
 		}
-		defer stmt.Close()
-		return o.stmtUpdateExec(isIntPk, stmt, sql, params...)
+		defer func(stmt *sql.Stmt) {
+			err := stmt.Close()
+			if err != nil {
+				println(err.Error())
+			}
+		}(stmt)
+		return o.stmtUpdateExec(isIntPk, stmt, query, params...)
 	} else {
 		//update model
 		var setCond string
@@ -518,17 +523,19 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 					o.getParamHolder(i))
 			}
 		}
-		sql = o.getUpdateSQL(meta, setCond, fieldArr)
-		stmt, err := o.DB.Prepare(sql)
+		query = o.getUpdateSQL(meta, setCond, fieldArr)
+		stmt, err := o.DB.Prepare(query)
 		if err != nil {
-			return 0, 0, o.err(err, sql)
+			return 0, 0, o.err(err, query)
 		}
-		defer stmt.Close()
+		defer func(stmt *sql.Stmt) {
+			_ = stmt.Close()
+		}(stmt)
 		params = append(params, primary)
 		if o.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, params))
+			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", query, params))
 		}
-		return o.stmtUpdateExec(isIntPk, stmt, sql, params...)
+		return o.stmtUpdateExec(isIntPk, stmt, query, params...)
 	}
 }
 func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, params ...interface{}) (int64, int64, error) {
@@ -541,13 +548,10 @@ func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, pa
 			if err := row.Scan(&lastInsertId); err != nil {
 				return 0, lastInsertId, o.err(err, sql_)
 			}
+		} else {
+			var tmp interface{}
+			_ = row.Scan(&tmp)
 		}
-		//} else {
-		//	v := ""
-		//	if err := row.Scan(&v); err != nil {
-		//		return 0, lastInsertId, o.err(err, sql_)
-		//	}
-		//}
 		return 0, lastInsertId, nil
 	}
 	result, err := stmt.Exec(params...)
