@@ -155,7 +155,7 @@ func (h *hashStorage) DeleteWith(prefix string) (int, error) {
 	return i, nil
 }
 
-// equal of h.Set(key,value)
+// SetExpire equal of h.Set(key,value)
 func (h *hashStorage) SetExpire(key string, v interface{}, seconds int64) error {
 	return h.Set(key, v)
 }
