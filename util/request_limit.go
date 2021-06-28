@@ -18,7 +18,7 @@ import (
 
 type RequestLimit struct {
 	buckets map[string]*concurrent.TokenBucket
-	sync.Mutex
+	sync.RWMutex
 	capacity   int     // 桶的容量
 	rate       float64 // 令牌放入速度
 	lockSecond int64
@@ -30,7 +30,7 @@ func NewRequestLimit(store storage.Interface, capacity int, rate float64, lockSe
 	return &RequestLimit{
 		buckets:    make(map[string]*concurrent.TokenBucket, 0),
 		store:      store,
-		Mutex:      sync.Mutex{},
+		RWMutex:      sync.RWMutex{},
 		capacity:   capacity,
 		rate:       rate,
 		lockSecond: int64(lockSecond),
@@ -47,17 +47,19 @@ func (i *RequestLimit) IsLock(addr string) bool {
 // 锁定地址
 func (i *RequestLimit) lockAddr(addr string) {
 	k := fmt.Sprintf("sys:req-limit:%s", addr)
-	i.store.SetExpire(k, 1, i.lockSecond)
+	_ = i.store.SetExpire(k, 1, i.lockSecond)
 }
 
-// 获取令牌
+// Acquire 获取令牌
 func (i *RequestLimit) Acquire(addr string, n int) bool {
+	i.RWMutex.RLock()
 	v, ok := i.buckets[addr]
+	i.RWMutex.RUnlock()
 	if !ok {
-		i.Mutex.Lock()
 		v = concurrent.NewTokenBucket(i.capacity, i.rate)
+		i.RWMutex.Lock()
 		i.buckets[addr] = v
-		i.Unlock()
+		i.RWMutex.Unlock()
 	}
 	b := v.Acquire(n)
 	if !b {
