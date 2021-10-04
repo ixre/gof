@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	http2 "github.com/ixre/gof/net/http"
 	"io/ioutil"
 	"net/http"
