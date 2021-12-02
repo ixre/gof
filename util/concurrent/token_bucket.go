@@ -5,7 +5,7 @@ import (
 )
 
 /**
- * Copyright 2009-2019 @ to2.net
+ * Copyright 2009-2019 @ 56x.net
  * name : token_bucket.go
  * author : jarrysix (jarrysix#gmail.com)
  * date : 2019-10-01 16:48

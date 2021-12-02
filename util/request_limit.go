@@ -8,7 +8,7 @@ import (
 )
 
 /**
- * Copyright 2009-2019 @ to2.net
+ * Copyright 2009-2019 @ 56x.net
  * name : request_limit.go.go
  * author : jarrysix (jarrysix#gmail.com)
  * date : 2019-10-01 16:48
@@ -30,7 +30,7 @@ func NewRequestLimit(store storage.Interface, capacity int, rate float64, lockSe
 	return &RequestLimit{
 		buckets:    make(map[string]*concurrent.TokenBucket, 0),
 		store:      store,
-		RWMutex:      sync.RWMutex{},
+		RWMutex:    sync.RWMutex{},
 		capacity:   capacity,
 		rate:       rate,
 		lockSecond: int64(lockSecond),

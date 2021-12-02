@@ -1,7 +1,7 @@
 package types
 
 /**
- * Copyright 2009-2019 @ to2.net
+ * Copyright 2009-2019 @ 56x.net
  * name : types_.go
  * author : jarrysix (jarrysix#gmail.com)
  * date : 2019-06-26 22:15

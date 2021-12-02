@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 @ to2.net.
+ * Copyright 2015 @ 56x.net.
  * name : authed_socket
  * author : jarryliu
  * date : 2015-12-28 15:32

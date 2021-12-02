@@ -7,7 +7,7 @@ import (
 )
 
 /**
- * Copyright 2009-2019 @ to2.net
+ * Copyright 2009-2019 @ 56x.net
  * name : request_limit_test.go
  * author : jarrysix (jarrysix#gmail.com)
  * date : 2019-10-02 11:02

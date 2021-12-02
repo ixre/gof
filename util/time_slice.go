@@ -7,7 +7,7 @@ import (
 )
 
 /**
- * Copyright 2009-2019 @ to2.net
+ * Copyright 2009-2019 @ 56x.net
  * name : time_ticker
  * author : jarrysix (jarrysix#gmail.com)
  * date : 2019-10-03 16:18

@@ -18,7 +18,7 @@ func threeCondition(b bool, i1, i2 interface{}) interface{} {
 }
 
 // Int条件判断
-func IntCond(b bool, v1, v2 int) int {
+func ElseInt(b bool, v1, v2 int) int {
 	return threeCondition(b, v1, v2).(int)
 }
 func StringCond(b bool, v1, v2 string) string {
