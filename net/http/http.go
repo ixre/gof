@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//转换到实体
+// MapToEntity 转换到实体
 func MapToEntity(values map[string][]string, dst interface{}) (err error) {
 	refVal := reflect.ValueOf(dst).Elem()
 	for k, v := range values {
@@ -21,7 +21,7 @@ func MapToEntity(values map[string][]string, dst interface{}) (err error) {
 	return err
 }
 
-// 获取HTTP请求真实IP
+// RealIp 获取HTTP请求真实IP
 func RealIp(r *http.Request) string {
 	ra := r.RemoteAddr
 	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
