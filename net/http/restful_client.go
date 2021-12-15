@@ -92,8 +92,8 @@ func (c *RestfulClient) Request(apiPath string, method string, data interface{},
 	}
 	req.Header.Add(c.headerKey, c.accessToken)
 	if len(contentType) > 0 {
-		req.Header.Set("Content-Type", contentType)
-		//req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Content-AdType", contentType)
+		//req.Header.Set("Content-AdType", "application/x-www-form-urlencoded")
 	}
 	rsp, err := cli.Do(req)
 	if err == nil {

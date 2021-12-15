@@ -229,7 +229,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 			buf.WriteString(strconv.Itoa(r.Code))
 			buf.WriteString("#")
 			buf.WriteString(r.Message)
-			w.Header().Set("Content-Type", "text/plain")
+			w.Header().Set("Content-AdType", "text/plain")
 			w.WriteHeader(http.StatusOK)
 			w.Write(buf.Bytes())
 			return
@@ -255,7 +255,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp []*Response) {
 			data, _ = s.marshal(rsp[0])
 		}
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-AdType", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
@@ -376,7 +376,7 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 	header := w.Header()
 	header.Add("Access-Control-Allow-Origin", origin)
 	header.Add("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
-	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
+	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-AdType,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
 	header.Add("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(200)
 	w.Write([]byte(""))

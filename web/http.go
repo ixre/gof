@@ -20,24 +20,24 @@ import (
 )
 
 type (
-	// 一个针对多个子域的HTTP处理程序
+	// MultiServe 一个针对多个子域的HTTP处理程序
 	MultiServe interface {
-		// 设置默认的处理程序
+		// Default 设置默认的处理程序
 		Default(handler http.Handler)
-		// 添加子域的处理程序
+		// Register 添加子域的处理程序
 		Register(sub string, handler http.Handler)
-		// 获取处理程序
+		// Get 获取处理程序
 		Get(sub string) http.Handler
-		// 处理HTTP请求
+		// ServeHTTP 处理HTTP请求
 		ServeHTTP(w http.ResponseWriter, r *http.Request)
-		// 监听端口,并启动
+		// ListenAndServe 监听端口,并启动
 		ListenAndServe(addr string) error
 	}
 )
 
 var _ MultiServe = new(MultiServeHandler)
 
-// 多域请求处理器
+// MultiServeHandler 多域请求处理器
 type MultiServeHandler struct {
 	Domain   string
 	dLen     int
@@ -46,10 +46,11 @@ type MultiServeHandler struct {
 }
 
 func NewMultiServe(domain string) MultiServeHandler {
+	host, pi := trimPort(domain)
 	return MultiServeHandler{
-		Domain:   domain,
-		dLen:     len(domain),
-		hasPort:  strings.Index(domain, ":") != -1,
+		Domain:   host,
+		dLen:     len(host),
+		hasPort:  pi != -1,
 		handlers: make(map[string]http.Handler),
 	}
 }
@@ -67,7 +68,7 @@ func (m MultiServeHandler) Default(handler http.Handler) {
 	m.handlers["*"] = handler
 }
 
-// 获取处理程序
+// Get 获取处理程序
 func (m MultiServeHandler) Get(sub string) http.Handler {
 	return m.handlers[sub]
 }
@@ -76,17 +77,23 @@ func (m MultiServeHandler) Register(sub string, handler http.Handler) {
 	m.handlers[sub] = handler
 }
 
-// Get sub name of host
+// 返回域名和':'所在在索引
+func trimPort(host string) (string, int) {
+	if i := strings.Index(host, ":"); i != -1 {
+		return host[:i], i
+	}
+	return host, -1
+}
+
+// SubName Get sub name of host
 func (m MultiServeHandler) SubName(r *http.Request) string {
-	h := r.Host
-	if len(h) > m.dLen {
+	host, i := trimPort(r.Host)
+	if len(host) > m.dLen {
 		// 如果域名不包含端口号, 但使用端口号访问
-		if !m.hasPort {
-			if i := strings.Index(h, ":"); i != -1 {
-				return h[:i-m.dLen]
-			}
+		if !m.hasPort && i != -1 {
+			return host[:i-m.dLen]
 		}
-		return h[:len(h)-m.dLen]
+		return host[:len(host)-m.dLen]
 	}
 	return "*"
 }
@@ -106,7 +113,7 @@ func (m MultiServeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func HttpError(rsp http.ResponseWriter, err error) {
 	_, f, line, _ := runtime.Caller(1)
-	rsp.Header().Add("Content-Type", "text/html")
+	rsp.Header().Add("Content-AdType", "text/html")
 	rsp.WriteHeader(500)
 
 	var part1 = `<html><head><title>HTTP ERROR</title>

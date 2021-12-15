@@ -23,7 +23,7 @@ type response struct {
 
 // 输出JSON
 func (this *response) JsonOutput(v interface{}) {
-	this.ResponseWriter.Header().Set("Content-Type", "application/json")
+	this.ResponseWriter.Header().Set("Content-AdType", "application/json")
 	b, err := json.Marshal(v)
 	if err != nil {
 		str := fmt.Sprintf(`{"error":"%s"}`,
