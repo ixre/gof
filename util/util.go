@@ -11,7 +11,7 @@ import (
 
 var LetterBytes = []byte("01234ABCDEFGHIJK56789abcdefghijklmLMNOPQRSTUVWXYZnopqrstuvwxyz")
 
-//随机字符号串
+// RandString 随机字符号串
 func RandString(n int) string {
 	return string(RandBytes(n, LetterBytes))
 }
