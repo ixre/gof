@@ -298,7 +298,7 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp *Response) {
 	if rsp == nil {
 		panic("no such response can flush to writer")
 	}
-	w.Header().Set("Content-AdType", "application/json;charset=utf-8")
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
 	if rsp.Code > RCInternalError && RCDeprecated > rsp.Code {
@@ -368,7 +368,7 @@ func (s *ServeMux) preFlight(w http.ResponseWriter, origin string) {
 	header := w.Header()
 	header.Add("Access-Control-Allow-Origin", origin)
 	header.Add("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
-	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-AdType,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
+	header.Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Credentials, Accept, Authorization, Access-Control-Allow-Credentials")
 	header.Add("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(""))
