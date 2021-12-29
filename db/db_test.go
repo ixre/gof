@@ -39,8 +39,8 @@ func model() {
 	println("===== testing model =======")
 	var user User
 	_orm.Get(&user, "root")
-	println("User:" + user.User)
-	println("Pwd:" + user.Pwd)
+	println("Username:" + user.User)
+	println("Password:" + user.Pwd)
 	println("Host:" + user.Host)
 }
 
@@ -99,10 +99,10 @@ func Test_to(t *testing.T) {
 //func Test_insermodel(t *testing.T) {
 //
 //	fmt.Println("\n===== testing insert model =======")
-//	i, i2, err :=_orm.Save(nil, User{Host: "localhost", User: "uu1", Pwd: "1233455"})
+//	i, i2, err :=_orm.Save(nil, Username{Host: "localhost", Username: "uu1", Password: "1233455"})
 //	fmt.Println(i, i2, err)
 //
-//	var user User
+//	var user Username
 //	_orm.Get(&user, "uu1")
 //	fmt.Println("Inserted :", user)
 //
@@ -110,10 +110,10 @@ func Test_to(t *testing.T) {
 
 //func Test_savemodel(t *testing.T) {
 //	fmt.Println("===== testing save model =======")
-//	var user User
+//	var user Username
 //	_orm.Get(&user, "uu1")
 //	user.Host = "127.0.0.1"
-//	_, _, err := _orm.Save(user.User, user)
+//	_, _, err := _orm.Save(user.Username, user)
 //	if err != nil {
 //		fmt.Println("happend error:", err.Error())
 //	} else {
@@ -125,7 +125,7 @@ func Test_to(t *testing.T) {
 
 //func Test_delmodel(t *testing.T) {
 //	fmt.Println("===== testing deleting model =======")
-//	i, err := _orm.Delete(User{User: "uu1"}, "")
+//	i, err := _orm.Delete(Username{Username: "uu1"}, "")
 //	fmt.Println(i, "rows deleted")
 //	if err != nil {
 //		fmt.Println("happend error:", err.Error())
