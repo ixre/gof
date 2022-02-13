@@ -45,12 +45,12 @@ func descartes(dimValue [][]interface{}, result *[][]interface{}, layer int, cur
 	}
 }
 
-// 笛卡尔乘积算法
+// Descartes 笛卡尔乘积算法
 func Descartes(dimValue [][]interface{}, result *[][]interface{}) {
 	descartes(dimValue, result, 0, []interface{}{})
 }
 
-// 笛卡尔乘积算法
+// DescartesInts 笛卡尔乘积算法
 func DescartesInts(dim [][]int, result *[][]int) {
 	dimNew := make([][]interface{}, len(dim))
 	resultNew := make([][]interface{}, len(*result))

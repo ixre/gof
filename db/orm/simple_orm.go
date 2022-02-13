@@ -570,7 +570,7 @@ func (o *simpleOrm) stmtUpdateExec(isIntPk bool, stmt *sql.Stmt, sql_ string, pa
 // 创建查询记录数的SQL
 func (o *simpleOrm) buildCountQuery(table string, where string) string {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT COUNT(0)")
+	buf.WriteString("SELECT COUNT(1)")
 	buf.WriteString(" FROM ")
 	buf.WriteString(table)
 	if len(where) > 0 {
