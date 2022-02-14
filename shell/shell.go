@@ -67,10 +67,10 @@ func execCommand(command string, stdIn io.Reader, stdOut io.Writer,
 
 	//var arr = string.Split(command, " ")
 	var cmd *exec.Cmd
-	if runtime.GOOS == "windows"{
+	if runtime.GOOS == "windows" {
 		var arr = strings.Split(command, " ")
-		 cmd = exec.Command(arr[0], arr[1:]...)
-	}else {
+		cmd = exec.Command(arr[0], arr[1:]...)
+	} else {
 		cmd = exec.Command("sh", "-c", command)
 	}
 	stdout = newShellStdBuffer(stdOut)
@@ -114,9 +114,9 @@ func execCommand(command string, stdIn io.Reader, stdOut io.Writer,
 // code返回命令执行返回的状态码,返回0表示执行成功
 // stdOutput:true 输出到os.StdOut, 错误输出到os.StdErr, 需要将正常结果输出到stderr中才能显示命令输出
 
-func Run(command string,stdOutput bool) (code int, output string, err error) {
+func Run(command string, stdOutput bool) (code int, output string, err error) {
 	//return execCommand(command, os.Stdin, os.Stdout, os.Stdin, isDebug)
-	if stdOutput{
+	if stdOutput {
 		return execCommand(command, os.Stderr, os.Stdout, os.Stderr, isDebug)
 	}
 	return execCommand(command, nil, nil, nil, isDebug)

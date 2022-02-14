@@ -12,10 +12,10 @@ import (
 	"github.com/ixre/gof/web"
 )
 
-// controller filter
+// Filter controller filter
 type Filter interface {
-	//call it before execute your some business.
+	// Requesting call it before execute your some business.
 	Requesting(*web.Context) bool
-	//call it after execute your some business.
+	// RequestEnd call it after execute your some business.
 	RequestEnd(*web.Context)
 }
