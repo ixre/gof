@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -32,23 +33,23 @@ func newShellStdBuffer(writer io.Writer) *shellStdBuffer {
 		buf:    bytes.NewBuffer([]byte{}),
 	}
 }
-func (this *shellStdBuffer) Write(p []byte) (n int, err error) {
-	n, err = this.buf.Write(p)
-	if this.writer != nil {
-		n, err = this.writer.Write(p)
+func (s *shellStdBuffer) Write(p []byte) (n int, err error) {
+	n, err = s.buf.Write(p)
+	if s.writer != nil {
+		n, err = s.writer.Write(p)
 	}
 	return n, err
 }
-func (this *shellStdBuffer) String() string {
-	return string(this.buf.Bytes())
+func (s *shellStdBuffer) String() string {
+	return string(s.buf.Bytes())
 }
 
 // 执行Shell命令
 // 如果没有返回error,则命令执行成功，反之失败
 // code返回命令执行返回的状态码,返回0表示执行成功
 // output返回命令输出内容
-func execCommand(command string, std_in io.Reader, std_out io.Writer,
-	std_err io.Writer, debug bool) (code int, output string, err error) {
+func execCommand(command string, stdIn io.Reader, stdOut io.Writer,
+	stdErr io.Writer, debug bool) (code int, output string, err error) {
 
 	var status syscall.WaitStatus //执行状态
 	//var output string             //输出内容
@@ -64,14 +65,19 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 			command, strings.Repeat("-", len(command))))
 	}
 
-	var arr = strings.Split(command, " ")
-	var cmd = exec.Command(arr[0], arr[1:]...)
-
-	stdout = newShellStdBuffer(std_out)
-	stderr = newShellStdBuffer(std_err)
+	//var arr = string.Split(command, " ")
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows"{
+		var arr = strings.Split(command, " ")
+		 cmd = exec.Command(arr[0], arr[1:]...)
+	}else {
+		cmd = exec.Command("sh", "-c", command)
+	}
+	stdout = newShellStdBuffer(stdOut)
+	stderr = newShellStdBuffer(stdErr)
 
 	cmd.Stdout = stdout
-	cmd.Stdin = std_in
+	cmd.Stdin = stdIn
 	cmd.Stderr = stderr
 
 	err = cmd.Start()
@@ -87,10 +93,10 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 		fmt.Println(strings.Repeat("-", len(command)))
 		if isSuccess {
 			fmt.Println("[OK] Status:", status.ExitStatus(),
-				" Used Time:", cmd.ProcessState.UserTime(), "\n")
+				" Used Time:", cmd.ProcessState.UserTime())
 		} else {
 			fmt.Println("[Fail] Status:", status.ExitStatus(),
-				" Used Time:", cmd.ProcessState.UserTime(), "\n")
+				" Used Time:", cmd.ProcessState.UserTime())
 		}
 	}
 
@@ -103,21 +109,20 @@ func execCommand(command string, std_in io.Reader, std_out io.Writer,
 	return status.ExitStatus(), output, nil
 }
 
-// 执行Shell命令
+// Run 执行Shell命令
 // 如果没有返回error,则命令执行成功，反之失败
 // code返回命令执行返回的状态码,返回0表示执行成功
-func Run(command string) (code int, output string, err error) {
+// stdOutput:true 输出到os.StdOut, 错误输出到os.StdErr, 需要将正常结果输出到stderr中才能显示命令输出
+
+func Run(command string,stdOutput bool) (code int, output string, err error) {
 	//return execCommand(command, os.Stdin, os.Stdout, os.Stdin, isDebug)
+	if stdOutput{
+		return execCommand(command, os.Stderr, os.Stdout, os.Stderr, isDebug)
+	}
 	return execCommand(command, nil, nil, nil, isDebug)
 }
 
-// 执行Shell命令，并输出到os.StdOut
-// 错误输出到os.StdErr
-func StdRun(command string) (code int, output string, err error) {
-	return execCommand(command, os.Stdin, os.Stdout, os.Stdin, isDebug)
-}
-
-// (后台/静默)执行
+// Brun (后台/静默)执行
 // 仅仅执行命令，不需要捕获结果
 func Brun(command string) (err error) {
 	if strings.TrimSpace(command) == "" {

@@ -26,11 +26,11 @@ func RandBytes(n int, letters []byte) []byte {
 	return arr
 }
 
-// 随机整数
+// RandInt 随机整数
 func RandInt(n int) int {
 	min := int(math.Pow10(n - 1))
 	max := min*10 - 1
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 	v := rand.Intn(max)
 	if v < min {
 		return min + v

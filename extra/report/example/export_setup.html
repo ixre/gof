@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>系统提示</title>
+    {{.Var.Header}}
+    <style type="text/css">
+        .expo-wrapper {
+            padding: 15px;
+        }
+
+        .expo-wrapper ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        .expo-wrapper input, .expo-wrapper label {
+            vertical-align: middle;
+        }
+
+        .expo-wrapper li {
+            float: left;
+            margin-right: 10px;
+            line-height: 30px;
+            white-space: nowrap;
+        }
+
+
+        strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="page-message">
+    {{.Map.SetupHtml}}
+</div>
+<script type="text/javascript" src="{{.Var.StaticPath}}/assets/js/base.js?v={{.Var.Version}}"></script>
+<script type="text/javascript">
+    $_expo.config.jsonHandler = $b.json;
+    $_expo.config.urlHandler = "processExport";
+</script>
+
+</body>
+</html>
