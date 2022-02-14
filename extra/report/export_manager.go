@@ -63,11 +63,11 @@ func (e *ExportItem) GetTotalView(ht map[string]string) (row map[string]interfac
 	return nil
 }
 
-func (e *ExportItem) GetTotalCount(p Params)(int,error) {
+func (e *ExportItem) GetTotalCount(p Params) (int, error) {
 	sqlDb := e.dbProvider.GetDB()
 	total := 0
 	if e.sqlConfig.Total == "" {
-		return 0,errors.New("no set total sql")
+		return 0, errors.New("no set total sql")
 	}
 	sql := SqlFormat(e.sqlConfig.Total, p)
 	smt, err := sqlDb.Prepare(e.check(sql))
@@ -81,10 +81,10 @@ func (e *ExportItem) GetTotalCount(p Params)(int,error) {
 	if err != nil {
 		log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
 	}
-	return total,err
+	return total, err
 }
 
-func (e *ExportItem) GetSchemaData(p Params)([]map[string]interface{},error){
+func (e *ExportItem) GetSchemaData(p Params) ([]map[string]interface{}, error) {
 	if e == nil || e.dbProvider == nil {
 		return nil, errors.New("no match config item")
 	}
@@ -119,25 +119,25 @@ func (e *ExportItem) GetSchemaData(p Params)([]map[string]interface{},error){
 		if err == nil {
 			data := db.RowsToMarshalMap(sqlRows)
 			sqlRows.Close()
-			return data,  err
+			return data, err
 		}
 	}
 	log.Println("[ Export][ Error] -", err.Error(), "\n", sql)
-	return nil,  err
+	return nil, err
 }
 
-func (e *ExportItem) GetSchemaAndData(p Params) ([]map[string]interface{},  int,  error) {
+func (e *ExportItem) GetSchemaAndData(p Params) ([]map[string]interface{}, int, error) {
 	if e == nil || e.dbProvider == nil {
 		return nil, 0, errors.New("no match config item")
 	}
 	total := -1
-	rows,err := e.GetSchemaData(p)
-	if err == nil && len(rows) > 0{
-		if p.IsFirstIndex(){
-			total,err = e.GetTotalCount(p)
+	rows, err := e.GetSchemaData(p)
+	if err == nil && len(rows) > 0 {
+		if p.IsFirstIndex() {
+			total, err = e.GetTotalCount(p)
 		}
 	}
-	return rows,total,err
+	return rows, total, err
 }
 
 // GetJsonData 获取要导出的数据Json格式

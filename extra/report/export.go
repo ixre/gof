@@ -57,9 +57,9 @@ type (
 		//导出的列名(比如：数据表是因为列，这里我需要列出中文列)
 		GetColumnMapping() []ColumnMapping
 		// GetTotalCount 查询总条数
-		GetTotalCount(p Params)(int,error)
+		GetTotalCount(p Params) (int, error)
 		// GetSchemaData 查询数据
-		GetSchemaData(p Params)([]map[string]interface{},error)
+		GetSchemaData(p Params) ([]map[string]interface{}, error)
 		// GetSchemaAndData 获取要导出的数据及表结构,仅在第一页时查询分页数据
 		GetSchemaAndData(p Params) (rows []map[string]interface{},
 			total int, err error)
@@ -98,6 +98,7 @@ type (
 )
 
 const reduceKey = "__reduce"
+
 // Copy 从Map中拷贝数据
 func (p Params) Copy(form map[string]string) {
 	for k, v := range form {
@@ -116,15 +117,15 @@ func (p Params) CopyForm(form url.Values) {
 	}
 }
 
-func (p Params) IsFirstIndex() bool{
-	if !p.Contains(reduceKey){
+func (p Params) IsFirstIndex() bool {
+	if !p.Contains(reduceKey) {
 		p.reduce()
 	}
 	return p["page_offset"] == "0"
 }
 
-func (p Params) reduce(){
-	if p.Contains(reduceKey){
+func (p Params) reduce() {
+	if p.Contains(reduceKey) {
 		return
 	}
 	//初始化添加参数
@@ -149,7 +150,6 @@ func (p Params) reduce(){
 	p["page_end"] = strconv.Itoa(pageIndex * pageSize)
 	p[reduceKey] = true
 }
-
 
 func (p Params) Contains(k string) bool {
 	_, ok := p[k]

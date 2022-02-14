@@ -21,21 +21,21 @@ import (
 var CurrentApp App
 
 type App interface {
-	// Provided db access
+	// Db Provided db access
 	Db() db.Connector
-	// Return application configs.
+	// Config Return application configs.
 	Config() *Config
-	// return registry
+	// Registry return registry
 	Registry() *Registry
 	// Storage
 	Storage() storage.Interface
-	// Return a logger
+	// Log Return a logger
 	Log() log.ILogger
-	// Application is running debug mode
+	// Debug Application is running debug mode
 	Debug() bool
 }
 
-// 自动安装包
+// AutoInstall 自动安装包
 func AutoInstall(d time.Duration) {
 	execInstall()
 	if d == 0 {
@@ -55,14 +55,14 @@ func AutoInstall(d time.Duration) {
 }
 
 func execInstall() error {
-	_, _, err := shell.Run("go install .")
+	_, _, err := shell.Run("go install .", false)
 	if err != nil {
 		log.Println("[ Gof][ Install]:", err)
 	}
 	return err
 }
 
-// 数组参数
+// ArrayFlags 数组参数
 type ArrayFlags []string
 
 // Value ...
