@@ -251,6 +251,10 @@ func checkSqlIf(dv interface{}) bool {
 	if ok && v < 0{
 		return false
 	}
+	v2,ok2 := dv.(float64)
+	if ok2 && v2 < 0{
+		return false
+	}
 	return true
 }
 
