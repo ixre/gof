@@ -30,13 +30,13 @@ var (
 )
 
 type (
-	// 数据库提供者
+	// IDbProvider 数据库提供者
 	IDbProvider interface {
-		//获取数据库连接
+		// GetDB 获取数据库连接
 		GetDB() *sql.DB
 	}
 
-	//列映射
+	// ColumnMapping 列映射
 	ColumnMapping struct {
 		//列的字段
 		Field string
@@ -44,7 +44,7 @@ type (
 		Name string
 	}
 
-	//导入导出项目配置
+	// ItemConfig 导入导出项目配置
 	ItemConfig struct {
 		ColumnMapping string
 		Query         string
@@ -52,9 +52,9 @@ type (
 		Import        string
 	}
 
-	//数据导出入口
+	// IDataExportPortal 数据导出入口
 	IDataExportPortal interface {
-		//导出的列名(比如：数据表是因为列，这里我需要列出中文列)
+		// GetColumnMapping 导出的列名(比如：数据表是因为列，这里我需要列出中文列)
 		GetColumnMapping() []ColumnMapping
 		// GetTotalCount 查询总条数
 		GetTotalCount(p Params) (int, error)
@@ -63,32 +63,32 @@ type (
 		// GetSchemaAndData 获取要导出的数据及表结构,仅在第一页时查询分页数据
 		GetSchemaAndData(p Params) (rows []map[string]interface{},
 			total int, err error)
-		//获取要导出的数据Json格式
+		// GetJsonData 获取要导出的数据Json格式
 		GetJsonData(ht map[string]string) string
-		//获取统计数据
+		// GetTotalView 获取统计数据
 		GetTotalView(ht map[string]string) (row map[string]interface{})
-		//根据导出的列名获取列的索引及对应键
+		// GetExportColumnNames 根据导出的列名获取列的索引及对应键
 		GetExportColumnNames(exportColumnNames []string) (fields []string)
-		//导出数据
+		// Export 导出数据
 		Export(ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
 	}
 
-	//导出
+	// IExportProvider 导出
 	IExportProvider interface {
-		//导出
+		// Export 导出
 		Export(rows []map[string]interface{}, fields []string, names []string,
 			formatter []IExportFormatter) (binary []byte)
 	}
-	// 数据格式化器
+	// IExportFormatter 数据格式化器
 	IExportFormatter interface {
-		// 格式化字段
+		// Format 格式化字段
 		Format(field, name string, rowNum int, data interface{}) interface{}
 	}
 
-	// 参数
+	// Params 参数
 	Params map[string]interface{}
 
-	//导出参数
+	// ExportParams 导出参数
 	ExportParams struct {
 		//参数
 		Params Params
@@ -184,7 +184,7 @@ func parseColumnMapping(str string) []ColumnMapping {
 	return columnsMapping
 }
 
-// 转换参数
+// ParseParams 转换参数
 func ParseParams(paramMappings string) Params {
 	params := Params{}
 	if len(paramMappings) > 0 {
@@ -211,19 +211,47 @@ func ParseParams(paramMappings string) Params {
 	return params
 }
 
-// 判断是否存在危险的注入操作
+// CheckInject 判断是否存在危险的注入操作
 func CheckInject(s string) bool {
 	return !injectRegexp.Match([]byte(s))
 }
 
-// 格式化sql语句
+// SqlFormat 格式化sql语句
 func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	formatted = sql
+	// 替换条件
+	reg := regexp.MustCompile("#if\\s+([^\\s]+)[^\\n]*\n([\\s\\S]+?)#fi\n")
+	submatch := reg.FindAllStringSubmatch(formatted, -1)
+	for _, v := range submatch{
+		key := v[1]
+		dv,ok := ht[key]
+		if !ok || !checkSqlIf(dv) {
+			formatted = strings.Replace(formatted,v[0],"",-1)
+			continue
+		}
+		formatted = strings.Replace(formatted,v[0],v[2],-1)
+	}
+
 	for k, v := range ht {
 		formatted = strings.Replace(formatted, "{"+k+"}",
 			typeconv.Stringify(v), -1)
 	}
 	return formatted
+}
+
+// 检查条件是否成立,值为空, false或者小于0均不成立
+func checkSqlIf(dv interface{}) bool {
+	if dv == ""{
+		return false
+	}
+	if dv == false{
+		return false
+	}
+	v,ok := dv.(int)
+	if ok && v < 0{
+		return false
+	}
+	return true
 }
 
 // 内置的格式化器

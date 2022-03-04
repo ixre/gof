@@ -6,8 +6,6 @@ import (
 	"sync"
 )
 
-// EventBus returns default event bus instance
-var EventBus = NewEventBus()
 
 // EventListener is the signature of functions that can handle an Event.
 type EventListener func(data interface{})
@@ -30,12 +28,12 @@ func NewEventBus() *eventBus {
 	return &eventBus{new(sync.RWMutex), map[string][]*eventListenerWrapper{}}
 }
 
-// Subscribe adds an EventListener to be called when an event is posted.
+// Subscribe adds an EventListener to be called when an event is published.
 func (e *eventBus) Subscribe(event interface{}, listener EventListener) {
 	e.subscribe(event, listener, false)
 }
 
-// SubscribeAsync adds an EventListener to be async called when an event is posted.
+// SubscribeAsync adds an EventListener to be async called when an event is published.
 func (e *eventBus) SubscribeAsync(event interface{}, listener EventListener) {
 	e.subscribe(event, listener, true)
 }
@@ -81,4 +79,23 @@ func (e *eventBus) getEventName(event interface{}) string {
 		t = t.Elem()
 	}
 	return fmt.Sprintf("%s/%s", t.PkgPath(), t.Name())
+}
+
+// EventBus returns default event bus instance
+var defaultEventBus = NewEventBus()
+
+// Subscribe adds an EventListener to be called when an event is published.
+func Subscribe(event interface{}, listener EventListener) {
+	defaultEventBus.Subscribe(event,listener)
+}
+
+
+// SubscribeAsync adds an EventListener to be async called when an event is published.
+func SubscribeAsync(event interface{}, listener EventListener) {
+	defaultEventBus.SubscribeAsync(event,listener)
+}
+// Publish sends an event to all subscribed listeners.
+// Parameter data is optional ; Post can only have one map parameter.
+func Publish(event interface{}) {
+	defaultEventBus.Publish(event)
 }
