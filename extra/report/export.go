@@ -9,6 +9,7 @@
 package report
 
 import (
+	"context"
 	"database/sql"
 	_ "database/sql"
 	"encoding/json"
@@ -30,10 +31,14 @@ var (
 )
 
 type (
-	// IDbProvider 数据库提供者
 	IDbProvider interface {
-		// GetDB 获取数据库连接
-		GetDB() *sql.DB
+		// PrepareContext prepare query, clickhouse 应实现QueryRowContext和QueryContext
+		//　其他数据库实现PrepareContext即可
+		PrepareContext(ctx context.Context, query string) (*sql.Stmt,error)
+		// QueryRowContext query single row data
+		QueryRowContext(todo context.Context, query string) (*sql.Row,error)
+		// QueryContext query multiple row data
+		QueryContext(todo context.Context, query string) (*sql.Rows, error)
 	}
 
 	// ColumnMapping 列映射
@@ -57,11 +62,11 @@ type (
 		// GetColumnMapping 导出的列名(比如：数据表是因为列，这里我需要列出中文列)
 		GetColumnMapping() []ColumnMapping
 		// GetTotalCount 查询总条数
-		GetTotalCount(p Params) (int, error)
+		GetTotalCount(provider IDbProvider,p Params) (int, error)
 		// GetSchemaData 查询数据
-		GetSchemaData(p Params) ([]map[string]interface{}, error)
+		GetSchemaData(provider IDbProvider,p Params) ([]map[string]interface{}, error)
 		// GetSchemaAndData 获取要导出的数据及表结构,仅在第一页时查询分页数据
-		GetSchemaAndData(p Params) (rows []map[string]interface{},
+		GetSchemaAndData(provider IDbProvider,p Params) (rows []map[string]interface{},
 			total int, err error)
 		// GetJsonData 获取要导出的数据Json格式
 		GetJsonData(ht map[string]string) string
@@ -70,7 +75,7 @@ type (
 		// GetExportColumnNames 根据导出的列名获取列的索引及对应键
 		GetExportColumnNames(exportColumnNames []string) (fields []string)
 		// Export 导出数据
-		Export(ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
+		Export(provider IDbProvider,ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
 	}
 
 	// IExportProvider 导出
