@@ -10,7 +10,7 @@ import (
 
 var _ Dialect = new(PostgresqlDialect)
 
-//select datname from pg_database
+// PostgresqlDialect select dataframe from pg_database
 type PostgresqlDialect struct {
 }
 
@@ -22,7 +22,7 @@ func (p *PostgresqlDialect) Name() string {
 	return "PostgresqlDialect"
 }
 
-// 获取所有的表
+// Tables 获取所有的表
 func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) ([]*Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
@@ -55,7 +55,7 @@ func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) (
 	return nil, err
 }
 
-// 获取表结构
+// Table 获取表结构
 func (p *PostgresqlDialect) Table(db *sql.DB, table string) (*Table, error) {
 	stmt, err := db.Prepare(`SELECT COALESCE(description,'') as comment from pg_description
 where objoid='` + table + `'::regclass and objsubid=0`)
@@ -137,7 +137,7 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 	switch dbType {
 	case "bigint":
 		return TypeInt64
-	case "smallint":
+	case "smallint","int4range":
 		return TypeInt16
 	case "numeric", "double precision":
 		return TypeFloat64
@@ -145,7 +145,7 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		return TypeBoolean
 	case "text":
 		return TypeString
-	case "integer":
+	case "integer","int8range":
 		if len > 32 {
 			return TypeInt64
 		} else {

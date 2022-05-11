@@ -15,7 +15,7 @@ import (
  * history :
  */
 
-// 将类型转为string
+// MustInt parse d to int
 func MustInt(d interface{}) int {
 	switch d.(type) {
 	case string:
@@ -42,7 +42,7 @@ func MustInt(d interface{}) int {
 	panic("not support type:" + fmt.Sprintf("%+v", d))
 }
 
-// 将类型转换为bool
+// MustBool 将类型转换为bool
 func MustBool(d interface{}) bool {
 	switch d.(type) {
 	case bool:
@@ -56,7 +56,7 @@ func MustBool(d interface{}) bool {
 	return false
 }
 
-// 将类型转换为float
+// MustFloat parse d to float
 func MustFloat(d interface{}) float64 {
 	switch d.(type) {
 	case string:
