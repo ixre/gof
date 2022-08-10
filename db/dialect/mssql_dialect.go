@@ -93,6 +93,7 @@ func (m *MsSqlDialect) Table(d *sql.DB, table string) (*db.Table, error) {
 				table.Columns = append(table.Columns, m.parseColumn(rs))
 			}
 		}
+		rows.Close()
 		stmt.Close()
 		m.updatePkColumn(d, table)
 		m.updateAutoKeys(d, table)
@@ -120,6 +121,7 @@ func (m *MsSqlDialect) updatePkColumn(d *sql.DB, table *db.Table) {
 			}
 		}
 	}
+	rows.Close()
 	stmt.Close()
 }
 
@@ -138,6 +140,7 @@ func (m *MsSqlDialect) updateAutoKeys(d *sql.DB, table *db.Table) {
 			keys[s] = 1
 		}
 	}
+	rows.Close()
 	stmt.Close()
 	for _, v := range table.Columns {
 		if _, ok := keys[v.Name]; ok {
@@ -160,7 +163,7 @@ func (m *MsSqlDialect) getTypeId(dbType string) int {
 		return db.TypeBytes
 	case "float":
 		return db.TypeFloat32
-	case "decimal", "decimal() identity":
+	case "decimal","numeric","money", "decimal() identity":
 		return db.TypeDecimal
 	case "double":
 		return db.TypeFloat64
