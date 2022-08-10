@@ -163,11 +163,11 @@ func (m *MsSqlDialect) getTypeId(dbType string) int {
 		return db.TypeBytes
 	case "float":
 		return db.TypeFloat32
-	case "decimal","numeric","money", "decimal() identity":
+	case "decimal", "numeric", "money", "decimal() identity":
 		return db.TypeDecimal
 	case "double":
 		return db.TypeFloat64
-	case "datetime", "smalldatetime":
+	case "date", "datetime", "smalldatetime":
 		return db.TypeDateTime
 	case "text", "ntext", "varchar", "nvarchar", "char":
 		return db.TypeString
