@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/ixre/gof/db/dialect"
 	"github.com/ixre/gof/log"
 	"github.com/lib/pq"
@@ -87,9 +87,9 @@ func open(driverName string, driverSource string) (dialect.Dialect, *sql.DB, err
 type defaultConnector struct {
 	driverName string  //驱动名称
 	db         *sql.DB //golang db只需要open一次即可
-	dialect dialect.Dialect
-	logger log.ILogger
-	debug  bool // 是否调试模式
+	dialect    dialect.Dialect
+	logger     log.ILogger
+	debug      bool // 是否调试模式
 }
 
 // Dialect implements Connector
@@ -174,9 +174,9 @@ func (t *defaultConnector) Query(s string, f func(*sql.Rows), args ...interface{
 			f(rows)
 		}
 	} else if err != sql.ErrNoRows {
-		err = t.err(errors.New(fmt.Sprintf(
-			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n",
-			err.Error(), s, args)))
+		err = t.err(fmt.Errorf(
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v",
+			err.Error(), s, args))
 	}
 	return err
 }
@@ -186,8 +186,7 @@ func (t *defaultConnector) QueryRow(s string, f func(*sql.Row) error, args ...in
 	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
-		return t.err(errors.New(fmt.Sprintf(
-			"[ SQL][ PREPARE][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+		return t.err(fmt.Errorf("[ SQL][ PREPARE][ ERROR]:%s ; sql = %s ; params = %+v", err.Error(), s, args))
 	} else {
 		defer stmt.Close()
 		row := stmt.QueryRow(args...)
@@ -208,8 +207,8 @@ func (t *defaultConnector) ExecScalar(s string, result interface{},
 		return row.Scan(result)
 	}, args...)
 	if err != nil && err != sql.ErrNoRows {
-		return t.err(errors.New(fmt.Sprintf(
-			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+		return t.err(fmt.Errorf(
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v", err.Error(), s, args))
 	}
 	return err
 }
@@ -224,12 +223,11 @@ func (t *defaultConnector) exec(s string, args ...interface{}) (rows int, lastIn
 	stmt, err := t.Raw().Prepare(s)
 	if err != nil {
 		panic(err.Error() + "/" + s)
-		return 0, -1, err
 	}
 	result, err := stmt.Exec(args...)
 	if err != nil {
-		err = t.err(errors.New(fmt.Sprintf(
-			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v\n", err.Error(), s, args)))
+		err = t.err(fmt.Errorf(
+			"[ SQL][ ERROR]:%s ; sql = %s ; params = %+v", err.Error(), s, args))
 		return 0, -1, err
 	}
 	var lastId int64

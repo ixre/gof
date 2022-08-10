@@ -183,7 +183,7 @@ func TestDeepCopy(t *testing.T) {
 			t3,
 			func(x, y interface{}) bool {
 				y1 := y.(T3)
-				return y1.A == y1.B
+				return y1A == y1.B
 			},
 		},
 		{
@@ -232,32 +232,32 @@ func TestDeepCopy(t *testing.T) {
 	}
 }
 
-func BenchmarkCopyT1(b *testing.B) {
-	for i := b.N; i >= 0; i-- {
-		Copy(t1)
-	}
-}
+// func BenchmarkCopyT1(b *testing.B) {
+// 	for i := b.N; i >= 0; i-- {
+// 		Copy(t1)
+// 	}
+// }
 
-func BenchmarkCopyT2(b *testing.B) {
-	for i := b.N; i >= 0; i-- {
-		Copy(t2)
-	}
-}
+// func BenchmarkCopyT2(b *testing.B) {
+// 	for i := b.N; i >= 0; i-- {
+// 		Copy(t2)
+// 	}
+// }
 
-func BenchmarkCopyT3(b *testing.B) {
-	for i := b.N; i >= 0; i-- {
-		Copy(t3)
-	}
-}
+// func BenchmarkCopyT3(b *testing.B) {
+// 	for i := b.N; i >= 0; i-- {
+// 		Copy(t3)
+// 	}
+// }
 
-func BenchmarkCopyT4(b *testing.B) {
-	for i := b.N; i >= 0; i-- {
-		Copy(t4)
-	}
-}
+// func BenchmarkCopyT4(b *testing.B) {
+// 	for i := b.N; i >= 0; i-- {
+// 		Copy(t4)
+// 	}
+// }
 
-func BenchmarkCopyT5(b *testing.B) {
-	for i := b.N; i >= 0; i-- {
-		Copy(t5)
-	}
-}
+// func BenchmarkCopyT5(b *testing.B) {
+// 	for i := b.N; i >= 0; i-- {
+// 		Copy(t5)
+// 	}
+// }

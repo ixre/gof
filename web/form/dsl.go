@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/ixre/gof/db/orm"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	tpl "text/template"
+
+	"github.com/ixre/gof/db/db"
 )
 
 type (
@@ -138,7 +139,7 @@ func (t *Engine) title(str string) string {
 }
 
 // 将数据库表格转为表单对象
-func (e *Engine) TableToForm(tb *orm.Table) *Form {
+func (e *Engine) TableToForm(tb *db.Table) *Form {
 	f := &Form{
 		ID:     e.title(tb.Name),
 		Label:  e.title(tb.Comment),

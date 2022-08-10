@@ -70,15 +70,15 @@ func (e *ExportItem) GetTotalCount(provider IDbProvider, p Params) (int, error) 
 		return 0, errors.New("no set total sql")
 	}
 	query := e.check(SqlFormat(e.sqlConfig.Total, p))
-	smt, err := provider.PrepareContext(context.TODO(),query)
+	smt, err := provider.PrepareContext(context.TODO(), query)
 	if err == nil {
 		var row *sql.Row
-		if smt != nil{
+		if smt != nil {
 			row = smt.QueryRow()
 			smt.Close()
-		}else{
+		} else {
 			// 如果PrepareContext返回stmt为空,error也为空,则直接查询.适用于clickhouse
-			row,err = provider.QueryRowContext(context.TODO(),query)
+			row, err = provider.QueryRowContext(context.TODO(), query)
 		}
 		if row != nil {
 			err = row.Scan(&total)
@@ -108,7 +108,7 @@ func (e *ExportItem) GetSchemaData(provider IDbProvider, p Params) ([]map[string
 		for i, v := range sqlLines {
 			if i != t-1 {
 				smt, err := provider.PrepareContext(context.TODO(), e.check(v))
-				if err == nil && smt != nil{
+				if err == nil && smt != nil {
 					smt.Exec()
 					smt.Close()
 				}
@@ -116,14 +116,14 @@ func (e *ExportItem) GetSchemaData(provider IDbProvider, p Params) ([]map[string
 		}
 		query = e.check(sqlLines[t-1])
 	}
-	smt, err := provider.PrepareContext(context.TODO(),query)
+	smt, err := provider.PrepareContext(context.TODO(), query)
 	if err == nil {
 		var sqlRows *sql.Rows
 		if smt != nil {
 			defer smt.Close()
 			sqlRows, err = smt.Query()
-		}else{
-			sqlRows,err = provider.QueryContext(context.TODO(),query)
+		} else {
+			sqlRows, err = provider.QueryContext(context.TODO(), query)
 		}
 		if err == nil {
 			data := db.RowsToMarshalMap(sqlRows)
@@ -140,10 +140,10 @@ func (e *ExportItem) GetSchemaAndData(provider IDbProvider, p Params) ([]map[str
 		return nil, 0, errors.New("no match config item")
 	}
 	total := -1
-	rows, err := e.GetSchemaData(provider,p)
+	rows, err := e.GetSchemaData(provider, p)
 	if err == nil && len(rows) > 0 {
 		if p.IsFirstIndex() {
-			total, err = e.GetTotalCount(provider,p)
+			total, err = e.GetTotalCount(provider, p)
 		}
 	}
 	return rows, total, err
@@ -159,9 +159,9 @@ func (e *ExportItem) GetJsonData(ht map[string]string) string {
 }
 
 // Export 导出数据
-func (e *ExportItem) Export(db IDbProvider,parameters *ExportParams,
+func (e *ExportItem) Export(db IDbProvider, parameters *ExportParams,
 	provider IExportProvider, formatter IExportFormatter) []byte {
-	rows, _, _ := e.GetSchemaAndData(db,parameters.Params)
+	rows, _, _ := e.GetSchemaAndData(db, parameters.Params)
 	names := e.GetExportColumnNames(parameters.ExportFields)
 	fmtArray := []IExportFormatter{interFmt}
 	if formatter != nil {
@@ -187,11 +187,11 @@ type ItemManager struct {
 	exportItems map[string]*ExportItem
 	// 是否缓存配置项文件
 	cacheFiles bool
-	lock *sync.RWMutex
+	lock       *sync.RWMutex
 }
 
 // NewItemManager 新建导出项目管理器
-func NewItemManager( rootPath string, cacheFiles bool) *ItemManager {
+func NewItemManager(rootPath string, cacheFiles bool) *ItemManager {
 	if rootPath == "" {
 		rootPath = "/query/"
 	}
@@ -203,7 +203,7 @@ func NewItemManager( rootPath string, cacheFiles bool) *ItemManager {
 		cfgFileExt:  ".xml",
 		exportItems: make(map[string]*ExportItem),
 		cacheFiles:  cacheFiles,
-		lock: &sync.RWMutex{},
+		lock:        &sync.RWMutex{},
 	}
 }
 
@@ -233,8 +233,8 @@ func (f *ItemManager) loadExportItem(portalKey string) *ExportItem {
 		cfg, err1 := readItemConfigFromXml(filePath)
 		if err1 == nil {
 			return &ExportItem{
-				sqlConfig:  cfg,
-				PortalKey:  portalKey,
+				sqlConfig: cfg,
+				PortalKey: portalKey,
 			}
 		}
 		err = err1
@@ -246,7 +246,7 @@ func (f *ItemManager) loadExportItem(portalKey string) *ExportItem {
 }
 
 // GetExportData 获取导出数据
-func (f *ItemManager) GetExportData(provider IDbProvider,portal string, p Params, page int,
+func (f *ItemManager) GetExportData(provider IDbProvider, portal string, p Params, page int,
 	rows int) (data []map[string]interface{}, total int, err error) {
 	exportItem := f.GetItem(portal)
 	if exportItem != nil {
@@ -256,7 +256,7 @@ func (f *ItemManager) GetExportData(provider IDbProvider,portal string, p Params
 		if rows > 0 {
 			p["page_size"] = rows
 		}
-		return exportItem.GetSchemaAndData(provider,p)
+		return exportItem.GetSchemaAndData(provider, p)
 	}
 	return make([]map[string]interface{}, 0), 0, errNoSuchItem
 }

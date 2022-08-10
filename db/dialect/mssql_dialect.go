@@ -9,6 +9,7 @@
 package dialect
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 
@@ -30,15 +31,20 @@ func (m *MsSqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string) ([]*db.Table, error) {
+func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, prefix string) ([]*db.Table, error) {
+	buf := bytes.NewBufferString(` SELECT ob.name FROM sys.objects AS ob
+	LEFT OUTER JOIN sys.extended_properties AS ep
+	  ON ep.major_id = ob.object_id
+		 AND ep.class = 1
+		 AND ep.minor_id = 0
+  WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
+	if prefix != "" {
+		buf.WriteString(`AND ob.name LIKE '`)
+		buf.WriteString(prefix)
+		buf.WriteString(`%'`)
+	}
 	var list []string
-	stmt, err := d.Prepare(`
-	 SELECT top 1 ob.name FROM sys.objects AS ob
-      LEFT OUTER JOIN sys.extended_properties AS ep
-        ON ep.major_id = ob.object_id
-           AND ep.class = 1
-           AND ep.minor_id = 0
-    WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1 `)
+	stmt, err := d.Prepare(buf.String())
 	if err == nil {
 		tb := ""
 		rows, _ := stmt.Query()
@@ -88,27 +94,27 @@ func (m *MsSqlDialect) Table(d *sql.DB, table string) (*db.Table, error) {
 			}
 		}
 		stmt.Close()
-		m.updatePkColumn(d,table)
-		m.updateAutoKeys(d,table)
-		return table,nil
+		m.updatePkColumn(d, table)
+		m.updateAutoKeys(d, table)
+		return table, nil
 	}
 	return nil, err
 }
 
 // 更新主键
-func (m *MsSqlDialect) updatePkColumn(d *sql.DB,table *db.Table){
-	stmt, _ := d.Prepare(fmt.Sprintf(`exec sp_pkeys %s`,table.Name))
+func (m *MsSqlDialect) updatePkColumn(d *sql.DB, table *db.Table) {
+	stmt, _ := d.Prepare(fmt.Sprintf(`exec sp_pkeys %s`, table.Name))
 	rows, _ := stmt.Query()
 	rs := make([]interface{}, 6)
-		var rawBytes = make([][]byte, 6)
-		for i := range rs {
-			rs[i] = &rawBytes[i]
+	var rawBytes = make([][]byte, 6)
+	for i := range rs {
+		rs[i] = &rawBytes[i]
 	}
-	if rows.Next(){
+	if rows.Next() {
 		_ = rows.Scan(rs...)
-		pk := getString(rs,3)
-		for _,v := range table.Columns{
-			if v.Name == pk{
+		pk := getString(rs, 3)
+		for _, v := range table.Columns {
+			if v.Name == pk {
 				v.IsPk = true
 				break
 			}
@@ -118,13 +124,13 @@ func (m *MsSqlDialect) updatePkColumn(d *sql.DB,table *db.Table){
 }
 
 // 更新自增键
-func (m *MsSqlDialect) updateAutoKeys(d *sql.DB,table *db.Table){
+func (m *MsSqlDialect) updateAutoKeys(d *sql.DB, table *db.Table) {
 	stmt, err := d.Prepare(fmt.Sprintf(`
 	SELECT name FROM syscolumns   
 	WHERE id=object_id('%s') 
-	AND COLUMNPROPERTY(id,name,'IsIdentity')=1`,table.Name))
+	AND COLUMNPROPERTY(id,name,'IsIdentity')=1`, table.Name))
 	rows, _ := stmt.Query()
-	keys := make(map[string]int,0)
+	keys := make(map[string]int, 0)
 	for rows.Next() {
 		s := ""
 		err = rows.Scan(&s)
@@ -133,8 +139,8 @@ func (m *MsSqlDialect) updateAutoKeys(d *sql.DB,table *db.Table){
 		}
 	}
 	stmt.Close()
-	for _,v := range table.Columns{
-		if _,ok := keys[v.Name];ok {
+	for _, v := range table.Columns {
+		if _, ok := keys[v.Name]; ok {
 			v.IsAuto = true
 		}
 	}
@@ -144,21 +150,23 @@ func (m *MsSqlDialect) getTypeId(dbType string) int {
 	switch dbType {
 	case "smallint":
 		return db.TypeInt16
-	case "tinyint", "int":
+	case "tinyint", "int", "int identity":
 		return db.TypeInt32
 	case "bit":
 		return db.TypeBoolean
-	case "bigint":
+	case "bigint", "bigint identity", "timestamp":
 		return db.TypeInt64
+	case "varbinary", "image":
+		return db.TypeBytes
 	case "float":
 		return db.TypeFloat32
-	case "decimal":
+	case "decimal", "decimal() identity":
 		return db.TypeDecimal
 	case "double":
 		return db.TypeFloat64
-	case "date":
+	case "datetime", "smalldatetime":
 		return db.TypeDateTime
-	case "text", "varchar", "char":
+	case "text", "ntext", "varchar", "nvarchar", "char":
 		return db.TypeString
 	}
 	println("[ ORM][ MSSQL][ Warning]:Dialect not support type :", dbType)

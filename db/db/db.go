@@ -30,8 +30,6 @@ type (
 	}
 )
 
-
-
 var (
 	//TypeUnknown = int(reflect.Invalid)
 	//TypeString  = int(reflect.String)

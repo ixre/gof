@@ -6,7 +6,6 @@ import (
 	"sync"
 )
 
-
 // EventListener is the signature of functions that can handle an Event.
 type EventListener func(data interface{})
 
@@ -86,14 +85,14 @@ var defaultEventBus = NewEventBus()
 
 // Subscribe adds an EventListener to be called when an event is published.
 func Subscribe(event interface{}, listener EventListener) {
-	defaultEventBus.Subscribe(event,listener)
+	defaultEventBus.Subscribe(event, listener)
 }
-
 
 // SubscribeAsync adds an EventListener to be async called when an event is published.
 func SubscribeAsync(event interface{}, listener EventListener) {
-	defaultEventBus.SubscribeAsync(event,listener)
+	defaultEventBus.SubscribeAsync(event, listener)
 }
+
 // Publish sends an event to all subscribed listeners.
 // Parameter data is optional ; Post can only have one map parameter.
 func Publish(event interface{}) {

@@ -14,19 +14,19 @@ func NewDistributedLock(s storage.Interface) *DistributedLock {
 }
 
 // Lock 加锁, 返回true,表示加锁成功.否则已经加锁
-func (d *DistributedLock) Lock(key string,expires int64)bool{
+func (d *DistributedLock) Lock(key string, expires int64) bool {
 	k := d.getKey(key)
-	if d.s.Exists(k){
+	if d.s.Exists(k) {
 		return false
 	}
-	return d.s.SetExpire(k,"",expires) == nil
+	return d.s.SetExpire(k, "", expires) == nil
 }
 
 // Unlock 解锁
-func (d *DistributedLock) Unlock(key string){
+func (d *DistributedLock) Unlock(key string) {
 	d.s.Delete(d.getKey(key))
 }
 
 func (d *DistributedLock) getKey(key string) string {
-	return "_lock_"+key
+	return "_lock_" + key
 }

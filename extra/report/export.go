@@ -34,9 +34,9 @@ type (
 	IDbProvider interface {
 		// PrepareContext prepare query, clickhouse 应实现QueryRowContext和QueryContext
 		//　其他数据库实现PrepareContext即可
-		PrepareContext(ctx context.Context, query string) (*sql.Stmt,error)
+		PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 		// QueryRowContext query single row data
-		QueryRowContext(todo context.Context, query string) (*sql.Row,error)
+		QueryRowContext(todo context.Context, query string) (*sql.Row, error)
 		// QueryContext query multiple row data
 		QueryContext(todo context.Context, query string) (*sql.Rows, error)
 	}
@@ -62,11 +62,11 @@ type (
 		// GetColumnMapping 导出的列名(比如：数据表是因为列，这里我需要列出中文列)
 		GetColumnMapping() []ColumnMapping
 		// GetTotalCount 查询总条数
-		GetTotalCount(provider IDbProvider,p Params) (int, error)
+		GetTotalCount(provider IDbProvider, p Params) (int, error)
 		// GetSchemaData 查询数据
-		GetSchemaData(provider IDbProvider,p Params) ([]map[string]interface{}, error)
+		GetSchemaData(provider IDbProvider, p Params) ([]map[string]interface{}, error)
 		// GetSchemaAndData 获取要导出的数据及表结构,仅在第一页时查询分页数据
-		GetSchemaAndData(provider IDbProvider,p Params) (rows []map[string]interface{},
+		GetSchemaAndData(provider IDbProvider, p Params) (rows []map[string]interface{},
 			total int, err error)
 		// GetJsonData 获取要导出的数据Json格式
 		GetJsonData(ht map[string]string) string
@@ -75,7 +75,7 @@ type (
 		// GetExportColumnNames 根据导出的列名获取列的索引及对应键
 		GetExportColumnNames(exportColumnNames []string) (fields []string)
 		// Export 导出数据
-		Export(provider IDbProvider,ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
+		Export(provider IDbProvider, ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
 	}
 
 	// IExportProvider 导出
@@ -227,14 +227,14 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	// 替换条件
 	reg := regexp.MustCompile("#if\\s+([^\\s]+)[^\\n]*\n([\\s\\S]+?)#fi\n")
 	submatch := reg.FindAllStringSubmatch(formatted, -1)
-	for _, v := range submatch{
+	for _, v := range submatch {
 		key := v[1]
-		dv,ok := ht[key]
+		dv, ok := ht[key]
 		if !ok || !checkSqlIf(dv) {
-			formatted = strings.Replace(formatted,v[0],"",-1)
+			formatted = strings.Replace(formatted, v[0], "", -1)
 			continue
 		}
-		formatted = strings.Replace(formatted,v[0],v[2],-1)
+		formatted = strings.Replace(formatted, v[0], v[2], -1)
 	}
 
 	for k, v := range ht {
@@ -246,18 +246,18 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 
 // 检查条件是否成立,值为空, false或者小于0均不成立
 func checkSqlIf(dv interface{}) bool {
-	if dv == ""{
+	if dv == "" {
 		return false
 	}
-	if dv == false{
+	if dv == false {
 		return false
 	}
-	v,ok := dv.(int)
-	if ok && v < 0{
+	v, ok := dv.(int)
+	if ok && v < 0 {
 		return false
 	}
-	v2,ok2 := dv.(float64)
-	if ok2 && v2 < 0{
+	v2, ok2 := dv.(float64)
+	if ok2 && v2 < 0 {
 		return false
 	}
 	return true

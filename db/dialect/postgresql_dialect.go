@@ -25,7 +25,7 @@ func (p *PostgresqlDialect) Name() string {
 }
 
 // Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string) ([]*db.Table, error) {
+func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, prefix string) ([]*db.Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
 	if schema == "" {
@@ -33,6 +33,11 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string) ([
 	}
 	buf.WriteString(schema)
 	buf.WriteByte('\'')
+	if prefix != "" {
+		buf.WriteString(` AND table_name LIKE '`)
+		buf.WriteString(prefix)
+		buf.WriteString(`%'`)
+	}
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
@@ -139,7 +144,7 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 	switch dbType {
 	case "bigint":
 		return db.TypeInt64
-	case "smallint","int4range":
+	case "smallint", "int4range":
 		return db.TypeInt16
 	case "numeric", "double precision":
 		return db.TypeFloat64
@@ -147,7 +152,7 @@ func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 		return db.TypeBoolean
 	case "text":
 		return db.TypeString
-	case "integer","int8range":
+	case "integer", "int8range":
 		if len > 32 {
 			return db.TypeInt64
 		} else {

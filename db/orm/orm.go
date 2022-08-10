@@ -73,14 +73,10 @@ type (
 		Save(primary interface{}, entity interface{}) (rows int64, lastInsertId int64, err error)
 	}
 
-
 	// find some information of entity
 	OrmFinder interface {
 	}
-
-	
 )
-
 
 // 获取表元数据
 func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {

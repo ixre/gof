@@ -173,7 +173,6 @@ func main() {
 	routes.Add("^/[0-9]$", func(ctx *web.Context) {
 		// 直接输出内容
 		ctx.Response.Write([]byte("数字路径"))
-		return
 	})
 
 	// 默认页路由
@@ -190,13 +189,13 @@ func main() {
 		return
 
 		// 使用会话
-		ctx.Session().Set("user", "jarrysix")
-		ctx.Session().Save()
+		//ctx.Session().Set("user", "jarrysix")
+		//ctx.Session().Save()
 
 		// 使用DB和ORM
-		db := ctx.App.Db()
-		orm := db.o
-		_ = orm.Version()
+		//db := ctx.App.Db()
+		//orm := db.o
+		//_ = orm.Version()
 	})
 
 	// 使用一个拦截器，来拦截请求。

@@ -2,8 +2,8 @@ package report
 
 import "testing"
 
-func TestIf(t *testing.T){
-	query :=`
+func TestIf(t *testing.T) {
+	query := `
 		"SELECT COUNT(1) FROM wal_wallet_log l 
 		WHERE l.wallet_id = {wallet_id}\n AND title LIKE '%{keyword}%'
 		#if kind > 0
@@ -14,9 +14,9 @@ func TestIf(t *testing.T){
 		#fi
 		`
 	mp := map[string]interface{}{
-		"kind":-1,
-		"trade_no":"F1",
+		"kind":     -1,
+		"trade_no": "F1",
 	}
-	ret := SqlFormat(query,mp)
+	ret := SqlFormat(query, mp)
 	t.Log(ret)
 }
