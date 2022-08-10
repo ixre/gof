@@ -35,7 +35,7 @@ func TestPGOrmSelect(t *testing.T) {
 	println("===== testing select model =======")
 	for i := 0; i < 3; i++ {
 		var users []PGMember
-		_orm.Select(&users, "user=$1", "jarry6")
+		//_orm.Select(&users, "user=$1", "jarry6")
 		if i == 0 {
 			t.Logf("%#v\n", users)
 		}

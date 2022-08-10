@@ -6,11 +6,13 @@
  * description :
  * history :
  */
-package orm
+package dialect
 
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/ixre/gof/db/db"
 )
 
 var _ Dialect = new(SqLiteDialect)
@@ -27,11 +29,11 @@ func (s *SqLiteDialect) Name() string {
 }
 
 // 获取所有的表
-func (s *SqLiteDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Table, error) {
+func (s *SqLiteDialect) Tables(d *sql.DB, dbName string, schema string) ([]*db.Table, error) {
 	panic("not implement")
 }
 
 // 获取表结构
-func (s *SqLiteDialect) Table(db *sql.DB, table string) (*Table, error) {
+func (s *SqLiteDialect) Table(d *sql.DB, table string) (*db.Table, error) {
 	panic("not implement")
 }

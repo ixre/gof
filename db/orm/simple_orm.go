@@ -5,13 +5,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ixre/gof/db"
-	"github.com/ixre/gof/storage"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/ixre/gof/db"
+	dbdb "github.com/ixre/gof/db/db"
+	"github.com/ixre/gof/db/dialect"
+	"github.com/ixre/gof/storage"
 )
 
 var _ Orm = new(simpleOrm)
@@ -23,26 +26,26 @@ type simpleOrm struct {
 	connector  db.Connector
 	driverName string
 	useTrace   bool
-	dialect    Dialect
+	dialect    dialect.Dialect
 	tmLock     *sync.RWMutex
 }
 
 func NewOrm(driver string, db *sql.DB) Orm {
-	var dialect Dialect
+	var d dialect.Dialect
 	switch driver {
 	case "mysql":
-		dialect = &MySqlDialect{}
+		d = &dialect.MySqlDialect{}
 	case "postgres", "postgresql":
-		dialect = &PostgresqlDialect{}
+		d = &dialect.PostgresqlDialect{}
 	case "mssql":
-		dialect = &MsSqlDialect{}
+		d = &dialect.MsSqlDialect{}
 	case "sqlite":
-		dialect = &SqLiteDialect{}
+		d = &dialect.SqLiteDialect{}
 	}
 	return &simpleOrm{
 		DB:         db,
 		driverName: strings.ToLower(driver),
-		dialect:    dialect,
+		dialect:    d,
 		tableMap:   make(map[string]*TableMapMeta),
 		tmLock:     &sync.RWMutex{},
 	}
@@ -63,7 +66,7 @@ func (o *simpleOrm) Connector() db.Connector {
 	return o.connector
 }
 
-func (o *simpleOrm) Dialect() Dialect {
+func (o *simpleOrm) Dialect() dialect.Dialect {
 	return o.dialect
 }
 
@@ -662,7 +665,7 @@ func (o *simpleOrm) isIntPk(typeId int) bool {
 		int(reflect.Int16), int(reflect.Uint64),
 		int(reflect.Uint32):
 		return true
-	case TypeInt16, TypeInt32, TypeInt64:
+	case dbdb.TypeInt16, dbdb.TypeInt32, dbdb.TypeInt64:
 		return true
 	}
 	return false

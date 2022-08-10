@@ -10,38 +10,25 @@ package orm
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
+
+	"github.com/ixre/gof/db/db"
+	"github.com/ixre/gof/db/dialect"
 )
 
 type dialectSession struct {
 	conn    *sql.DB
-	dialect Dialect
+	dialect dialect.Dialect
 	driver  string
 }
 
 func NewDialectSession(db string, conn *sql.DB) (*dialectSession, error) {
 	dst := &dialectSession{conn: conn}
-	switch db {
-	case "mysql", "mariadb":
-		dst.driver = "mysql"
-		dst.dialect = &MySqlDialect{}
-	case "postgres", "postgresql", "pgsql":
-		dst.driver = "pgsql"
-		dst.dialect = &PostgresqlDialect{}
-	case "sqlserver", "mssql":
-		dst.driver = "mssql"
-		dst.dialect = &MsSqlDialect{}
-	case "sqlite":
-		dst.driver = "sqlite"
-		dst.dialect = &SqLiteDialect{}
-	default:
-		return nil, errors.New("不支持的数据库类型" + db)
-	}
+	dst.driver, dst.dialect = dialect.GetDialect(db)
 	return dst, nil
 }
 
-func DialectSession(conn *sql.DB, dialect Dialect) *dialectSession {
+func DialectSession(conn *sql.DB, dialect dialect.Dialect) *dialectSession {
 	return &dialectSession{
 		conn:    conn,
 		dialect: dialect,
@@ -53,16 +40,16 @@ func (d *dialectSession) Driver() string {
 }
 
 // 获取所有的表
-func (d *dialectSession) Tables(database string, schema string) ([]*Table, error) {
+func (d *dialectSession) Tables(database string, schema string) ([]*db.Table, error) {
 	return d.dialect.Tables(d.conn, database, schema)
 }
 
 // 获取所有的表
 func (d *dialectSession) TablesByPrefix(database string, schema string,
-	prefix string) ([]*Table, error) {
+	prefix string) ([]*db.Table, error) {
 	list, err := d.dialect.Tables(d.conn, database, schema)
 	if err == nil {
-		var l []*Table
+		var l []*db.Table
 		for _, v := range list {
 			if strings.HasPrefix(v.Name, prefix) {
 				l = append(l, v)
@@ -74,6 +61,6 @@ func (d *dialectSession) TablesByPrefix(database string, schema string,
 }
 
 // 获取表结构
-func (d *dialectSession) Table(table string) (*Table, error) {
+func (d *dialectSession) Table(table string) (*db.Table, error) {
 	return d.dialect.Table(d.conn, table)
 }

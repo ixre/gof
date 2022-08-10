@@ -1,15 +1,16 @@
 package orm
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ixre/gof/db"
-	"github.com/ixre/gof/util"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ixre/gof/db"
+	"github.com/ixre/gof/db/dialect"
+	"github.com/ixre/gof/util"
 )
 
 const (
@@ -34,7 +35,7 @@ type (
 		// get connector of db
 		Connector() db.Connector
 		// db dialect
-		Dialect() Dialect
+		Dialect() dialect.Dialect
 
 		//Set orm output information
 		SetTrace(b bool)
@@ -72,73 +73,14 @@ type (
 		Save(primary interface{}, entity interface{}) (rows int64, lastInsertId int64, err error)
 	}
 
-	// 表
-	Table struct {
-		// 名称
-		Name string
-		// 注释
-		Comment string
-		// 引擎
-		Engine string
-		// 架构
-		Schema string
-		// 编码
-		Charset string
-		// 列
-		Columns []*Column
-	}
-
-	// 列
-	Column struct {
-		Name    string
-		IsPk    bool
-		IsAuto  bool
-		NotNull bool
-		DbType  string
-		Length  int
-		Comment string
-		Type    int
-	}
 
 	// find some information of entity
 	OrmFinder interface {
 	}
 
-	Dialect interface {
-		// 数据库方言名称
-		Name() string
-		// 获取所有的表
-		Tables(db *sql.DB, database string, schema string) ([]*Table, error)
-		// 获取表结构
-		Table(db *sql.DB, table string) (*Table, error)
-		// 获取数据库字段,如果有保留字,则添加引号
-		GetField(v string) string
-	}
+	
 )
 
-var (
-	//TypeUnknown = int(reflect.Invalid)
-	//TypeString  = int(reflect.String)
-	//TypeBoolean = int(reflect.Bool)
-	//TypeInt16   = int(reflect.Int16)
-	//TypeInt32   = int(reflect.Int32)
-	//TypeInt64   = int(reflect.Int64)
-	//TypeFloat32 = int(reflect.Float32)
-	//TypeFloat64 = int(reflect.Float64)
-
-	TypeUnknown = 0
-	TypeString  = 1
-	TypeBoolean = 2
-	TypeInt16   = 3
-	TypeInt32   = 4
-	TypeInt64   = 5
-	TypeFloat32 = 6
-	TypeFloat64 = 7
-
-	TypeBytes    = 14
-	TypeDateTime = 15
-	TypeDecimal  = 16
-)
 
 // 获取表元数据
 func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {

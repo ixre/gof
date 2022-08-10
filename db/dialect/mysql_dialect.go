@@ -6,7 +6,7 @@
  * description :
  * history :
  */
-package orm
+package dialect
 
 import (
 	"bytes"
@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"github.com/ixre/gof/db/db"
 )
 
 var _ Dialect = new(MySqlDialect)
@@ -32,7 +33,7 @@ func (m *MySqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MySqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Table, error) {
+func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string) ([]*db.Table, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
@@ -41,7 +42,7 @@ func (m *MySqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Tabl
 	}
 	var list []string
 	tb := ""
-	stmt, err := db.Prepare(buf.String())
+	stmt, err := d.Prepare(buf.String())
 	if err == nil {
 		rows, err := stmt.Query()
 		for rows.Next() {
@@ -51,9 +52,9 @@ func (m *MySqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Tabl
 		}
 		stmt.Close()
 		rows.Close()
-		tList := make([]*Table, len(list))
+		tList := make([]*db.Table, len(list))
 		for i, v := range list {
-			if tList[i], err = m.Table(db, v); err != nil {
+			if tList[i], err = m.Table(d, v); err != nil {
 				return nil, err
 			}
 		}
@@ -63,7 +64,7 @@ func (m *MySqlDialect) Tables(db *sql.DB, dbName string, schema string) ([]*Tabl
 }
 
 // 获取表结构
-func (m *MySqlDialect) Table(db *sql.DB, table string) (*Table, error) {
+func (m *MySqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
 	stmt, err := db.Prepare("SHOW CREATE TABLE " + table)
 	if err == nil {
 		row := stmt.QueryRow()
@@ -77,7 +78,7 @@ func (m *MySqlDialect) Table(db *sql.DB, table string) (*Table, error) {
 	return nil, err
 }
 
-func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
+func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 	/**
 	  'mm_member', 'CREATE TABLE `mm_member` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `user` varchar(20) DEFAULT NULL COMMENT \'用户名\',\n  `pwd` varchar(45) DEFAULT NULL COMMENT \'密码\',\n  `trade_pwd` varchar(45) DEFAULT NULL,\n  `exp` int(11) unsigned DEFAULT \'0\',\n  `level` int(11) DEFAULT \'1\',\n  `invitation_code` varchar(10) DEFAULT NULL COMMENT \'邀请码\',\n  `reg_ip` varchar(20) DEFAULT NULL,\n  `reg_from` varchar(20) DEFAULT NULL,\n  `reg_time` int(11) DEFAULT NULL,\n  `check_code` varchar(8) DEFAULT NULL,\n  `check_expires` int(11) DEFAULT NULL,\n  `login_time` int(11) DEFAULT NULL,\n  `last_login_time` int(11) DEFAULT NULL COMMENT \'最后登录时间\',\n  `state` int(1) DEFAULT \'1\',\n  `update_time` int(11) DEFAULT NULL,\n  PRIMARY KEY (`id`)\n) ENGINE=MyISAM AUTO_INCREMENT=16900 DEFAULT CHARSET=utf8'
 	*/
@@ -97,12 +98,12 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 	for _, v := range matches {
 		mp[v[1]] = v[2]
 	}
-	table := &Table{
+	table := &db.Table{
 		Name:    name,
 		Comment: strings.TrimSpace(mp["COMMENT"]),
 		Engine:  mp["ENGINE"],
 		Charset: mp["DEFAULT CHARSET"],
-		Columns: []*Column{},
+		Columns: []*db.Column{},
 	}
 	if table.Comment != "" {
 		table.Comment = strings.Replace(table.Comment, "'", "", -1)
@@ -124,7 +125,7 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 		match := colReg.FindStringSubmatch(str)
 		if match != nil {
 			dbType := match[2]
-			col := &Column{
+			col := &db.Column{
 				Name:    match[1],
 				DbType:  dbType,
 				IsAuto:  strings.Index(str, "AUTO_") != -1,
@@ -146,41 +147,41 @@ func (m *MySqlDialect) getStruct(desc string) (*Table, error) {
 func (m *MySqlDialect) getTypeId(dbType string) int {
 	switch true {
 	case strings.HasPrefix(dbType, "smallint"):
-		return TypeInt16
+		return db.TypeInt16
 	case strings.HasPrefix(dbType, "tinyint"):
-		return TypeInt32
+		return db.TypeInt32
 	case strings.HasPrefix(dbType, "bit"):
-		return TypeBoolean
+		return db.TypeBoolean
 	case strings.HasPrefix(dbType, "bigint"):
-		return TypeInt64
+		return db.TypeInt64
 	case dbType == "int":
-		return TypeInt32
+		return db.TypeInt32
 	case strings.HasPrefix(dbType, "int("):
 		i, _ := strconv.Atoi(dbType[4 : len(dbType)-1])
 		if i < 11 {
-			return TypeInt32
+			return db.TypeInt32
 		}
-		return TypeInt64
+		return db.TypeInt64
 	case strings.HasPrefix(dbType, "float"):
-		return TypeFloat32
+		return db.TypeFloat32
 	case strings.HasPrefix(dbType, "decimal"):
-		return TypeDecimal
+		return db.TypeDecimal
 	case strings.HasPrefix(dbType, "double"):
-		return TypeFloat64
+		return db.TypeFloat64
 	case dbType == "datetime", dbType == "date":
-		return TypeDateTime
+		return db.TypeDateTime
 	case dbType == "timestamp":
-		return TypeInt64
+		return db.TypeInt64
 	case dbType == "blob":
-		return TypeBytes
+		return db.TypeBytes
 	case dbType == "text", dbType == "longtext",
 		dbType == "mediumtext", dbType == "tinytext",
 		strings.HasPrefix(dbType, "varchar"),
 		strings.HasPrefix(dbType, "char"):
-		return TypeString
+		return db.TypeString
 	}
 	println("[ ORM][ MySQL][ Warning]:Dialect not support type :", dbType)
-	return TypeUnknown
+	return db.TypeUnknown
 }
 
 // 获取类型长度

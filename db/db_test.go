@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/ixre/gof/db/orm"
 	"log"
 	"os"
 	"testing"
@@ -12,7 +11,6 @@ import (
 
 var (
 	_conn Connector
-	_orm  orm.Orm
 	print = false
 )
 
@@ -38,7 +36,7 @@ func model() {
 	initTest()
 	println("===== testing model =======")
 	var user User
-	_orm.Get(&user, "root")
+	//_orm.Get(&user, "root")
 	println("Username:" + user.User)
 	println("Password:" + user.Pwd)
 	println("Host:" + user.Host)
@@ -49,7 +47,7 @@ func sel() {
 	println("===== testing select model =======")
 	for i := 0; i < 3; i++ {
 		var users []User
-		_orm.Select(&users, "user=?", "root")
+		//_orm.Select(&users, "user=?", "root")
 		if i == 0 {
 			println(users)
 		}

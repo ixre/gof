@@ -1,4 +1,4 @@
-package orm
+package dialect
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/ixre/gof/db/db"
 )
 
 var _ Dialect = new(PostgresqlDialect)
@@ -23,7 +25,7 @@ func (p *PostgresqlDialect) Name() string {
 }
 
 // Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) ([]*Table, error) {
+func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string) ([]*db.Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
 	if schema == "" {
@@ -33,7 +35,7 @@ func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) (
 	buf.WriteByte('\'')
 	var list []string
 	tb := ""
-	stmt, err := db.Prepare(buf.String())
+	stmt, err := d.Prepare(buf.String())
 	if err == nil {
 		rows, err := stmt.Query()
 		for rows.Next() {
@@ -43,9 +45,9 @@ func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) (
 		}
 		stmt.Close()
 		rows.Close()
-		tList := make([]*Table, len(list))
+		tList := make([]*db.Table, len(list))
 		for i, v := range list {
-			if tList[i], err = p.Table(db, v); err != nil {
+			if tList[i], err = p.Table(d, v); err != nil {
 				return nil, err
 			}
 			tList[i].Schema = schema
@@ -56,7 +58,7 @@ func (p *PostgresqlDialect) Tables(db *sql.DB, database string, schema string) (
 }
 
 // Table 获取表结构
-func (p *PostgresqlDialect) Table(db *sql.DB, table string) (*Table, error) {
+func (p *PostgresqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
 	stmt, err := db.Prepare(`SELECT COALESCE(description,'') as comment from pg_description
 where objoid='` + table + `'::regclass and objsubid=0`)
 	row := stmt.QueryRow()
@@ -68,12 +70,12 @@ where objoid='` + table + `'::regclass and objsubid=0`)
 	return p.getStruct(db, table, comment)
 }
 
-func (p *PostgresqlDialect) getStruct(db *sql.DB, table, comment string) (*Table, error) {
+func (p *PostgresqlDialect) getStruct(d *sql.DB, table, comment string) (*db.Table, error) {
 	//stmt, err := db.Prepare(`SELECT column_name,data_type,udt_name,
 	//		is_identity,COALESCE(identity_increment,''),is_nullable
 	//		FROM information_schema.columns WHERE table_name ='` + table + `'`)
 
-	smt, err := db.Prepare(strings.Replace(`
+	smt, err := d.Prepare(strings.Replace(`
 SELECT ordinal_position as col_order,column_name,data_type,
 coalesce(character_maximum_length,numeric_precision,-1) as col_len,COALESCE(numeric_scale,-1) as col_scale,
 CASE is_nullable WHEN 'NO' then 1 else 0 end as not_null,
@@ -95,15 +97,15 @@ LEFT JOIN (
 )c on c.attname = information_schema.columns.column_name
 where table_schema='public' and table_name='{table}' order by ordinal_position asc
 `, "{table}", table, -1))
-	var columns []*Column
-	colMap := make(map[string]*Column, 0)
+	var columns []*db.Column
+	colMap := make(map[string]*db.Column, 0)
 	rows, err := smt.Query()
 	if err == nil {
 		rd := make([]string, 10)
 		for rows.Next() {
 			if err = rows.Scan(&rd[0], &rd[1], &rd[2], &rd[3], &rd[4], &rd[5], &rd[6], &rd[7], &rd[8], &rd[9]); err == nil {
 				len, _ := strconv.Atoi(rd[3])
-				c := &Column{
+				c := &db.Column{
 					Name:    strings.TrimSpace(rd[1]),
 					IsPk:    rd[8] == "1",
 					IsAuto:  rd[7] == "1",
@@ -122,7 +124,7 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 		}
 		smt.Close()
 		rows.Close()
-		return &Table{
+		return &db.Table{
 			Name:    table,
 			Comment: strings.TrimSpace(comment),
 			Engine:  "",
@@ -136,33 +138,33 @@ where table_schema='public' and table_name='{table}' order by ordinal_position a
 func (p *PostgresqlDialect) getTypeId(dbType string, len int) int {
 	switch dbType {
 	case "bigint":
-		return TypeInt64
+		return db.TypeInt64
 	case "smallint","int4range":
-		return TypeInt16
+		return db.TypeInt16
 	case "numeric", "double precision":
-		return TypeFloat64
+		return db.TypeFloat64
 	case "boolean", "bit":
-		return TypeBoolean
+		return db.TypeBoolean
 	case "text":
-		return TypeString
+		return db.TypeString
 	case "integer","int8range":
 		if len > 32 {
-			return TypeInt64
+			return db.TypeInt64
 		} else {
-			return TypeInt32
+			return db.TypeInt32
 		}
 	case "date", "time":
-		return TypeDateTime
+		return db.TypeDateTime
 	}
 	if strings.HasPrefix(dbType, "character") {
-		return TypeString
+		return db.TypeString
 	}
 	if dbType == "float" {
 		if len > 32 {
-			return TypeFloat64
+			return db.TypeFloat64
 		}
-		return TypeFloat32
+		return db.TypeFloat32
 	}
-	println("[ ORM][ Postgres][ Warning]:Dialect not support type :", dbType)
-	return TypeUnknown
+	println("[ ORM][ Postgres][ Warning]:Dialect not support db.Type :", dbType)
+	return db.TypeUnknown
 }

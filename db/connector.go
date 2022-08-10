@@ -13,17 +13,22 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/ixre/gof/log"
-	"github.com/lib/pq"
 	"strings"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/ixre/gof/db/dialect"
+	"github.com/ixre/gof/log"
+	"github.com/lib/pq"
 )
 
 type (
 	Connector interface {
 		Driver() string
 		Raw() *sql.DB
+		// Get db dialect
+		Dialect() dialect.Dialect
 		// Ping create a connection for ping test
 		Ping() error
 		// close the database connection
@@ -42,7 +47,7 @@ var _ Connector = new(defaultConnector)
 
 // NewConnector create a new connector
 func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (Connector, error) {
-	db, err := open(driverName, driverSource)
+	dt, db, err := open(driverName, driverSource)
 	if err == nil {
 		//	err = db.Ping()
 		//}
@@ -54,6 +59,7 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (C
 		//}
 		return &defaultConnector{
 			db:         db,
+			dialect:    dt,
 			driverName: strings.ToLower(driverName),
 			logger:     l,
 			debug:      debug,
@@ -63,30 +69,40 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (C
 }
 
 // 创建连接
-func open(driverName string, driverSource string) (*sql.DB, error) {
-	switch strings.ToLower(driverName) {
-	case "postgres", "postgresql":
+func open(driverName string, driverSource string) (dialect.Dialect, *sql.DB, error) {
+	driver, dialect := dialect.GetDialect(driverName)
+	switch driver {
+	case "postgresql":
 		conn, err := pq.NewConnector(driverSource)
 		if err == nil {
-			return sql.OpenDB(conn), err
+			return dialect, sql.OpenDB(conn), err
 		}
-		return nil, err
+		return dialect, nil, err
 	}
-	return sql.Open(driverName, driverSource)
+	db, err := sql.Open(driver, driverSource)
+	return dialect, db, err
 }
 
 //数据库连接器
 type defaultConnector struct {
 	driverName string  //驱动名称
 	db         *sql.DB //golang db只需要open一次即可
-	logger     log.ILogger
-	debug      bool // 是否调试模式
+	dialect dialect.Dialect
+	logger log.ILogger
+	debug  bool // 是否调试模式
+}
+
+// Dialect implements Connector
+func (c *defaultConnector) Dialect() dialect.Dialect {
+	return c.dialect
 }
 
 func NewDefaultConnector(driver string, db *sql.DB, logger log.ILogger) Connector {
+	stdDriver, dialect := dialect.GetDialect(driver)
 	return &defaultConnector{
-		driverName: driver,
+		driverName: stdDriver,
 		db:         db,
+		dialect:    dialect,
 		logger:     logger,
 		debug:      false,
 	}
