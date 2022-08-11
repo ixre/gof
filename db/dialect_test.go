@@ -32,7 +32,7 @@ func TestMysqlDialect(t *testing.T) {
 }
 
 func TestSQLServerDialect(t *testing.T) {
-	conn, err := NewConnector("mssql", "sqlserver://sfDBUser:Jbmeon@008@192.168.16.9:1433?database=DCF19_ERP_TEST_B&encrypt=disable", nil, false)
+	conn, err := NewConnector("mssql", "sqlserver://sfDBUser:Jbmeon@008@192.168.16.119:1433?database=DCF19_ERP_TEST_B&encrypt=disable", nil, false)
 	if err != nil {
 		t.Error(err)
 	}

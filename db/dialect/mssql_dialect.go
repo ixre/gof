@@ -12,7 +12,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-
+	"log"
 	"github.com/ixre/gof/db/db"
 	"github.com/ixre/gof/types/typeconv"
 )
@@ -32,7 +32,7 @@ func (m *MsSqlDialect) Name() string {
 
 // 获取所有的表
 func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, prefix string) ([]*db.Table, error) {
-	buf := bytes.NewBufferString(` SELECT ob.name FROM sys.objects AS ob
+	buf := bytes.NewBufferString(` SELECT ob.name,ep.value as comment  FROM sys.objects AS ob
 	LEFT OUTER JOIN sys.extended_properties AS ep
 	  ON ep.major_id = ob.object_id
 		 AND ep.class = 1
@@ -43,22 +43,26 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, prefix st
 		buf.WriteString(prefix)
 		buf.WriteString(`%'`)
 	}
-	var list []string
+	var tables = make(map[string]string,0)
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
 		tb := ""
+		comment:=""
 		rows, _ := stmt.Query()
 		for rows.Next() {
-			if err = rows.Scan(&tb); err == nil {
-				list = append(list, tb)
+			if err = rows.Scan(&tb,&comment); err == nil {
+				tables[tb]=comment
 			}
 		}
 		stmt.Close()
 		rows.Close()
-		tList := make([]*db.Table, len(list))
-		for i, v := range list {
-			if tList[i], err = m.Table(d, v); err != nil {
-				return nil, err
+		tList := make([]*db.Table, 0)
+		for k, v := range tables {
+			if tb, err := m.Table(d, k);err == nil {
+				tb.Comment = v
+				tList = append(tList,tb)
+			}else{
+				log.Println("[ mssql][ dialect]: get table structure failed. "+err.Error())
 			}
 		}
 		return tList, nil
