@@ -32,14 +32,13 @@ func (m *MsSqlDialect) Name() string {
 
 // 获取所有的表
 func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword string) ([]*db.Table, error) {
-	buf := bytes.NewBufferString(` SELECT ob.name,ep.value as comment  FROM sys.objects AS ob
-	LEFT OUTER JOIN sys.extended_properties AS ep
-	  ON ep.major_id = ob.object_id
-		 AND ep.class = 1
-		 AND ep.minor_id = 0
-  WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
+	buf := bytes.NewBufferString(` SELECT ob.name,ISNULL(ep.value,'') as comment
+	  	FROM sys.objects AS ob
+	  	LEFT OUTER JOIN sys.extended_properties AS ep
+	  	ON ep.major_id = ob.object_id  AND ep.class = 1  AND ep.minor_id = 0
+  		WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
 	if keyword != "" {
-		buf.WriteString(`AND ob.name LIKE '%`)
+		buf.WriteString(` AND ob.name LIKE '%`)
 		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
@@ -161,9 +160,9 @@ func (m *MsSqlDialect) getTypeId(dbType string) int {
 		return db.TypeInt32
 	case "bit":
 		return db.TypeBoolean
-	case "bigint", "bigint identity", "timestamp":
+	case "bigint", "bigint identity":
 		return db.TypeInt64
-	case "varbinary", "image":
+	case "varbinary", "image", "timestamp":
 		return db.TypeBytes
 	case "float":
 		return db.TypeFloat32

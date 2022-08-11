@@ -36,7 +36,7 @@ func TestSQLServerDialect(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", "t_K")
+	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", "t_COPD_OrdMst")
 	if err != nil {
 		t.Error(err)
 	}
