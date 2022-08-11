@@ -25,7 +25,7 @@ func (p *PostgresqlDialect) Name() string {
 }
 
 // Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, prefix string) ([]*db.Table, error) {
+func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, keyword string) ([]*db.Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
 	if schema == "" {
@@ -33,9 +33,9 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, pr
 	}
 	buf.WriteString(schema)
 	buf.WriteByte('\'')
-	if prefix != "" {
-		buf.WriteString(` AND table_name LIKE '`)
-		buf.WriteString(prefix)
+	if keyword != "" {
+		buf.WriteString(` AND table_name LIKE '%`)
+		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
 	var list []string

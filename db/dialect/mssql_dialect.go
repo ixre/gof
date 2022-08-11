@@ -31,16 +31,16 @@ func (m *MsSqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, prefix string) ([]*db.Table, error) {
+func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword string) ([]*db.Table, error) {
 	buf := bytes.NewBufferString(` SELECT ob.name,ep.value as comment  FROM sys.objects AS ob
 	LEFT OUTER JOIN sys.extended_properties AS ep
 	  ON ep.major_id = ob.object_id
 		 AND ep.class = 1
 		 AND ep.minor_id = 0
   WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
-	if prefix != "" {
-		buf.WriteString(`AND ob.name LIKE '`)
-		buf.WriteString(prefix)
+	if keyword != "" {
+		buf.WriteString(`AND ob.name LIKE '%`)
+		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
 	var tables = make(map[string]string,0)

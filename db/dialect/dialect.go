@@ -10,7 +10,7 @@ type Dialect interface {
 	// 数据库方言名称
 	Name() string
 	// 获取所有的表
-	Tables(db *sql.DB, database string, schema string, prefix string) ([]*db.Table, error)
+	Tables(db *sql.DB, database string, schema string, keyword string) ([]*db.Table, error)
 	// 获取表结构
 	Table(db *sql.DB, table string) (*db.Table, error)
 	// 获取数据库字段,如果有保留字,则添加引号

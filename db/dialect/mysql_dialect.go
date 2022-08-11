@@ -33,16 +33,16 @@ func (m *MySqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, prefix string) ([]*db.Table, error) {
+func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword string) ([]*db.Table, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
 		buf.WriteString(dbName)
 		buf.WriteString("`")
 	}
-	if prefix != "" {
-		buf.WriteString(` LIKE '`)
-		buf.WriteString(prefix)
+	if keyword != "" {
+		buf.WriteString(` LIKE '%`)
+		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
 
