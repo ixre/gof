@@ -39,13 +39,13 @@ func (d *dialectSession) Driver() string {
 
 // 获取所有的表
 func (d *dialectSession) Tables(database string, schema string) ([]*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema,"")
+	return d.dialect.Tables(d.conn, database, schema, "")
 }
 
 // 获取所有的表
 func (d *dialectSession) TablesByPrefix(database string, schema string,
 	prefix string) ([]*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema,prefix)
+	return d.dialect.Tables(d.conn, database, schema, prefix)
 }
 
 // 获取表结构

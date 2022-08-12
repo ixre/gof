@@ -12,9 +12,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"log"
 	"github.com/ixre/gof/db/db"
 	"github.com/ixre/gof/types/typeconv"
+	"log"
 )
 
 var _ Dialect = new(MsSqlDialect)
@@ -42,26 +42,26 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword s
 		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
-	var tables = make(map[string]string,0)
+	var tables = make(map[string]string, 0)
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
 		tb := ""
-		comment:=""
+		comment := ""
 		rows, _ := stmt.Query()
 		for rows.Next() {
-			if err = rows.Scan(&tb,&comment); err == nil {
-				tables[tb]=comment
+			if err = rows.Scan(&tb, &comment); err == nil {
+				tables[tb] = comment
 			}
 		}
 		stmt.Close()
 		rows.Close()
 		tList := make([]*db.Table, 0)
 		for k, v := range tables {
-			if tb, err := m.Table(d, k);err == nil {
+			if tb, err := m.Table(d, k); err == nil {
 				tb.Comment = v
-				tList = append(tList,tb)
-			}else{
-				log.Println("[ mssql][ dialect]: get table structure failed. "+err.Error())
+				tList = append(tList, tb)
+			} else {
+				log.Println("[ mssql][ dialect]: get table structure failed. " + err.Error())
 			}
 		}
 		return tList, nil
@@ -99,7 +99,7 @@ func (m *MsSqlDialect) Table(d *sql.DB, table string) (*db.Table, error) {
 		rows.Close()
 		stmt.Close()
 		m.updatePkColumn(d, table)
-		m.updateAutoKeys(d, table)
+		m.updateColumnOthers(d, table)
 		return table, nil
 	}
 	return nil, err
@@ -128,28 +128,43 @@ func (m *MsSqlDialect) updatePkColumn(d *sql.DB, table *db.Table) {
 	stmt.Close()
 }
 
-// 更新自增键
-func (m *MsSqlDialect) updateAutoKeys(d *sql.DB, table *db.Table) {
+// 更新列的其他信息
+func (m *MsSqlDialect) updateColumnOthers(d *sql.DB, table *db.Table) {
+
+	mp := make(map[string]*db.Column, 0)
+	for _, v := range table.Columns {
+		mp[v.Name] = v
+	}
+
 	stmt, err := d.Prepare(fmt.Sprintf(`
-	SELECT name FROM syscolumns   
-	WHERE id=object_id('%s') 
-	AND COLUMNPROPERTY(id,name,'IsIdentity')=1`, table.Name))
-	rows, _ := stmt.Query()
-	keys := make(map[string]int, 0)
+	SELECT c.name AS colname,
+	ISNULL(p.value,'') AS comment,
+	c.is_identity
+	FROM sys.columns c
+	LEFT JOIN sys.extended_properties p 
+	ON p.major_id = c.object_id AND p.minor_id = c.column_id
+	WHERE c.object_id=object_id('%s')`, table.Name))
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Println("[ mssql][ dialect]: error ", err.Error())
+		return
+	}
+
 	for rows.Next() {
-		s := ""
-		err = rows.Scan(&s)
+		name, comment := "", ""
+		isIdentity := false
+		err = rows.Scan(&name, &comment, &isIdentity)
 		if err == nil {
-			keys[s] = 1
+			if col, ok := mp[name]; ok {
+				col.IsAuto = isIdentity
+				col.Comment = comment
+			}
+		} else {
+			log.Println("[ mssql][ dialect]: scan error ", err.Error())
 		}
 	}
 	rows.Close()
 	stmt.Close()
-	for _, v := range table.Columns {
-		if _, ok := keys[v.Name]; ok {
-			v.IsAuto = true
-		}
-	}
 }
 
 func (m *MsSqlDialect) getTypeId(dbType string) int {
