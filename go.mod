@@ -18,6 +18,4 @@ require (
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 )
 
-require (
-	github.com/denisenkom/go-mssqldb v0.12.2
-)
+require github.com/denisenkom/go-mssqldb v0.12.2
