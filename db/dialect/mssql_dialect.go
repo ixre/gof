@@ -187,10 +187,10 @@ func (m *MsSqlDialect) getTypeId(dbType string) int {
 		return db.TypeFloat64
 	case "date", "datetime", "smalldatetime":
 		return db.TypeDateTime
-	case "text", "ntext", "varchar", "nvarchar", "char":
+	case "text", "ntext", "varchar", "nvarchar", "char","xml","uniqueidentifier":
 		return db.TypeString
 	}
-	println("[ ORM][ MSSQL][ Warning]:Dialect not support type :", dbType)
+	println("[ mssql][ dialect]:Dialect not support type :", dbType)
 	return db.TypeUnknown
 }
 
