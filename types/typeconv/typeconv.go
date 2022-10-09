@@ -2,8 +2,6 @@ package typeconv
 
 import (
 	"fmt"
-	"log"
-	"reflect"
 	"strconv"
 )
 
@@ -120,8 +118,6 @@ func String(d interface{}) (string, bool) {
 	case bool:
 		return strconv.FormatBool(d.(bool)), true
 	}
-	t := reflect.TypeOf(d)
-	log.Println(t.Elem())
 	return "", false
 }
 
