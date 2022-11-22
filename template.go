@@ -20,6 +20,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var (
