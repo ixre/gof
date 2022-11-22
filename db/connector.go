@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/go-sql-driver/mysql"
+	//_ "github.com/denisenkom/go-mssqldb"
+	//_ "github.com/go-sql-driver/mysql"
 	"github.com/ixre/gof/db/dialect"
 	"github.com/ixre/gof/log"
 	"github.com/lib/pq"
@@ -83,7 +83,7 @@ func open(driverName string, driverSource string) (dialect.Dialect, *sql.DB, err
 	return dialect, db, err
 }
 
-//数据库连接器
+// 数据库连接器
 type defaultConnector struct {
 	driverName string  //驱动名称
 	db         *sql.DB //golang db只需要open一次即可
@@ -213,7 +213,7 @@ func (t *defaultConnector) ExecScalar(s string, result interface{},
 	return err
 }
 
-//执行
+// 执行
 func (t *defaultConnector) exec(s string, args ...interface{}) (rows int, lastInsertId int, err error) {
 	t.debugPrintf("[ SQL][ TRACE] - sql = %s ; params = %+v\n", s, args)
 	// Postgresql 新增或更新时候,使用returning语句,应当做Result查询

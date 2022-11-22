@@ -6,9 +6,9 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/gomodule/redigo v1.8.8
-	github.com/lib/pq v1.10.4
-	github.com/pelletier/go-toml v1.9.4
+	github.com/gomodule/redigo v1.8.9
+	github.com/lib/pq v1.10.7
+	github.com/pelletier/go-toml v1.9.5
 )
 
 require (

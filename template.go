@@ -11,7 +11,6 @@ package gof
 import (
 	"bytes"
 	"errors"
-	"github.com/fsnotify/fsnotify"
 	"html/template"
 	"io"
 	"log"
