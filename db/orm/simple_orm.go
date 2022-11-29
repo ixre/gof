@@ -19,7 +19,7 @@ import (
 
 var _ Orm = new(simpleOrm)
 
-//it's a IOrm Implements for mysql
+// it's a IOrm Implements for mysql
 type simpleOrm struct {
 	tableMap map[string]*TableMapMeta
 	*sql.DB
@@ -76,20 +76,15 @@ func (o *simpleOrm) err(err error, s string, args ...interface{}) error {
 			log.Println("[ ORM][ ERROR]:", err.Error())
 		} else {
 			if len(args) > 0 {
-				log.Println(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s [Args]:%+v", err.Error(), s, args))
+				fmt.Printf("[ ORM][ ERROR]:%s [ SQL]:%s [Args]:%+v \n", err.Error(), s, args)
 			} else {
-				log.Println(fmt.Sprintf("[ ORM][ ERROR]:%s [ SQL]:%s ", err.Error(), s))
+				fmt.Printf("[ ORM][ ERROR]:%s [ SQL]:%s \n", err.Error(), s)
 			}
 		}
 	}
 	return err
 }
 
-func (o *simpleOrm) debug(format string, args ...interface{}) {
-	if o.useTrace {
-		log.Printf(format+"\n", args...)
-	}
-}
 
 func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	o.tmLock.RLock()
@@ -105,15 +100,6 @@ func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	return m
 }
 
-func (o *simpleOrm) getTableName(t reflect.Type) string {
-	//todo: 用int做键
-	v, exists := o.tableMap[t.String()]
-	if exists {
-		return v.TableName
-	}
-	return t.Name()
-}
-
 func (o *simpleOrm) unionField(meta *TableMapMeta, field string) string {
 	if len(meta.TableName) != 0 {
 		return meta.TableName + "." + field
@@ -125,7 +111,7 @@ func (o *simpleOrm) SetTrace(b bool) {
 	o.useTrace = b
 }
 
-//create a fixed table map
+// create a fixed table map
 func (o *simpleOrm) Mapping(v interface{}, table string) error {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
@@ -169,7 +155,7 @@ func (o *simpleOrm) Get(primaryVal interface{}, entity interface{}) error {
 	}
 	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, meta.PkFieldName+" = "+o.getParamHolder(0))
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sqlQuery, primaryVal))
+		fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%+v \n", sqlQuery, primaryVal)
 	}
 	stmt, err := o.DB.Prepare(sqlQuery)
 	if err == nil {
@@ -221,7 +207,7 @@ func (o *simpleOrm) GetBy(entity interface{}, where string,
 	}
 	sqlQuery := o.fmtSelectSingleQuery(fieldArr, meta.TableName, where)
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sqlQuery, where, args))
+		fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%s - %+v\n", sqlQuery, where, args)
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sqlQuery)
@@ -245,7 +231,7 @@ func (o *simpleOrm) Count(entity interface{}, where string, args ...interface{})
 	meta := o.getTableMapMeta(t)
 	sqlQuery := o.buildCountQuery(meta.TableName, where)
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%s - %+v", sqlQuery, where, args))
+		fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%s - %+v \n", sqlQuery, where, args)
 	}
 	/* query */
 	count := 0
@@ -282,11 +268,11 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
-	if strings.Index(sql, "*") != -1 {
-		sql = strings.Replace(sql, "*", o.getSQLFields(fieldArr), 1)
-	}
+
+	sql = strings.Replace(sql, "*", o.getSQLFields(fieldArr), 1)
+
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s", sql))
+		fmt.Printf("[ ORM][ SQL]:%s\n", sql)
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
@@ -312,10 +298,10 @@ func (o *simpleOrm) getSQLFields(fieldArr []string) string {
 	return buf.String()
 }
 
-//Select more than 1 entity list
-//@to : referenced queried entity list
-//@entity : query condition
-//@where : other condition
+// Select more than 1 entity list
+// @to : referenced queried entity list
+// @entity : query condition
+// @where : other condition
 func (o *simpleOrm) Select(to interface{}, where string, args ...interface{}) error {
 	return o.selectBy(to, where, false, args...)
 }
@@ -352,9 +338,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		scanVal[i] = &rawBytes[i]
 	}
 	if fullSql {
-		if strings.Index(sql, "*") != -1 {
-			sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
-		}
+		sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
 	} else {
 		where := sql
 		if len(where) == 0 {
@@ -370,7 +354,7 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		}
 	}
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s [ Params] - %+v", sql, args))
+		fmt.Printf("[ ORM][ SQL]:%s [ Params] - %+v \n", sql, args)
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
@@ -417,14 +401,14 @@ func (o *simpleOrm) Delete(entity interface{}, where string,
 	/* build sql */
 	meta := o.getTableMapMeta(t)
 	if where == "" {
-		return 0, errors.New("Unknown condition")
+		return 0, fmt.Errorf("Unknown condition")
 	}
 	sql = fmt.Sprintf("DELETE FROM %s WHERE %s",
 		meta.TableName,
 		where,
 	)
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, args))
+		fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%+v \n", sql, args)
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
@@ -459,7 +443,7 @@ func (o *simpleOrm) DeleteByPk(entity interface{}, primary interface{}) (err err
 	)
 
 	if o.useTrace {
-		log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", sql, primary))
+		fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%+v \n", sql, primary)
 	}
 	/* query */
 	stmt, err := o.DB.Prepare(sql)
@@ -488,7 +472,7 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 	// pk type is int?
 	isIntPk := o.isIntPk(meta.PkFieldTypeId)
 	//fieldLen = len(meta.FieldNames)
-	params, fieldArr := ItrFieldForSave(meta, &val, false)
+	params, fieldArr := itrFieldForSave(meta, &val, false)
 	//insert
 	if primary == nil {
 		var pArr = make([]string, len(fieldArr))
@@ -497,7 +481,7 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		}
 		query = o.getInsertSQL(meta, fieldArr, pArr)
 		if o.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", query, params))
+			fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%+v \n", query, params)
 		}
 		/* query */
 		stmt, err := o.DB.Prepare(query)
@@ -536,7 +520,7 @@ func (o *simpleOrm) Save(primary interface{}, entity interface{}) (rows int64, l
 		}(stmt)
 		params = append(params, primary)
 		if o.useTrace {
-			log.Println(fmt.Sprintf("[ ORM][ SQL]:%s , [ Params]:%+v", query, params))
+			fmt.Printf("[ ORM][ SQL]:%s , [ Params]:%+v \n", query, params)
 		}
 		return o.stmtUpdateExec(isIntPk, stmt, query, params...)
 	}
