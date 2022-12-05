@@ -3,6 +3,7 @@ package typeconv
 import (
 	"fmt"
 	"strconv"
+	"encoding/json"
 )
 
 /**
@@ -138,4 +139,12 @@ func Int64Array(src []int64) []int {
 		dst[i] = int(v)
 	}
 	return dst
+}
+
+func MustJson(v interface{})string{
+	bytes,err := json.Marshal(v)
+	if err != nil{
+		panic(err)
+	}
+	return string(bytes)
 }
