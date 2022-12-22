@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	http2 "github.com/ixre/gof/util/http"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
+
+	http2 "github.com/ixre/gof/util/http"
 )
 
 var (
@@ -41,7 +42,7 @@ func init() {
 			println("---获取accessToken失败", err1.Error())
 			return ""
 		}
-		bytes, _ := ioutil.ReadAll(r.Body)
+		bytes, _ := io.ReadAll(r.Body)
 		rsp := Response{}
 		json.Unmarshal(bytes, &rsp)
 		return rsp.Data.(string)

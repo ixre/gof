@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -96,7 +95,7 @@ func (e *Engine) Parse(dsl string) (*Form, error) {
 
 // 将DSL文件转为表单对象
 func (e *Engine) ParseFile(dslFile string) (*Form, error) {
-	data, err := ioutil.ReadFile(dslFile)
+	data, err := os.ReadFile(dslFile)
 	if err == nil {
 		return e.Parse(string(data))
 	}
@@ -199,7 +198,7 @@ func (e *Engine) SaveHtmlForm(f *Form, template string,
 		if _, err = os.Stat(path); os.IsNotExist(err) {
 			os.MkdirAll(filepath.Dir(path), os.ModePerm)
 		}
-		err = ioutil.WriteFile(path, []byte(htm), os.ModePerm)
+		err = os.WriteFile(path, []byte(htm), os.ModePerm)
 	}
 	return htm, err
 }

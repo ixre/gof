@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -27,7 +27,7 @@ func testApi(t *testing.T, apiName string, params url.Values) {
 		t.Error(err)
 		t.FailNow()
 	}
-	data, _ := ioutil.ReadAll(rsp.Body)
+	data, _ := io.ReadAll(rsp.Body)
 	rsp1 := Response{}
 	json.Unmarshal(data, &rsp1)
 	if rsp1.Code != RSuccessCode {
@@ -62,7 +62,7 @@ func TestGenApiSign(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	data, _ := ioutil.ReadAll(rsp.Body)
+	data, _ := io.ReadAll(rsp.Body)
 	rsp1 := Response{}
 	json.Unmarshal(data, &rsp1)
 	if rsp1.Code != RSuccessCode {

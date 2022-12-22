@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,7 +96,7 @@ func (c *RestfulClient) Request(apiPath string, method string, data interface{},
 	}
 	rsp, err := cli.Do(req)
 	if err == nil {
-		data, err := ioutil.ReadAll(rsp.Body)
+		data, err := io.ReadAll(rsp.Body)
 		if err == nil {
 			return data, nil
 		}

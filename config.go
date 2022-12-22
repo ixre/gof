@@ -38,7 +38,7 @@ func LoadConfig(file string) (cfg *Config, err error) {
 	return s, _err
 }
 
-//从配置中读取数据
+// 从配置中读取数据
 func (c *Config) GetString(key string) string {
 	k, e := c.configDict[key]
 	if e {
@@ -48,7 +48,7 @@ func (c *Config) GetString(key string) string {
 	return ""
 }
 
-//从配置中读取数据
+// 从配置中读取数据
 func (c *Config) Get(key string) interface{} {
 	v, e := c.configDict[key]
 	if e {
@@ -96,7 +96,7 @@ func (c *Config) GetFloat(key string) float64 {
 	return 0
 }
 
-//从文件中加载配置
+// 从文件中加载配置
 func (c *Config) load(file string) (err error) {
 	c.configDict = make(map[string]interface{})
 	//var allContent string = ""
