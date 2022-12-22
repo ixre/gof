@@ -13,13 +13,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt"
-	http2 "github.com/ixre/gof/net/http"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/golang-jwt/jwt"
+	http2 "github.com/ixre/gof/net/http"
 )
 
 var (
@@ -141,7 +142,7 @@ type RequestWrapper struct {
 }
 
 func (w RequestWrapper) Bind(e interface{}) error {
-	buf, err := ioutil.ReadAll(w.Request.Body)
+	buf, err := io.ReadAll(w.Request.Body)
 	//w.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 	if err == nil {
 		return json.Unmarshal(buf, &e)
@@ -312,26 +313,26 @@ func (s *ServeMux) flushOutputWriter(w http.ResponseWriter, rsp *Response) {
 	_, _ = w.Write(data)
 	return
 
-	// 如果包含数据, 直接返回数据, 否则返回Response
-	if rsp.Data != nil {
-		switch rsp.Data.(type) {
-		case string:
-			data = []byte(rsp.Data.(string))
-		case int:
-			data = []byte(strconv.Itoa(rsp.Data.(int)))
-		case bool:
-			if rsp.Data.(bool) {
-				data = []byte("true")
-			} else {
-				data = []byte("false")
-			}
-		default:
-			data = s.marshal(rsp.Data)
-		}
-	} else {
-		data = s.marshal(rsp)
-	}
-	_, _ = w.Write(data)
+	// // 如果包含数据, 直接返回数据, 否则返回Response
+	// if rsp.Data != nil {
+	// 	switch rsp.Data.(type) {
+	// 	case string:
+	// 		data = []byte(rsp.Data.(string))
+	// 	case int:
+	// 		data = []byte(strconv.Itoa(rsp.Data.(int)))
+	// 	case bool:
+	// 		if rsp.Data.(bool) {
+	// 			data = []byte("true")
+	// 		} else {
+	// 			data = []byte("false")
+	// 		}
+	// 	default:
+	// 		data = s.marshal(rsp.Data)
+	// 	}
+	// } else {
+	// 	data = s.marshal(rsp)
+	// }
+	// _, _ = w.Write(data)
 }
 
 // 处理请求,如果同时请求多个api,那么api参数用","隔开

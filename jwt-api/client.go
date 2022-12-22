@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -103,7 +102,7 @@ func (c *Client) Request(apiPath string, method string, data interface{}, timeou
 	}
 	rsp, err := cli.Do(req)
 	if err == nil {
-		data, err := ioutil.ReadAll(rsp.Body)
+		data, err := io.ReadAll(rsp.Body)
 		if err == nil {
 			if len(data) >= 1 && data[0] == '#' {
 				ret := string(data[1:])

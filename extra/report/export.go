@@ -11,17 +11,17 @@ package report
 import (
 	"context"
 	"database/sql"
-	_ "database/sql"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"github.com/ixre/gof/types/typeconv"
-	"io/ioutil"
 	"log"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/ixre/gof/types/typeconv"
 )
 
 var (
@@ -141,8 +141,8 @@ func (p Params) reduce() {
 		p["page_index"] = "1"
 	}
 	// 获取页码和每页加载数量
-	pi, _ := p["page_index"]
-	ps, _ := p["page_size"]
+	pi:= p["page_index"]
+	ps:= p["page_size"]
 	pageIndex := typeconv.MustInt(pi)
 	pageSize := typeconv.MustInt(ps)
 	// 设置SQL分页信息
@@ -164,7 +164,7 @@ func (p Params) Contains(k string) bool {
 //获取列映射数组
 func readItemConfigFromXml(xmlFilePath string) (*ItemConfig, error) {
 	var cfg ItemConfig
-	content, err := ioutil.ReadFile(xmlFilePath)
+	content, err := os.ReadFile(xmlFilePath)
 	if err != nil {
 		return &ItemConfig{}, err
 	}
@@ -174,7 +174,7 @@ func readItemConfigFromXml(xmlFilePath string) (*ItemConfig, error) {
 
 // 转换列与字段的映射
 func parseColumnMapping(str string) []ColumnMapping {
-	re, err := regexp.Compile("([^:]+):([^;]*);*\\s*")
+	re, err := regexp.Compile(`([^:]+):([^;]*);*\s*`)
 	if err != nil {
 		return nil
 	}

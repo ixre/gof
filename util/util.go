@@ -1,12 +1,14 @@
 package util
 
 import (
-	"github.com/ixre/gof/types/typeconv"
+	"encoding/json"
 	"math"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ixre/gof/types/typeconv"
 )
 
 var LetterBytes = []byte("01234ABCDEFGHIJK56789abcdefghijklmLMNOPQRSTUVWXYZnopqrstuvwxyz")
@@ -36,6 +38,14 @@ func RandInt(n int) int {
 		return min + v
 	}
 	return v
+}
+
+
+
+// Stringify 返回对象的JSON格式数据
+func Stringify(o interface{}) string {
+	bytes, _ := json.Marshal(o)
+	return string(bytes)
 }
 
 var (

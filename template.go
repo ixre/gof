@@ -11,7 +11,6 @@ package gof
 import (
 	"bytes"
 	"errors"
-	"github.com/fsnotify/fsnotify"
 	"html/template"
 	"io"
 	"log"
@@ -21,6 +20,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var (

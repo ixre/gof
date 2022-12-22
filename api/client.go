@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -49,7 +49,7 @@ func (c Client) Post(apiName string, params map[string]string) ([]byte, error) {
 	form["sign"] = []string{sign}
 	rsp, err := cli.PostForm(c.server, form)
 	if err == nil {
-		data, err := ioutil.ReadAll(rsp.Body)
+		data, err := io.ReadAll(rsp.Body)
 		if err == nil {
 			if len(data) >= 1 && data[0] == '#' {
 				ret := string(data[1:])

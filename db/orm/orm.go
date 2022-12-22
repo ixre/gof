@@ -93,7 +93,7 @@ func GetTableMapMeta(driver string, t reflect.Type) *TableMapMeta {
 	return m
 }
 
-//if not defined primary key.the first key will as primary key
+// if not defined primary key.the first key will as primary key
 func GetPKName(t reflect.Type) (pkName string, pkType int, pkIsAuto bool) {
 	var ti = t.NumField()
 	ffc := func(f reflect.StructField) (string, int, bool) {
@@ -198,26 +198,22 @@ func assignValue(d reflect.Value, s []byte) (err error) {
 	return err
 }
 
-//遍历所有列，并得到参数及列名
-func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
+// 遍历所有列，并得到参数及列名
+func itrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
 	params []interface{}, fieldArr []string) {
 	var isSet bool
-	for i, k := range meta.FieldMapNames {
+	for index, fieldName := range meta.FieldMapNames {
 		if !includePk && meta.PkIsAuto &&
-			meta.FieldMapNames[i] == meta.PkFieldName {
+			meta.FieldMapNames[index] == meta.PkFieldName {
 			continue
 		}
-		field := val.Field(meta.FieldsIndex[i]) // 获取字段所在定义中的位置
+		field := val.Field(meta.FieldsIndex[index]) // 获取字段所在定义中的位置
 		isSet = false
 
 		switch field.Type().Kind() {
 		case reflect.String:
 			isSet = true
-			if val.Kind() == reflect.Ptr {
-				params = append(params, field.String())
-			} else {
-				params = append(params, field.String())
-			}
+			params = append(params, field.String())
 		case reflect.Int, reflect.Int8,
 			reflect.Int16, reflect.Int32, reflect.Int64:
 			isSet = true
@@ -244,7 +240,7 @@ func ItrFieldForSave(meta *TableMapMeta, val *reflect.Value, includePk bool) (
 		}
 
 		if isSet {
-			fieldArr = append(fieldArr, k)
+			fieldArr = append(fieldArr, fieldName)
 		}
 	}
 	return params, fieldArr

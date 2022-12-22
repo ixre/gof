@@ -34,7 +34,7 @@ func (r *Result) ErrorText(err string) *Result {
 	return r
 }
 
-//序列化
+// 序列化
 func (r Result) Marshal() []byte {
 	d, _ := json.Marshal(r)
 	return d
