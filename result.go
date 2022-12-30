@@ -6,9 +6,9 @@ import (
 )
 
 type Result struct {
-	ErrCode int               `json:"ErrCode"`
-	ErrMsg  string            `json:"ErrMsg,omitempty"`
-	Data    map[string]string `json:"Data,omitempty"`
+	ErrCode int               `json:"errCode"`
+	ErrMsg  string            `json:"errMsg,omitempty"`
+	Data    map[string]string `json:"data,omitempty"`
 }
 
 func (r *Result) Error(err error) *Result {

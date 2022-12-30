@@ -93,7 +93,7 @@
     cli := http.Client{}
     rsp, err := cli.PostForm(serverUrl, form)
     if err == nil {	
-        data, _ := ioutil.ReadAll(rsp.Body)
+        data, _ := io.ReadAll(rsp.Body)
         log.Println("接口响应：", string(data))
     }
 

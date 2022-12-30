@@ -143,7 +143,7 @@ type RequestWrapper struct {
 
 func (w RequestWrapper) Bind(e interface{}) error {
 	buf, err := io.ReadAll(w.Request.Body)
-	//w.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+	//w.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
 	if err == nil {
 		return json.Unmarshal(buf, &e)
 	}
