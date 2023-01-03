@@ -1,9 +1,9 @@
 package typeconv
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
-	"encoding/json"
 )
 
 /**
@@ -19,6 +19,8 @@ import (
 // MustInt parse d to int
 func MustInt(d interface{}) int {
 	switch d.(type) {
+	case nil:
+		return 0;
 	case string:
 		i, err := strconv.Atoi(d.(string))
 		if err != nil {
@@ -46,6 +48,8 @@ func MustInt(d interface{}) int {
 // MustBool 将类型转换为bool
 func MustBool(d interface{}) bool {
 	switch d.(type) {
+	case nil:
+		return false
 	case bool:
 		return d.(bool)
 	case int, int8, int16, int32, int64:
@@ -60,6 +64,8 @@ func MustBool(d interface{}) bool {
 // MustFloat parse d to float
 func MustFloat(d interface{}) float64 {
 	switch d.(type) {
+	case nil:
+		return 0
 	case string:
 		i, err := strconv.ParseFloat(d.(string), 64)
 		if err != nil {
@@ -124,6 +130,9 @@ func String(d interface{}) (string, bool) {
 
 // get object string
 func Stringify(d interface{}) string {
+	if d == nil{
+		return "null"
+	}
 	if s, b := String(d); b {
 		return s
 	}
@@ -133,18 +142,23 @@ func Stringify(d interface{}) string {
 	return fmt.Sprintf("%+v", d)
 }
 
+
+
+func MustJson(v interface{}) string {
+	if v == nil{
+		return "null"
+	}
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
+}
+
 func Int64Array(src []int64) []int {
 	dst := make([]int, len(src))
 	for i, v := range src {
 		dst[i] = int(v)
 	}
 	return dst
-}
-
-func MustJson(v interface{})string{
-	bytes,err := json.Marshal(v)
-	if err != nil{
-		panic(err)
-	}
-	return string(bytes)
 }

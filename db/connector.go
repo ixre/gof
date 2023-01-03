@@ -16,8 +16,7 @@ import (
 	"strings"
 	"time"
 
-	//_ "github.com/denisenkom/go-mssqldb"
-	//_ "github.com/go-sql-driver/mysql"
+	
 	"github.com/ixre/gof/db/dialect"
 	"github.com/ixre/gof/log"
 	"github.com/lib/pq"
