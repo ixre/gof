@@ -16,7 +16,7 @@ ac.wallet_balance,m.reg_time,m.last_login_time
 INNER JOIN mm_level lv ON lv.id = m.level
 INNER JOIN mm_account ac ON m.id = ac.member_id
 INNER JOIN mm_profile pro ON pro.member_id = m.id
- WHERE  (pro.name LIKE '%{keyword}%' OR m.user LIKE '%{keyword}%'
+ WHERE  (pro.name LIKE '%{keyword}%' OR m.username LIKE '%{keyword}%'
  OR pro.phone LIKE '%{keyword}%')
  AND ({level_value}<0 OR m.level={level_value})
  AND ({state} <0 OR m.state={state})
@@ -30,7 +30,7 @@ ORDER BY m.reg_time DESC
 INNER JOIN mm_level lv ON lv.id = m.level
 INNER JOIN mm_account ac ON m.id = ac.member_id
 INNER JOIN mm_profile pro ON pro.member_id = m.id
-  WHERE  (pro.name LIKE '%{keyword}%' OR m.user LIKE '%{keyword}%'
+  WHERE  (pro.name LIKE '%{keyword}%' OR m.username LIKE '%{keyword}%'
  OR pro.phone LIKE '%{keyword}%')
  AND ({level_value}<0 OR m.level={level_value})
  AND ({state} <0 OR m.state={state})

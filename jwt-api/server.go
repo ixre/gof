@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	http2 "github.com/ixre/gof/net/http"
 )
 
