@@ -12,7 +12,7 @@ import (
 func MapToEntity(values map[string][]string, dst interface{}) (err error) {
 	refVal := reflect.ValueOf(dst).Elem()
 	for k, v := range values {
-		d := refVal.FieldByName(k)
+		d := refVal.FieldByName(strings.Title(k))
 		if !d.IsValid() {
 			continue
 		}
