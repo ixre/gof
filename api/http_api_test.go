@@ -45,12 +45,12 @@ func TestGenApiSign(t *testing.T) {
 	signType := "sha1"
 	serverUrl := "http://localhost:7020/api"
 	form := url.Values{
-		"key":          []string{key},
-		"api":          []string{"status.ping,status.hello"},
-		"product":      []string{"h"},
-		"productType":  []string{"hello@$g"},
-		"product_kind": []string{"h"},
-		"sign_type":    []string{signType},
+		"key":          {key},
+		"api":          {"status.ping,status.hello"},
+		"product":      {"h"},
+		"productType":  {"hello@$g"},
+		"product_kind": {"h"},
+		"sign_type":    {signType},
 	}
 	sign := Sign(signType, form, secret)
 	t.Log("-- Sort params:", string(ParamsToBytes(form, secret, true)))
@@ -75,13 +75,13 @@ func TestGenApiSign(t *testing.T) {
 
 func TestParamToBytes(t *testing.T) {
 	form := url.Values{
-		"Key":       []string{"sdf"},
-		"api":       []string{"dsfsf"},
-		"sign_type": []string{"sfsf"},
-		"user":      []string{"jarrysix"},
-		"Password":  []string{"2423424"},
-		"loginType": []string{"normal"},
-		"checkCode": []string{""},
+		"Key":       {"sdf"},
+		"api":       {"dsfsf"},
+		"sign_type": {"sfsf"},
+		"user":      {"jarrysix"},
+		"Password":  {"2423424"},
+		"loginType": {"normal"},
+		"checkCode": {""},
 	}
 
 	t.Log("---xx = ", string(ParamsToBytes(form, "123", true)))

@@ -192,7 +192,7 @@ func notifyMup(conn redis.Conn) {
 func cliMAuth(id *ClientIdentity, param string) ([]byte, error) {
 	arr := strings.Split(param, "#")
 	if len(arr) == 2 {
-		memberId, _ := strconv.Atoi(arr[0])
+		memberId  := strconv.Atoi(arr[0])
 		b := util.CompareMemberApiToken(gof.CurrentApp.Storage(),
 			memberId, arr[1])
 		b = true
