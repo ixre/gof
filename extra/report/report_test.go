@@ -11,13 +11,13 @@ func TestIf(t *testing.T) {
 		WHERE l.wallet_id = {wallet_id}\n AND title LIKE '%{keyword}%'
 		#if(kind>0)
 		AND ({kind}=0 OR {kind}=kind)
-		#end
+		#fi
 		#if(trade_no)
 		AND	(trade_no IS NULL OR outer_no LIKE '%{trade_no}%')";
-		#end
-		#if (check) AND (check = 1) #end
+		#fi
+		#if (check) AND (check = 1) #fi
 
-		#if (unchecked) AND (uncheck = {kind}) #end
+		#if (unchecked) AND (uncheck = {kind}) #fi
 		`
 	mp := map[string]interface{}{
 		"wallet_id": 0,

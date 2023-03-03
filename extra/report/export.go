@@ -224,11 +224,9 @@ func CheckInject(s string) bool {
 // SqlFormat 格式化sql语句
 func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	formatted = sql
-	// 兼容之前SQL
-	formatted = strings.ReplaceAll(formatted, "#fi", "#end")
 	// 替换条件
 	//reg := regexp.MustCompile("#if\\s+([^\\s]+)[^\\n]*\n([\\s\\S]+?)#fi\n")
-	reg := regexp.MustCompile(`#if\s*[\{|\(](.+?)[\}\)]\s*\n*([\s\S]+?)#end`)
+	reg := regexp.MustCompile(`#if\s*[\{|\(](.+?)[\}\)]\s*\n*([\s\S]+?)#fi`)
 	submatch := reg.FindAllStringSubmatch(formatted, -1)
 	for _, v := range submatch {
 		key := v[1]
