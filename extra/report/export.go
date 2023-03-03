@@ -141,8 +141,8 @@ func (p Params) reduce() {
 		p["page_index"] = "1"
 	}
 	// 获取页码和每页加载数量
-	pi:= p["page_index"]
-	ps:= p["page_size"]
+	pi := p["page_index"]
+	ps := p["page_size"]
 	pageIndex := typeconv.MustInt(pi)
 	pageSize := typeconv.MustInt(ps)
 	// 设置SQL分页信息
@@ -161,7 +161,7 @@ func (p Params) Contains(k string) bool {
 	return ok
 }
 
-//获取列映射数组
+// 获取列映射数组
 func readItemConfigFromXml(xmlFilePath string) (*ItemConfig, error) {
 	var cfg ItemConfig
 	content, err := os.ReadFile(xmlFilePath)
@@ -224,13 +224,21 @@ func CheckInject(s string) bool {
 // SqlFormat 格式化sql语句
 func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	formatted = sql
+	// 兼容之前SQL
+	formatted = strings.ReplaceAll(formatted, "#fi", "#end")
 	// 替换条件
-	reg := regexp.MustCompile("#if\\s+([^\\s]+)[^\\n]*\n([\\s\\S]+?)#fi\n")
+	//reg := regexp.MustCompile("#if\\s+([^\\s]+)[^\\n]*\n([\\s\\S]+?)#fi\n")
+	reg := regexp.MustCompile(`#if\s*[\{|\(](.+?)[\}\)]\s*\n*([\s\S]+?)#end`)
 	submatch := reg.FindAllStringSubmatch(formatted, -1)
 	for _, v := range submatch {
 		key := v[1]
 		dv, ok := ht[key]
-		if !ok || !checkSqlIf(dv) {
+		cmp := false
+		if !ok && checkIfCompare(key, ht) {
+			cmp = true
+			ok = true
+		}
+		if !ok || !cmp && !checkSqlIf(dv) {
 			formatted = strings.Replace(formatted, v[0], "", -1)
 			continue
 		}
@@ -242,6 +250,35 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 			typeconv.Stringify(v), -1)
 	}
 	return formatted
+}
+
+var mathRegexp = regexp.MustCompile(`([^\s]+?)\s*([><!=]*)\s*([-\d+])\s*`)
+
+// 计算判断条件
+func checkIfCompare(key string, ht map[string]interface{}) bool {
+	submatch := mathRegexp.FindAllStringSubmatch(key, 1)
+	for _, match := range submatch {
+		vo, ok := ht[match[1]]
+		if ok {
+			r := typeconv.MustInt(vo)
+			v, _ := strconv.Atoi(match[3])
+			switch match[2] {
+			case ">":
+				return r > v
+			case ">=":
+				return r >= v
+			case "<":
+				return r < v
+			case "<=":
+				return r <= v
+			case "<>":
+			case "!=":
+				return r <= v
+			}
+			//log.Println("----^", match[1], match[2], match[3])
+		}
+	}
+	return false
 }
 
 // 检查条件是否成立,值为空, false或者小于0均不成立
