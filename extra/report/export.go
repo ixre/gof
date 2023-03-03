@@ -246,7 +246,7 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 
 // 检查条件是否成立,值为空, false或者小于0均不成立
 func checkSqlIf(dv interface{}) bool {
-	if dv == "" {
+	if dv == "" || dv == "false" || dv == "0" {
 		return false
 	}
 	if dv == false {
