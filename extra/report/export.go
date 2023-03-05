@@ -258,23 +258,37 @@ func checkIfCompare(key string, ht map[string]interface{}) bool {
 	for _, match := range submatch {
 		vo, ok := ht[match[1]]
 		if ok {
-			r := typeconv.MustInt(vo)
-			v, _ := strconv.Atoi(match[3])
-			switch match[2] {
-			case ">":
-				return r > v
-			case ">=":
-				return r >= v
-			case "<":
-				return r < v
-			case "<=":
-				return r <= v
-			case "<>":
-			case "!=":
-				return r <= v
+			op := match[2]
+			if strings.ContainsAny(op, "<>") && op != "<>" {
+				return checkIntCompare(op, vo, match[3])
+			}
+			v1 := typeconv.Stringify(vo)
+			v2 := match[3]
+			switch op {
+			case "=", "==":
+				return v1 == v2
+			case "<>", "!=":
+				return v1 != v2
 			}
 			//log.Println("----^", match[1], match[2], match[3])
 		}
+	}
+	return false
+}
+
+// int条件判断
+func checkIntCompare(o string, v1 interface{}, v2 interface{}) bool {
+	r := typeconv.MustInt(v1)
+	v := typeconv.MustInt(v2)
+	switch o {
+	case ">":
+		return r > v
+	case ">=":
+		return r >= v
+	case "<":
+		return r < v
+	case "<=":
+		return r <= v
 	}
 	return false
 }

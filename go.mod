@@ -11,4 +11,4 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 )
 
-require golang.org/x/sys v0.4.0 // indirect
+require golang.org/x/sys v0.6.0 // indirect
