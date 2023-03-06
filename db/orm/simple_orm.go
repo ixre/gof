@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -84,7 +85,6 @@ func (o *simpleOrm) err(err error, s string, args ...interface{}) error {
 	}
 	return err
 }
-
 
 func (o *simpleOrm) getTableMapMeta(t reflect.Type) *TableMapMeta {
 	o.tmLock.RLock()
@@ -268,9 +268,11 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 		fieldArr[i] = o.unionField(meta, v)
 		scanVal[i] = &rawBytes[i]
 	}
-
-	sql = strings.Replace(sql, "*", o.getSQLFields(fieldArr), 1)
-
+	// 替换查询字段统配符*
+	match, text, prefix := o.getUnifinedField(sql)
+	if match {
+		sql = strings.Replace(sql, text, o.getSQLFields(fieldArr, prefix), 1)
+	}
 	if o.useTrace {
 		fmt.Printf("[ ORM][ SQL]:%s\n", sql)
 	}
@@ -287,10 +289,26 @@ func (o *simpleOrm) GetByQuery(entity interface{}, sql string,
 	return assignValues(meta, &val, rawBytes)
 }
 
-func (o *simpleOrm) getSQLFields(fieldArr []string) string {
+// 查询是否包含通配字段
+func (o *simpleOrm) getUnifinedField(s string) (match bool, text string, prefix string) {
+	reg, _ := regexp.Compile(`([\S]*?)\.*\*`)
+	b := reg.MatchString(s)
+	if b {
+		matches := reg.FindAllStringSubmatch(s, 1)[0]
+		return b, matches[0], matches[1]
+	}
+	return b, "", ""
+}
+
+// 获取查询字段
+func (o *simpleOrm) getSQLFields(fieldArr []string, prefix string) string {
 	buf := bytes.NewBufferString("")
 	for i, v := range fieldArr {
 		if i > 0 {
+			buf.WriteString(",")
+		}
+		if len(prefix) > 0 {
+			buf.WriteString(prefix)
 			buf.WriteString(",")
 		}
 		buf.WriteString(o.dialect.GetField(v))

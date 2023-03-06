@@ -10,9 +10,10 @@ package orm
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type user struct {
@@ -57,3 +58,10 @@ func TestStmtClose(t *testing.T) {
 //	str = tool.TableToGoRepo(tb, true, "model.")
 //	t.Log("//生成的REP代码为：\n" + str + "\n")
 //}
+
+func TestGetUnifinedFiles(t *testing.T) {
+	s := "select item_info.* FROM item_info"
+	o := &simpleOrm{}
+	match, txt, prefix := o.getUnifinedField(s)
+	t.Log(match, txt, prefix)
+}

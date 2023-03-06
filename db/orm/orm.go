@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -189,8 +188,8 @@ func assignValue(d reflect.Value, s []byte) (err error) {
 		d.SetString(string(s))
 	case reflect.Slice:
 		if d.Type().Elem().Kind() != reflect.Uint8 {
-			err = errors.New(fmt.Sprintf("can't covert %s to slice!",
-				reflect.TypeOf(s).String()))
+			err = fmt.Errorf("can't covert %s to slice!",
+				reflect.TypeOf(s).String())
 		} else {
 			d.SetBytes(s)
 		}
