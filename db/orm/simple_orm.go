@@ -309,7 +309,7 @@ func (o *simpleOrm) getSQLFields(fieldArr []string, prefix string) string {
 		}
 		if len(prefix) > 0 {
 			buf.WriteString(prefix)
-			buf.WriteString(",")
+			buf.WriteString(".")
 		}
 		buf.WriteString(o.dialect.GetField(v))
 	}
@@ -356,7 +356,10 @@ func (o *simpleOrm) selectBy(dst interface{}, sql string, fullSql bool, args ...
 		scanVal[i] = &rawBytes[i]
 	}
 	if fullSql {
-		sql = strings.Replace(sql, "*", strings.Join(fieldArr, ","), 1)
+		match, text, prefix := o.getUnifinedField(sql)
+		if match {
+			sql = strings.Replace(sql, text, o.getSQLFields(fieldArr, prefix), 1)
+		}
 	} else {
 		where := sql
 		if len(where) == 0 {
