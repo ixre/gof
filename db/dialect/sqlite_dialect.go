@@ -11,6 +11,7 @@ package dialect
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/ixre/gof/db/db"
 )
@@ -21,6 +22,9 @@ type SqLiteDialect struct {
 }
 
 func (s *SqLiteDialect) GetField(f string) string {
+	if strings.Contains(f, ".") {
+		return f
+	}
 	return fmt.Sprintf("[%s]", f)
 }
 

@@ -17,6 +17,9 @@ type PostgresqlDialect struct {
 }
 
 func (p *PostgresqlDialect) GetField(f string) string {
+	if strings.Contains(f,"."){
+		return f
+	}
 	return fmt.Sprintf("\"%s\"", f)
 }
 

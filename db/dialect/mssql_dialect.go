@@ -12,9 +12,11 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/ixre/gof/db/db"
 	"github.com/ixre/gof/types/typeconv"
-	"log"
 )
 
 var _ Dialect = new(MsSqlDialect)
@@ -23,6 +25,9 @@ type MsSqlDialect struct {
 }
 
 func (m *MsSqlDialect) GetField(f string) string {
+	if strings.Contains(f,"."){
+		return f
+	}
 	return fmt.Sprintf("[%s]", f)
 }
 
