@@ -231,18 +231,14 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	for _, v := range submatch {
 		key := v[1]
 		dv, ok := ht[key]
-		cmp := false
-		if !ok && checkIfCompare(key, ht) {
-			cmp = true
-			ok = true
-		}
-		if !ok || !cmp && !checkSqlIf(dv) {
-			formatted = strings.Replace(formatted, v[0], "", -1)
+		if ok {
+			b := checkSqlIf(dv)
+			formatted = replaceSqlBlock(formatted, v[0], b, v[2])
 			continue
 		}
-		formatted = strings.Replace(formatted, v[0], v[2], -1)
+		b := checkIfCompare(ht, key)
+		formatted = replaceSqlBlock(formatted, v[0], b, v[2])
 	}
-
 	for k, v := range ht {
 		formatted = strings.Replace(formatted, "{"+k+"}",
 			typeconv.Stringify(v), -1)
@@ -250,10 +246,24 @@ func SqlFormat(sql string, ht map[string]interface{}) (formatted string) {
 	return formatted
 }
 
-var mathRegexp = regexp.MustCompile(`([^\s]+?)\s*([><!=]*)\s*([-\d+])\s*`)
+// 替换SQL中的条件
+func replaceSqlBlock(s string, block string, b bool, body string) string {
+	i := strings.Index(body, "#else")
+	tf, ff := body, ""
+	if i != -1 {
+		tf = body[:i]
+		ff = body[i+6:]
+	}
+	if b {
+		return strings.ReplaceAll(s, block, tf)
+	}
+	return strings.ReplaceAll(s, block, ff)
+}
+
+var mathRegexp = regexp.MustCompile(`(\S+)\s*([><!=]*)\s*(\S+)\s*`)
 
 // 计算判断条件
-func checkIfCompare(key string, ht map[string]interface{}) bool {
+func checkIfCompare(ht map[string]interface{}, key string) bool {
 	submatch := mathRegexp.FindAllStringSubmatch(key, 1)
 	for _, match := range submatch {
 		vo, ok := ht[match[1]]
