@@ -1,10 +1,12 @@
 // HTTP API v1.0
 // -----------------------
 // 约定参数名称:
-//	api       : 接口名称
-//  key  	  : 接口用户
-//  sign      : 签名
-//  sign_type : 签名类型
+//
+//		api       : 接口名称
+//	 key  	  : 接口用户
+//	 sign      : 签名
+//	 sign_type : 签名类型
+//
 // -----------------------
 package api
 
@@ -12,14 +14,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ixre/gof"
-	"github.com/ixre/gof/api"
-	"github.com/ixre/gof/crypto"
-	"github.com/ixre/gof/storage"
-	"github.com/ixre/gof/util"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/ixre/gof"
+	"github.com/ixre/gof/crypto"
+	"github.com/ixre/gof/ext/api"
+	"github.com/ixre/gof/storage"
+	"github.com/ixre/gof/util"
 )
 
 const (
