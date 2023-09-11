@@ -13,7 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ixre/gof"
-	"github.com/ixre/gof/api"
+	"github.com/ixre/gof/extapi"
 	"github.com/ixre/gof/crypto"
 	"github.com/ixre/gof/storage"
 	"github.com/ixre/gof/util"
