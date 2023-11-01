@@ -21,8 +21,7 @@ func FsWatch(h func(fsnotify.Event), directory ...string) {
 			log.Fatal(err)
 		}
 	}
-	log.Printf("watch directory: %s\n", directory)
-
+	//log.Printf("watch directory: %s\n", directory)
 	// 监控文件更改,如果更改则生成代码
 	go func() {
 		for {
