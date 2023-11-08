@@ -2,6 +2,8 @@ package util
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -15,8 +17,20 @@ func FsWatch(h func(fsnotify.Event), directory ...string) {
 	}
 	defer watch.Close()
 	//添加要监控的对象，文件或文件夹
-	for _, v := range directory {
-		err = watch.Add(v)
+	for _, path := range directory {
+		fi, err := os.Stat(path)
+		if err == nil {
+			err = watch.Add(path)
+			if fi.IsDir() {
+				//通过Walk来遍历目录下的所有子目录,并添加到监听中
+				err = filepath.Walk(path, func(path string, info os.FileInfo, _ error) error {
+					if info.IsDir() {
+						return watch.Add(path)
+					}
+					return nil
+				})
+			}
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
