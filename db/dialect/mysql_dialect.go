@@ -13,10 +13,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/ixre/gof/db/db"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/ixre/gof/db/db"
 )
 
 var _ Dialect = new(MySqlDialect)
@@ -25,7 +26,7 @@ type MySqlDialect struct {
 }
 
 func (m *MySqlDialect) GetField(f string) string {
-	if strings.Contains(f,"."){
+	if strings.Contains(f, ".") {
 		return f
 	}
 	return fmt.Sprintf("`%s`", f)
@@ -48,12 +49,11 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword s
 		buf.WriteString(keyword)
 		buf.WriteString(`%'`)
 	}
-
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
-		rows, err := stmt.Query()
+		rows, _ := stmt.Query()
 		for rows.Next() {
 			if err = rows.Scan(&tb); err == nil {
 				list = append(list, tb)
@@ -61,11 +61,17 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword s
 		}
 		stmt.Close()
 		rows.Close()
-		tList := make([]*db.Table, len(list))
-		for i, v := range list {
-			if tList[i], err = m.Table(d, v); err != nil {
-				return nil, err
+		tList := make([]*db.Table, 0)
+		for _, v := range list {
+			t, err2 := m.Table(d, v)
+			if err2 != nil {
+				if strings.HasPrefix(v, dbName+".") {
+					// 当tb包含了库名如：mysql.user会导致可而存在表找不到的情况
+					continue
+				}
+				return nil, err2
 			}
+			tList = append(tList, t)
 		}
 		return tList, nil
 	}
