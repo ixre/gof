@@ -5,10 +5,20 @@ import (
 	"strings"
 )
 
+func ErrorResult(err error) *Result {
+	return (&Result{}).Error(err)
+}
+
+func SuccessResult(v interface{}) *Result {
+	r := &Result{}
+	r.Data = v
+	return r
+}
+
 type Result struct {
-	ErrCode int               `json:"errCode"`
-	ErrMsg  string            `json:"errMsg,omitempty"`
-	Data    map[string]string `json:"data,omitempty"`
+	ErrCode int         `json:"errCode"`
+	ErrMsg  string      `json:"errMsg,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 func (r *Result) Error(err error) *Result {
