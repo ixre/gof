@@ -28,7 +28,7 @@ func (p *PostgresqlDialect) Name() string {
 }
 
 // Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, keyword string) ([]*db.Table, error) {
+func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string,  match func(string) bool) ([]*db.Table, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
 	if schema == "" {
@@ -36,11 +36,11 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, ke
 	}
 	buf.WriteString(schema)
 	buf.WriteByte('\'')
-	if keyword != "" {
-		buf.WriteString(` AND table_name LIKE '%`)
-		buf.WriteString(keyword)
-		buf.WriteString(`%'`)
-	}
+	// if keyword != "" {
+	// 	buf.WriteString(` AND table_name LIKE '%`)
+	// 	buf.WriteString(keyword)
+	// 	buf.WriteString(`%'`)
+	// }
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
@@ -55,6 +55,10 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string, ke
 		rows.Close()
 		tList := make([]*db.Table, len(list))
 		for i, v := range list {
+			if match != nil && !match(v) {
+				// 筛选掉不匹配的表
+				continue
+			}
 			if tList[i], err = p.Table(d, v); err != nil {
 				return nil, err
 			}

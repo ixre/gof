@@ -25,7 +25,7 @@ type MsSqlDialect struct {
 }
 
 func (m *MsSqlDialect) GetField(f string) string {
-	if strings.Contains(f,"."){
+	if strings.Contains(f, ".") {
 		return f
 	}
 	return fmt.Sprintf("[%s]", f)
@@ -36,17 +36,17 @@ func (m *MsSqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword string) ([]*db.Table, error) {
+func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(string) bool) ([]*db.Table, error) {
 	buf := bytes.NewBufferString(` SELECT ob.name,ISNULL(ep.value,'') as comment
 	  	FROM sys.objects AS ob
 	  	LEFT OUTER JOIN sys.extended_properties AS ep
 	  	ON ep.major_id = ob.object_id  AND ep.class = 1  AND ep.minor_id = 0
   		WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
-	if keyword != "" {
-		buf.WriteString(` AND ob.name LIKE '%`)
-		buf.WriteString(keyword)
-		buf.WriteString(`%'`)
-	}
+	// if keyword != "" {
+	// 	buf.WriteString(` AND ob.name LIKE '%`)
+	// 	buf.WriteString(keyword)
+	// 	buf.WriteString(`%'`)
+	// }
 	var tables = make(map[string]string, 0)
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
@@ -62,6 +62,10 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword s
 		rows.Close()
 		tList := make([]*db.Table, 0)
 		for k, v := range tables {
+			if match != nil && !match(k) {
+				// 筛选掉不匹配的表
+				continue
+			}
 			if tb, err := m.Table(d, k); err == nil {
 				tb.Comment = v
 				tList = append(tList, tb)

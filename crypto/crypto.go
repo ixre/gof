@@ -9,7 +9,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 )
 
 // MD5
@@ -32,7 +31,6 @@ func Sha1WithRSA(privateKey *rsa.PrivateKey, data []byte) (string, error) {
 
 	bytes, err := rsa.SignPKCS1v15(nil, privateKey, crypto.SHA1, digest)
 	if err != nil {
-		fmt.Errorf("rsaSign SignPKCS1v15 error")
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(bytes), nil

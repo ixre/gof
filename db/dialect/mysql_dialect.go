@@ -37,18 +37,18 @@ func (m *MySqlDialect) Name() string {
 }
 
 // 获取所有的表
-func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword string) ([]*db.Table, error) {
+func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(string) bool) ([]*db.Table, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
 		buf.WriteString(dbName)
 		buf.WriteString("`")
 	}
-	if keyword != "" {
-		buf.WriteString(` LIKE '%`)
-		buf.WriteString(keyword)
-		buf.WriteString(`%'`)
-	}
+	// if keyword != "" {
+	// 	buf.WriteString(` LIKE '%`)
+	// 	buf.WriteString(keyword)
+	// 	buf.WriteString(`%'`)
+	// }
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
@@ -63,6 +63,10 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, keyword s
 		rows.Close()
 		tList := make([]*db.Table, 0)
 		for _, v := range list {
+			if match != nil && !match(v) {
+				// 筛选掉不匹配的表
+				continue
+			}
 			t, err2 := m.Table(d, v)
 			if err2 != nil {
 				if strings.HasPrefix(v, dbName+".") {

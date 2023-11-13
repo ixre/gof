@@ -33,7 +33,7 @@ func (s *SqLiteDialect) Name() string {
 }
 
 // 获取所有的表
-func (s *SqLiteDialect) Tables(d *sql.DB, dbName string, schema string, prefix string) ([]*db.Table, error) {
+func (s *SqLiteDialect) Tables(d *sql.DB, dbName string, schema string, match func(string) bool) ([]*db.Table, error) {
 	panic("not implement")
 }
 

@@ -6,7 +6,7 @@ import (
 
 func TestPGDialect(t *testing.T) {
 	conn, _ := NewConnector("postgresql", "postgres://postgres:123456@127.0.0.1:5432/go2o?sslmode=disable", nil, false)
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "public", "")
+	tables, err := conn.Dialect().Tables(conn.Raw(), "", "public", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -22,7 +22,7 @@ func TestPGDialect(t *testing.T) {
 
 func TestMysqlDialect(t *testing.T) {
 	conn, _ := NewConnector("mysql", "root:123456@tcp(127.0.0.1:3306)/mysql?charset=utf8", nil, false)
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", "")
+	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +36,7 @@ func TestSQLServerDialect(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", "t_COPD_OrdMst")
+	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", func(s string) bool { return s == "t_COPD_OrdMst" })
 	if err != nil {
 		t.Error(err)
 	}

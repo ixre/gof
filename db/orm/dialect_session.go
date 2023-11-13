@@ -10,6 +10,8 @@ package orm
 
 import (
 	"database/sql"
+	"strings"
+
 	"github.com/ixre/gof/db/db"
 	"github.com/ixre/gof/db/dialect"
 )
@@ -38,14 +40,16 @@ func (d *dialectSession) Driver() string {
 }
 
 // 获取所有的表
-func (d *dialectSession) Tables(database string, schema string) ([]*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema, "")
+func (d *dialectSession) Tables(database string, schema string, match func(string) bool) ([]*db.Table, error) {
+	return d.dialect.Tables(d.conn, database, schema, match)
 }
 
 // 获取所有的表
 func (d *dialectSession) TablesByPrefix(database string, schema string,
 	prefix string) ([]*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema, prefix)
+	return d.dialect.Tables(d.conn, database, schema, func(s string) bool {
+		return strings.HasPrefix(s,prefix)
+	})
 }
 
 // 获取表结构
