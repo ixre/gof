@@ -35,8 +35,7 @@ func (m *MsSqlDialect) Name() string {
 	return "MSSQLDialect"
 }
 
-// 获取所有的表
-func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(string) bool) ([]*db.Table, error) {
+func (m *MsSqlDialect) fetchTableNames(d *sql.DB, dbName string) (map[string]string, error) {
 	buf := bytes.NewBufferString(` SELECT ob.name,ISNULL(ep.value,'') as comment
 	  	FROM sys.objects AS ob
 	  	LEFT OUTER JOIN sys.extended_properties AS ep
@@ -60,22 +59,35 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 		}
 		stmt.Close()
 		rows.Close()
+	}
+	return tables, err
+}
+
+// 获取所有的表
+func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
+	tables, err := m.fetchTableNames(d, dbName)
+	l := len(tables)
+	tableList := make([]string, 0, len(tables))
+	for k := range tables {
+		tableList = append(tableList, k)
+	}
+	if err == nil {
 		tList := make([]*db.Table, 0)
-		for k, v := range tables {
-			if match != nil && !match(k) {
+		for i, k := range tableList {
+			if match != nil && !match(i,k) {
 				// 筛选掉不匹配的表
 				continue
 			}
 			if tb, err := m.Table(d, k); err == nil {
-				tb.Comment = v
+				tb.Comment = tables[k]
 				tList = append(tList, tb)
 			} else {
 				log.Println("[ mssql][ dialect]: get table structure failed. " + err.Error())
 			}
 		}
-		return tList, nil
+		return l, tList, nil
 	}
-	return nil, err
+	return l, nil, err
 }
 
 // 获取表结构

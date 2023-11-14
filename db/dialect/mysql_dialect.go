@@ -36,8 +36,7 @@ func (m *MySqlDialect) Name() string {
 	return "MySQLDialect"
 }
 
-// 获取所有的表
-func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(string) bool) ([]*db.Table, error) {
+func (m *MySqlDialect) fetchTableNames(d *sql.DB, dbName string) ([]string, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
@@ -56,30 +55,39 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 		rows, _ := stmt.Query()
 		for rows.Next() {
 			if err = rows.Scan(&tb); err == nil {
+				if strings.HasPrefix(tb, dbName+".") {
+					// 当tb包含了库名如：mysql.user会导致可而存在表找不到的情况
+					continue
+				}
 				list = append(list, tb)
 			}
 		}
 		stmt.Close()
 		rows.Close()
+	}
+	return list, err
+}
+
+// 获取所有的表
+func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
+	tableNames, err := m.fetchTableNames(d, dbName)
+	l := len(tableNames)
+	if err == nil {
 		tList := make([]*db.Table, 0)
-		for _, v := range list {
-			if match != nil && !match(v) {
+		for i, v := range tableNames {
+			if match != nil && !match(i, v) {
 				// 筛选掉不匹配的表
 				continue
 			}
 			t, err2 := m.Table(d, v)
 			if err2 != nil {
-				if strings.HasPrefix(v, dbName+".") {
-					// 当tb包含了库名如：mysql.user会导致可而存在表找不到的情况
-					continue
-				}
-				return nil, err2
+				return l, nil, err2
 			}
 			tList = append(tList, t)
 		}
-		return tList, nil
+		return l, tList, nil
 	}
-	return nil, err
+	return l, nil, err
 }
 
 // 获取表结构

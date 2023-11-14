@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -17,7 +18,7 @@ type PostgresqlDialect struct {
 }
 
 func (p *PostgresqlDialect) GetField(f string) string {
-	if strings.Contains(f,"."){
+	if strings.Contains(f, ".") {
 		return f
 	}
 	return fmt.Sprintf("\"%s\"", f)
@@ -27,14 +28,13 @@ func (p *PostgresqlDialect) Name() string {
 	return "PostgresqlDialect"
 }
 
-// Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string,  match func(string) bool) ([]*db.Table, error) {
+func (p *PostgresqlDialect) fetchTableNames(d *sql.DB, dbName string, schema *string) ([]string, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
-	if schema == "" {
-		schema = "public"
+	if *schema == "" {
+		*schema = "public"
 	}
-	buf.WriteString(schema)
+	buf.WriteString(*schema)
 	buf.WriteByte('\'')
 	// if keyword != "" {
 	// 	buf.WriteString(` AND table_name LIKE '%`)
@@ -53,20 +53,33 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, database string, schema string,  m
 		}
 		stmt.Close()
 		rows.Close()
-		tList := make([]*db.Table, len(list))
-		for i, v := range list {
-			if match != nil && !match(v) {
+	}
+	return list, nil
+}
+
+// Tables 获取所有的表
+func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
+	list, err := p.fetchTableNames(d, dbName, &schema)
+	l := len(list)
+	if err == nil {
+		tList := make([]*db.Table, 0)
+		for i, k := range list {
+			if match != nil && !match(i, k) {
 				// 筛选掉不匹配的表
 				continue
 			}
-			if tList[i], err = p.Table(d, v); err != nil {
-				return nil, err
+			if tb, err := p.Table(d, k); err == nil {
+				if len(tb.Schema) == 0 {
+					tb.Schema = schema
+				}
+				tList = append(tList, tb)
+			} else {
+				log.Println("[ pgsql][ dialect]: get table structure failed. " + err.Error())
 			}
-			tList[i].Schema = schema
 		}
-		return tList, nil
+		return l, tList, nil
 	}
-	return nil, err
+	return l, nil, err
 }
 
 // Table 获取表结构

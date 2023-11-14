@@ -11,8 +11,8 @@ type Dialect interface {
 	// 数据库方言名称
 	Name() string
 	// 获取所有的表
-	// match: 匹配表名函数，如果为空，则默认匹配
-	Tables(db *sql.DB, database string, schema string, match func(string) bool) ([]*db.Table, error)
+	// filter: 数据表筛选函数，如果为空，则默认匹配
+	Tables(db *sql.DB, database string, schema string, filter func(index int, name string) bool) (int, []*db.Table, error)
 	// 获取表结构
 	Table(db *sql.DB, table string) (*db.Table, error)
 	// 获取数据库字段,如果有保留字,则添加引号

@@ -40,16 +40,17 @@ func (d *dialectSession) Driver() string {
 }
 
 // 获取所有的表
-func (d *dialectSession) Tables(database string, schema string, match func(string) bool) ([]*db.Table, error) {
+func (d *dialectSession) Tables(database string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
 	return d.dialect.Tables(d.conn, database, schema, match)
 }
 
 // 获取所有的表
 func (d *dialectSession) TablesByPrefix(database string, schema string,
 	prefix string) ([]*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema, func(s string) bool {
-		return strings.HasPrefix(s,prefix)
+	_, tables, err := d.dialect.Tables(d.conn, database, schema, func(i int, s string) bool {
+		return strings.HasPrefix(s, prefix)
 	})
+	return tables, err
 }
 
 // 获取表结构
