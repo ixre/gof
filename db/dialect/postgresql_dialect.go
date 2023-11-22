@@ -62,8 +62,9 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, schema string, matc
 	list, err := p.fetchTableNames(d, dbName, &schema)
 	l := len(list)
 	if err == nil {
+		i := 0
 		tList := make([]*db.Table, 0)
-		for i, k := range list {
+		for _, k := range list {
 			if match != nil && !match(i, k) {
 				// 筛选掉不匹配的表
 				continue
@@ -73,6 +74,7 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, schema string, matc
 					tb.Schema = schema
 				}
 				tList = append(tList, tb)
+				i++
 			} else {
 				log.Println("[ pgsql][ dialect]: get table structure failed. " + err.Error())
 			}

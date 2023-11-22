@@ -74,7 +74,8 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 	l := len(tableNames)
 	if err == nil {
 		tList := make([]*db.Table, 0)
-		for i, v := range tableNames {
+		i := 0
+		for _, v := range tableNames {
 			if match != nil && !match(i, v) {
 				// 筛选掉不匹配的表
 				continue
@@ -84,6 +85,7 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 				return l, nil, err2
 			}
 			tList = append(tList, t)
+			i++
 		}
 		return l, tList, nil
 	}

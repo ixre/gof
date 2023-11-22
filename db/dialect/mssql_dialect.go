@@ -72,8 +72,9 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 		tableList = append(tableList, k)
 	}
 	if err == nil {
+		i := 0
 		tList := make([]*db.Table, 0)
-		for i, k := range tableList {
+		for _, k := range tableList {
 			if match != nil && !match(i,k) {
 				// 筛选掉不匹配的表
 				continue
@@ -81,6 +82,7 @@ func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 			if tb, err := m.Table(d, k); err == nil {
 				tb.Comment = tables[k]
 				tList = append(tList, tb)
+				i++
 			} else {
 				log.Println("[ mssql][ dialect]: get table structure failed. " + err.Error())
 			}
