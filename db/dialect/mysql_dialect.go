@@ -158,7 +158,7 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 				IsAuto:  strings.Index(str, "AUTO_") != -1,
 				NotNull: strings.Index(str, "NOT NULL") != -1,
 				IsPk:    match[1] == pkField,
-				Length:  m.getTypeLen(dbType),
+				Length:  getTypeLen(dbType),
 				Type:    m.getTypeId(dbType),
 			}
 			comMatch := commReg.FindStringSubmatch(str)
@@ -209,26 +209,4 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 	}
 	println("[ ORM][ MySQL][ Warning]:Dialect not support type :", dbType)
 	return db.TypeUnknown
-}
-
-// 获取类型长度
-func (m *MySqlDialect) getTypeLen(dbType string) int {
-	i := strings.Index(dbType, "(")
-	j := strings.LastIndex(dbType, ")")
-	if i > 0 && j > 0 {
-		s := strings.Split(dbType[i+1:j], ",")
-		i1, err := strconv.Atoi(s[0])
-		if err != nil {
-			panic(err)
-		}
-		if len(s) == 2 {
-			i2, err2 := strconv.Atoi(s[1])
-			if err2 != nil {
-				panic(err2)
-			}
-			return i1 + i2
-		}
-		return i1
-	}
-	return -1
 }

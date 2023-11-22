@@ -2,6 +2,9 @@ package dialect
 
 import (
 	"database/sql"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/ixre/gof/db/db"
 )
@@ -33,4 +36,28 @@ func GetDialect(driver string) (string, Dialect) {
 	default:
 		panic("不支持的数据库类型" + driver)
 	}
+}
+
+var lengthRegexp = regexp.MustCompile(`\(([\d|,]+)\)`)
+
+// 获取类型长度
+func getTypeLen(dbType string) int {
+	// like: l := getTypeLen("varchar(100)")
+	// l1 := getTypeLen("decimal(10,2)")
+	if lengthRegexp.Match([]byte(dbType)) {
+		arr := lengthRegexp.FindAllStringSubmatch(dbType, 1)
+		s := strings.Split(arr[0][1], ",")
+		i1, err := strconv.Atoi(s[0])
+		if err == nil {
+			if len(s) == 2 {
+				i2, err2 := strconv.Atoi(s[1])
+				if err2 != nil {
+					panic(err2)
+				}
+				return i1 + i2
+			}
+		}
+		return i1
+	}
+	return -1
 }
