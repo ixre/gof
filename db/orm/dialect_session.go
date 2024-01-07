@@ -40,8 +40,8 @@ func (d *dialectSession) Driver() string {
 }
 
 // 获取所有的表
-func (d *dialectSession) Tables(database string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
-	return d.dialect.Tables(d.conn, database, schema, match)
+func (d *dialectSession) Tables(database string, keyword string, match func(int, string) bool) (int, []*db.Table, error) {
+	return d.dialect.Tables(d.conn, database, keyword, match)
 }
 
 // 获取所有的表
