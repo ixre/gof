@@ -28,7 +28,7 @@ func (p *PostgresqlDialect) Name() string {
 	return "PostgresqlDialect"
 }
 
-func (p *PostgresqlDialect) fetchTableNames(d *sql.DB, dbName string, schema *string) ([]string, error) {
+func (p *PostgresqlDialect) fetchTableNames(d *sql.DB, dbName string, schema *string, keyword string) ([]string, error) {
 	//SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
 	buf := bytes.NewBufferString("SELECT table_name FROM information_schema.tables WHERE table_schema ='")
 	if *schema == "" {
@@ -36,11 +36,11 @@ func (p *PostgresqlDialect) fetchTableNames(d *sql.DB, dbName string, schema *st
 	}
 	buf.WriteString(*schema)
 	buf.WriteByte('\'')
-	// if keyword != "" {
-	// 	buf.WriteString(` AND table_name LIKE '%`)
-	// 	buf.WriteString(keyword)
-	// 	buf.WriteString(`%'`)
-	// }
+	if keyword != "" {
+		buf.WriteString(` AND table_name LIKE '%`)
+		buf.WriteString(keyword)
+		buf.WriteString(`%'`)
+	}
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
@@ -58,13 +58,15 @@ func (p *PostgresqlDialect) fetchTableNames(d *sql.DB, dbName string, schema *st
 }
 
 // Tables 获取所有的表
-func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
-	list, err := p.fetchTableNames(d, dbName, &schema)
+func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, keyword string, match func(int, string) bool) (int, []*db.Table, error) {
+	schema := ""
+	list, err := p.fetchTableNames(d, dbName, &schema, keyword)
 	l := len(list)
 	if err == nil {
-		i := 0
+		i := -1
 		tList := make([]*db.Table, 0)
 		for _, k := range list {
+			i++
 			if match != nil && !match(i, k) {
 				// 筛选掉不匹配的表
 				continue
@@ -74,7 +76,6 @@ func (p *PostgresqlDialect) Tables(d *sql.DB, dbName string, schema string, matc
 					tb.Schema = schema
 				}
 				tList = append(tList, tb)
-				i++
 			} else {
 				log.Println("[ pgsql][ dialect]: get table structure failed. " + err.Error())
 			}

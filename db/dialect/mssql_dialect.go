@@ -35,17 +35,17 @@ func (m *MsSqlDialect) Name() string {
 	return "MSSQLDialect"
 }
 
-func (m *MsSqlDialect) fetchTableNames(d *sql.DB, dbName string) (map[string]string, error) {
+func (m *MsSqlDialect) fetchTableNames(d *sql.DB, dbName string, keyword string) (map[string]string, error) {
 	buf := bytes.NewBufferString(` SELECT ob.name,ISNULL(ep.value,'') as comment
 	  	FROM sys.objects AS ob
 	  	LEFT OUTER JOIN sys.extended_properties AS ep
 	  	ON ep.major_id = ob.object_id  AND ep.class = 1  AND ep.minor_id = 0
   		WHERE ObjectProperty(ob.object_id, 'IsUserTable') = 1`)
-	// if keyword != "" {
-	// 	buf.WriteString(` AND ob.name LIKE '%`)
-	// 	buf.WriteString(keyword)
-	// 	buf.WriteString(`%'`)
-	// }
+	if keyword != "" {
+		buf.WriteString(` AND ob.name LIKE '%`)
+		buf.WriteString(keyword)
+		buf.WriteString(`%'`)
+	}
 	var tables = make(map[string]string, 0)
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
@@ -64,25 +64,25 @@ func (m *MsSqlDialect) fetchTableNames(d *sql.DB, dbName string) (map[string]str
 }
 
 // 获取所有的表
-func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
-	tables, err := m.fetchTableNames(d, dbName)
+func (m *MsSqlDialect) Tables(d *sql.DB, dbName string, keyword string, match func(int, string) bool) (int, []*db.Table, error) {
+	tables, err := m.fetchTableNames(d, dbName, keyword)
 	l := len(tables)
 	tableList := make([]string, 0, len(tables))
 	for k := range tables {
 		tableList = append(tableList, k)
 	}
 	if err == nil {
-		i := 0
+		i := -1
 		tList := make([]*db.Table, 0)
 		for _, k := range tableList {
-			if match != nil && !match(i,k) {
+			i++
+			if match != nil && !match(i, k) {
 				// 筛选掉不匹配的表
 				continue
 			}
 			if tb, err := m.Table(d, k); err == nil {
 				tb.Comment = tables[k]
 				tList = append(tList, tb)
-				i++
 			} else {
 				log.Println("[ mssql][ dialect]: get table structure failed. " + err.Error())
 			}

@@ -2,11 +2,13 @@ package db
 
 import (
 	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func TestPGDialect(t *testing.T) {
 	conn, _ := NewConnector("postgresql", "postgres://postgres:123456@127.0.0.1:5432/go2o?sslmode=disable", nil, false)
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "public", nil)
+	_, tables, err := conn.Dialect().Tables(conn.Raw(), "", "public", nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -21,8 +23,15 @@ func TestPGDialect(t *testing.T) {
 }
 
 func TestMysqlDialect(t *testing.T) {
-	conn, _ := NewConnector("mysql", "root:123456@tcp(127.0.0.1:3306)/mysql?charset=utf8", nil, false)
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", nil)
+	conn, err1 := NewConnector("mysql", "mzl:mzl888@tcp(127.0.0.1:3306)/mzl-next?charset=utf8", nil, false)
+	if err1 != nil {
+		t.Error(err1)
+		t.FailNow()
+	}
+	match := func(i int, s string) bool {
+		return i > 2 && i <= 7
+	}
+	_, tables, err := conn.Dialect().Tables(conn.Raw(), "", "uams_", match)
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +45,7 @@ func TestSQLServerDialect(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tables, err := conn.Dialect().Tables(conn.Raw(), "", "", func(s string) bool { return s == "t_COPD_OrdMst" })
+	_, tables, err := conn.Dialect().Tables(conn.Raw(), "", "", func(i int, s string) bool { return s == "t_COPD_OrdMst" })
 	if err != nil {
 		t.Error(err)
 	}

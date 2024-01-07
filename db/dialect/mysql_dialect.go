@@ -36,46 +36,50 @@ func (m *MySqlDialect) Name() string {
 	return "MySQLDialect"
 }
 
-func (m *MySqlDialect) fetchTableNames(d *sql.DB, dbName string) ([]string, error) {
+func (m *MySqlDialect) fetchTableNames(d *sql.DB, dbName string, keyword string) ([]string, error) {
 	buf := bytes.NewBufferString("SHOW TABLES")
 	if dbName != "" {
 		buf.WriteString(" FROM `")
 		buf.WriteString(dbName)
 		buf.WriteString("`")
 	}
-	// if keyword != "" {
-	// 	buf.WriteString(` LIKE '%`)
-	// 	buf.WriteString(keyword)
-	// 	buf.WriteString(`%'`)
-	// }
+	if keyword != "" {
+		buf.WriteString(` LIKE '%`)
+		buf.WriteString(keyword)
+		buf.WriteString(`%'`)
+	}
 	var list []string
 	tb := ""
 	stmt, err := d.Prepare(buf.String())
 	if err == nil {
-		rows, _ := stmt.Query()
-		for rows.Next() {
-			if err = rows.Scan(&tb); err == nil {
-				if strings.HasPrefix(tb, dbName+".") {
-					// 当tb包含了库名如：mysql.user会导致可而存在表找不到的情况
-					continue
+		if rows, err1 := stmt.Query(); err1 != nil {
+			return make([]string, 0), err1
+		} else {
+			for rows.Next() {
+				if err = rows.Scan(&tb); err == nil {
+					if strings.HasPrefix(tb, dbName+".") {
+						// 当tb包含了库名如：mysql.user会导致可而存在表找不到的情况
+						continue
+					}
+					list = append(list, tb)
 				}
-				list = append(list, tb)
 			}
+			stmt.Close()
+			rows.Close()
 		}
-		stmt.Close()
-		rows.Close()
 	}
 	return list, err
 }
 
 // 获取所有的表
-func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match func(int, string) bool) (int, []*db.Table, error) {
-	tableNames, err := m.fetchTableNames(d, dbName)
+func (m *MySqlDialect) Tables(d *sql.DB, dbName string, keyword string, match func(int, string) bool) (int, []*db.Table, error) {
+	tableNames, err := m.fetchTableNames(d, dbName, keyword)
 	l := len(tableNames)
 	if err == nil {
 		tList := make([]*db.Table, 0)
-		i := 0
+		i := -1
 		for _, v := range tableNames {
+			i++
 			if match != nil && !match(i, v) {
 				// 筛选掉不匹配的表
 				continue
@@ -85,7 +89,6 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, schema string, match fun
 				return l, nil, err2
 			}
 			tList = append(tList, t)
-			i++
 		}
 		return l, tList, nil
 	}

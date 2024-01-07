@@ -9,13 +9,23 @@ import (
 	"github.com/ixre/gof/db/db"
 )
 
+// // 表筛选条件
+// type TableFilterOptions struct {
+// 	// 数据库,默认为空
+// 	Database string
+// 	// 数据库架构
+// 	Schema string
+// 	// 表名关键词
+// 	TableKeyword string
+// }
+
 // Dialect 方言
 type Dialect interface {
 	// 数据库方言名称
 	Name() string
 	// 获取所有的表
 	// filter: 数据表筛选函数，如果为空，则默认匹配
-	Tables(db *sql.DB, database string, schema string, filter func(index int, name string) bool) (int, []*db.Table, error)
+	Tables(db *sql.DB, database string, keyword string, filter func(index int, name string) bool) (int, []*db.Table, error)
 	// 获取表结构
 	Table(db *sql.DB, table string) (*db.Table, error)
 	// 获取数据库字段,如果有保留字,则添加引号
