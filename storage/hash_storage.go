@@ -127,7 +127,7 @@ func (h *hashStorage) Set(key string, v interface{}) error {
 	return nil
 }
 
-//Get raw value
+// Get raw value
 func (h *hashStorage) GetRaw(key string) (interface{}, error) {
 	k, ok := h.test(key)
 	if ok {

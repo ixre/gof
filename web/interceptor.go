@@ -17,7 +17,7 @@ var (
 	_                       http.Handler = new(Interceptor)
 )
 
-//Http请求处理代理
+// Http请求处理代理
 type Interceptor struct {
 	_app gof.App
 	//执行请求

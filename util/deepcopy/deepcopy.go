@@ -47,10 +47,10 @@ type memRanges struct {
 }
 
 // two functions are required to copy a given type:
-//   ranges traverses the type, adding and memory segments
-//  found to m.
-//  copy makes a copy of the given type, storing the result in dst.
 //
+//	 ranges traverses the type, adding and memory segments
+//	found to m.
+//	copy makes a copy of the given type, storing the result in dst.
 type copyInfo struct {
 	hasPointers bool
 	canCopy     bool
@@ -66,7 +66,6 @@ var lock sync.Mutex
 // to the map concurrently without placing a lock around every
 // map access. This works because the same functions
 // will be generated for any given type.
-//
 type infoStore struct {
 	info, newInfo map[reflect.Type]*copyInfo
 }
@@ -81,7 +80,6 @@ type infoStore struct {
 // recurse into map keys.
 // Due to restrictions in the reflect package, only
 // types with all public members may be copied.
-//
 func DeepCopy(obj interface{}) (r interface{}) {
 	var m memRanges
 	v := reflect.ValueOf(obj)
@@ -121,7 +119,6 @@ func DeepCopy(obj interface{}) (r interface{}) {
 // To save recursively inspecting its type each time an object
 // is copied, we store (in store) functions tailored to each type that
 // know how to calculate ranges and copy objects of that type.
-//
 func deepCopyInfo(store *infoStore, t reflect.Type) (f *copyInfo) {
 	if f = store.get(t); f != nil {
 		return
@@ -410,7 +407,6 @@ func (l *memRangeList) String() string {
 // with the new range.
 // mk is a function to be called to allocate space for a copy of the memory,
 // which will be called with t and r (to avoid a closure allocation)
-//
 func (m *memRanges) add(r memRange, t reflect.Type, mk func(r memRange, t reflect.Type) (reflect.Value, uintptr)) (added bool) {
 	prev := &m.l
 	var s *memRangeList
@@ -441,7 +437,6 @@ func (m *memRanges) add(r memRange, t reflect.Type, mk func(r memRange, t reflec
 }
 
 // get looks for a memory range that contains m0.
-//
 func (m *memRanges) get(m0 uintptr) *memRangeList {
 	for l := m.l; l != nil; l = l.next {
 		if m0 < l.m0 {

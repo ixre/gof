@@ -20,7 +20,7 @@ const (
 	shellPrefix = "shell > "
 )
 
-//运行shell
+// 运行shell
 func InShell() {
 	var toServ *string
 	toServ = flag.String("s", "", "object socket server")

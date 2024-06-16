@@ -4,8 +4,8 @@ import (
 	"database/sql"
 )
 
-//转换为字典数组
-//参考：http://my.oschina.net/nowayout/blog/143278
+// 转换为字典数组
+// 参考：http://my.oschina.net/nowayout/blog/143278
 func RowsToMarshalMap(rows *sql.Rows) (rowsMap []map[string]interface{}) {
 	rowsMap = []map[string]interface{}{} //数据切片
 	var tmpInt = 0                       //序列
@@ -30,8 +30,8 @@ func RowsToMarshalMap(rows *sql.Rows) (rowsMap []map[string]interface{}) {
 	return rowsMap
 }
 
-//转换为字典数组
-//参考：http://my.oschina.net/nowayout/blog/143278
+// 转换为字典数组
+// 参考：http://my.oschina.net/nowayout/blog/143278
 func RowsToMarshalMapV1(rows *sql.Rows) (rowsMap []map[string]interface{}) {
 	rowsMap = []map[string]interface{}{} //数据切片
 	var tmpInt = 0                       //序列

@@ -9,8 +9,9 @@
 package util
 
 import (
-	"github.com/ixre/gof/types/typeconv"
 	"regexp"
+
+	"github.com/ixre/gof/typeconv"
 )
 
 var reg = regexp.MustCompile("\\{([^\\}]+)\\}")

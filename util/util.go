@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ixre/gof/types/typeconv"
+	"github.com/ixre/gof/typeconv"
 )
 
 var LetterBytes = []byte("01234ABCDEFGHIJK56789abcdefghijklmLMNOPQRSTUVWXYZnopqrstuvwxyz")
@@ -39,8 +39,6 @@ func RandInt(n int) int {
 	}
 	return v
 }
-
-
 
 // Stringify 返回对象的JSON格式数据
 func Stringify(o interface{}) string {

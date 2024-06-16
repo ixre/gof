@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	
 	"github.com/ixre/gof/db/dialect"
 	"github.com/ixre/gof/log"
 	"github.com/lib/pq"

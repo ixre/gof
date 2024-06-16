@@ -168,7 +168,7 @@ func (a AccessTokenApi) createAccessToken(ctx Context) *Response {
 	}
 	// 创建token并返回
 	claims := CreateClaims("0", "go2o",
-		"go2o-api-jwt", time.Now().Unix()+7200).(MapClaims)
+		"go2o-user-jwt", time.Now().Unix()+7200).(MapClaims)
 	claims["global"] = true
 	token, err := AccessToken(claims, jwtSecret)
 	if err != nil {

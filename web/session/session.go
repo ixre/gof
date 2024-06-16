@@ -145,7 +145,7 @@ func (s *Session) MaxAge() int64 {
 	return s._maxAge
 }
 
-//存储到客户端
+// 存储到客户端
 func (s *Session) flushToClient() {
 	d := time.Duration(s._maxAge * 1e9)
 	expires := time.Now().Add(d)

@@ -102,7 +102,7 @@ func (h *HttpApp) Log() log.ILogger {
 	return h.logger
 }
 
-//获取Http请求代理处理程序
+// 获取Http请求代理处理程序
 func getInterceptor(a gof.App, routes web.Route) *web.Interceptor {
 	var in = web.NewInterceptor(a, getHttpExecFunc(routes))
 	// 处理发生的异常

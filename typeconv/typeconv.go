@@ -16,14 +16,16 @@ import (
  * history :
  */
 
-// MustInt parse d to int
-func MustInt(d interface{}) int {
+func parseInt(d interface{}, must bool) int {
+	if d == nil && must {
+		panic("parse nil to int fail")
+	}
 	switch d.(type) {
 	case nil:
-		return 0;
+		return 0
 	case string:
 		i, err := strconv.Atoi(d.(string))
-		if err != nil {
+		if must && err != nil {
 			panic("parse string to int fail:" + err.Error())
 		}
 		return i
@@ -42,7 +44,20 @@ func MustInt(d interface{}) int {
 	case int64:
 		return int(d.(int64))
 	}
-	panic("not support type:" + fmt.Sprintf("%+v", d))
+	if must {
+		panic("not support type:" + fmt.Sprintf("%+v", d))
+	}
+	return 0
+}
+
+// MustInt parse d to int
+func Int(d interface{}) int {
+	return parseInt(d, false)
+}
+
+// MustInt parse d to int
+func MustInt(d interface{}) int {
+	return parseInt(d, true)
 }
 
 // MustBool 将类型转换为bool
@@ -130,7 +145,7 @@ func String(d interface{}) (string, bool) {
 
 // get object string
 func Stringify(d interface{}) string {
-	if d == nil{
+	if d == nil {
 		return "null"
 	}
 	if s, b := String(d); b {
@@ -142,10 +157,8 @@ func Stringify(d interface{}) string {
 	return fmt.Sprintf("%+v", d)
 }
 
-
-
 func MustJson(v interface{}) string {
-	if v == nil{
+	if v == nil {
 		return "null"
 	}
 	bytes, err := json.Marshal(v)

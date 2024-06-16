@@ -23,7 +23,7 @@ type Route interface {
 
 var _ Route = new(RouteMap)
 
-//路由映射
+// 路由映射
 type RouteMap struct {
 	deferFunc RequestHandler
 	//地址模式
@@ -35,7 +35,7 @@ type RouteMap struct {
 // HTTP处理词典
 type httpFuncMap map[string]RequestHandler
 
-//添加路由
+// 添加路由
 func (this *RouteMap) Add(urlPattern string, rf RequestHandler) {
 	if this.RouteCollection == nil {
 		this.RouteCollection = make(map[string]RequestHandler)

@@ -15,7 +15,7 @@ import (
  * history :
  */
 
-//Des加密
+// Des加密
 func encrypt(origData, key []byte) ([]byte, error) {
 	if len(origData) < 1 || len(key) < 1 {
 		return nil, errors.New("wrong data or key")
@@ -38,7 +38,7 @@ func encrypt(origData, key []byte) ([]byte, error) {
 	return out, nil
 }
 
-//Des解密
+// Des解密
 func decrypt(crypted, key []byte) ([]byte, error) {
 	if len(crypted) < 1 || len(key) < 1 {
 		return nil, errors.New("wrong data or key")

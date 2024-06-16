@@ -61,13 +61,14 @@ func CustomHandle(c Controller, ctx *web.Context, action string, args ...interfa
 	}
 }
 
-//控制器处理
-//@controller ： 包含多种动作，URL中的文件名自动映射到控制器的函数
-//				 注意，是区分大小写的,默认映射到index函数
-//				 如果是POST请求将映射到控制器“函数名+_post”的函数执行
+// 控制器处理
+// @controller ： 包含多种动作，URL中的文件名自动映射到控制器的函数
+//
+//	注意，是区分大小写的,默认映射到index函数
+//	如果是POST请求将映射到控制器“函数名+_post”的函数执行
+//
 // @path    : 指定路径
 // @re_post : 是否为post请求额外加上_post来区分Post和Get请求
-//
 func HandlePath(controller Controller, ctx *web.Context, path string, rePost bool, args ...interface{}) {
 	r := ctx.Request
 	if len(path) == 0 {

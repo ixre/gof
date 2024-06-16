@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ixre/gof/types/typeconv"
+	"github.com/ixre/gof/typeconv"
 )
 
 var (

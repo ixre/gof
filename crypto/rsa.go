@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//RSA公钥私钥产生,bits: 1024 2048 4096
+// RSA公钥私钥产生,bits: 1024 2048 4096
 func GenRsaKeys(bits int) (publicKeyStr, privateKeyStr string, err error) {
 	str := func(block *pem.Block) (s string, err error) {
 		buffer := new(bytes.Buffer)

@@ -28,7 +28,7 @@ func (this *ResponseProxyWriter) WriteHeader(i int) {
 	this.writer.WriteHeader(i)
 }
 
-//创建一个新的HttpWriter
+// 创建一个新的HttpWriter
 func NewRespProxyWriter(w http.ResponseWriter) *ResponseProxyWriter {
 	return &ResponseProxyWriter{
 		writer: w,

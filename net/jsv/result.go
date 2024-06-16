@@ -23,7 +23,7 @@ var (
 
 // json-rpc无法在客户端反序化为实体，
 // 所以data需要返回字符串
-//输出结果
+// 输出结果
 type Result struct {
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`
