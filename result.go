@@ -16,8 +16,8 @@ func SuccessResult(v interface{}) *Result {
 }
 
 type Result struct {
-	ErrCode int         `json:"errCode"`
-	ErrMsg  string      `json:"errMsg,omitempty"`
+	Code    int         `json:"code,omitempty"`
+	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
@@ -30,16 +30,16 @@ func (r *Result) Error(err error) *Result {
 
 func ResultWithCode(code int, message string) *Result {
 	return &Result{
-		ErrCode: code,
-		ErrMsg:  message,
+		Code:    code,
+		Message: message,
 		Data:    nil,
 	}
 }
 
 func (r *Result) ErrorText(err string) *Result {
 	if err = strings.TrimSpace(err); err != "" {
-		r.ErrCode = 1
-		r.ErrMsg = err
+		r.Code = 1
+		r.Message = err
 	}
 	return r
 }
