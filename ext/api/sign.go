@@ -11,6 +11,27 @@ import (
 	"strings"
 )
 
+// SortParamsString 将url.Values类型的参数r按照键进行排序，并拼接成字符串形式返回
+func GetSortParams(r url.Values) string {
+	keys := keyArr{}
+	for k := range r {
+		keys = append(keys, k)
+	}
+	sort.Sort(keys)
+	buf := bytes.NewBufferString("")
+	i := 0
+	for _, k := range keys {
+		if i > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(r[k][0])
+		i++
+	}
+	return buf.String()
+}
+
 // 参数首字母小写后排序，排除sign和sign_type，secret，转换为字节
 func ParamsToBytes(r url.Values, secret string, attach bool) []byte {
 	keys := keyArr{}
