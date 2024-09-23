@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
+	"testing"
 
-	"github.com/ixre/go2o/core/infrastructure/fw/types"
 	"github.com/ixre/gof/db"
 	"github.com/ixre/gof/typeconv"
+	"github.com/ixre/gof/types"
 	"gorm.io/gorm"
 )
 
@@ -56,6 +58,8 @@ type (
 		Save(v *M) (*M, error)
 		// Update 更新实体的非零字段
 		Update(v *M) (*M, error)
+		// 统计数量
+		Count(where string, v ...interface{}) (int, error)
 		// Delete 删除
 		Delete(v *M) error
 		// DeleteBy 根据条件删除
@@ -74,7 +78,8 @@ type (
 		Save(v *M) (*M, error)
 		// FindList 查找列表
 		FindList(opt *QueryOption, where string, args ...interface{}) []*M
-
+		// 统计数量
+		Count(where string, v ...interface{}) (int, error)
 		// Delete 删除
 		Delete(v *M) error
 		// QueryPaging 查询分页数据
@@ -152,6 +157,13 @@ func (r *BaseRepository[M]) Update(v *M) (*M, error) {
 	return v, ctx.Error
 }
 
+func (r *BaseRepository[M]) Count(where string, v ...interface{}) (int, error) {
+	var count int64
+	var m M
+	tx := r.ORM.Model(&m).Where(where, v...).Count(&count)
+	return int(count), tx.Error
+}
+
 func (r *BaseRepository[M]) Delete(v *M) error {
 	tx := r.ORM.Delete(v)
 	return tx.Error
@@ -213,6 +225,10 @@ func (m *BaseService[M]) FindBy(where string, args ...interface{}) *M {
 
 func (m *BaseService[M]) FindList(opt *QueryOption, where string, args ...interface{}) []*M {
 	return m.Repo.FindList(opt, where, args...)
+}
+
+func (m *BaseService[M]) Count(where string, args ...interface{}) (int, error) {
+	return m.Repo.Count(where, args...)
 }
 
 func (m *BaseService[M]) Delete(v *M) error {
@@ -314,6 +330,16 @@ func (p *PagingParams) Like(field string, value interface{}) *PagingParams {
 	return p.where(field, "LIKE ?", value)
 }
 
+// Gt 大于
+func (p *PagingParams) Gt(field string, value interface{}) *PagingParams {
+	return p.where(field, "> ?", value)
+}
+
+// Lt 小于
+func (p *PagingParams) Lt(field string, value interface{}) *PagingParams {
+	return p.where(field, "< ?", value)
+}
+
 func (p *PagingParams) And(where string, values ...interface{}) *PagingParams {
 	buf := bytes.NewBuffer(nil)
 	isBlank := len(p.Arguments) == 0
@@ -400,8 +426,9 @@ func UnifinedQueryPaging(o ORM, p *PagingParams, tables string, fields string) (
 	// 查询行数
 	order := types.Ternary(p.Order != "", " ORDER BY "+p.Order, "")
 	if ret.Total > 0 {
-		sql = fmt.Sprintf(`SELECT %s %s %s %s`, fields, from, where, order)
-		rows, err := o.Raw(sql, args...).Offset(p.Begin).Limit(p.Size).Rows()
+		skipper := GetSkipperSQL(o, p)
+		sql = strings.Join([]string{"SELECT", fields, from, where, order, skipper}, " ")
+		rows, err := o.Offset(p.Begin).Limit(p.Size).Raw(sql, args...).Rows()
 		if err != nil {
 			log.Println("paging query rows error: %s", err.Error())
 		} else {
@@ -414,6 +441,24 @@ func UnifinedQueryPaging(o ORM, p *PagingParams, tables string, fields string) (
 	return &ret, nil
 }
 
+// 生成分页条件
+func GetSkipperSQL(o ORM, p *PagingParams) string {
+	if p.Size <= 0 {
+		return ""
+	}
+	switch o.Dialector.Name() {
+	case "mysql":
+		return fmt.Sprintf(" LIMIT %d,%d", p.Begin, p.Size)
+	case "postgres":
+		return fmt.Sprintf(" OFFSET %d LIMIT %d", p.Begin, p.Size)
+	case "sqlite3":
+		return fmt.Sprintf(" LIMIT %d OFFSET %d", p.Size, p.Begin)
+	case "mssql":
+		return fmt.Sprintf(" OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", p.Begin, p.Size)
+	}
+	panic("not support dialect")
+}
+
 // 分页行
 type pagingRow struct {
 	v map[string]interface{}
@@ -421,6 +466,16 @@ type pagingRow struct {
 
 func ParsePagingRow(v interface{}) *pagingRow {
 	return &pagingRow{v: v.(map[string]interface{})}
+}
+
+func (p *pagingRow) AsInt(keys ...string) {
+	for _, key := range keys {
+		v, ok := p.v[key].([]uint8)
+		if ok {
+			f := typeconv.MustInt(string(v))
+			p.v[key] = f
+		}
+	}
 }
 
 // 转换为float类型
@@ -457,4 +512,31 @@ type Error struct {
 	Code int `json:"code"`
 	// 错误信息
 	Message string `json:"message"`
+}
+
+// 解析错误
+func ParseError(err error) *Error {
+	if err != nil {
+		return &Error{
+			Code:    1,
+			Message: err.Error(),
+		}
+	}
+	return nil
+}
+
+// NewError 创建错误
+func NewError(code int, message string) *Error {
+	return &Error{
+		Code:    code,
+		Message: message,
+	}
+}
+
+// 断言错误
+func AssertError(t *testing.T, err error) {
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 }
