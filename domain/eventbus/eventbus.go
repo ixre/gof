@@ -52,9 +52,9 @@ func (e *eventBus) subscribe(event interface{}, listener EventListener, async bo
 	e.listeners[name] = list
 }
 
-// Publish sends an event to all subscribed listeners.
+// Dispatch sends an event to all subscribed listeners.
 // Parameter data is optional ; Post can only have one map parameter.
-func (e *eventBus) Publish(event interface{}) {
+func (e *eventBus) Dispatch(event interface{}) {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 	name := e.getEventName(event)
@@ -93,8 +93,8 @@ func SubscribeAsync(event interface{}, listener EventListener) {
 	defaultEventBus.SubscribeAsync(event, listener)
 }
 
-// Publish sends an event to all subscribed listeners.
+// Dispatch sends an event to all subscribed listeners.
 // Parameter data is optional ; Post can only have one map parameter.
-func Publish(event interface{}) {
-	defaultEventBus.Publish(event)
+func Dispatch(event interface{}) {
+	defaultEventBus.Dispatch(event)
 }

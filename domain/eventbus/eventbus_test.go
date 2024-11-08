@@ -22,7 +22,7 @@ func TestEventBus(t *testing.T) {
 	e.Subscribe(Test2Event{}, func(data interface{}) {
 		t.Log(fmt.Sprintf("event2 data %#v ", data))
 	})
-	e.Publish(TestEvent{})
-	e.Publish(Test2Event{})
+	e.Dispatch(TestEvent{})
+	e.Dispatch(Test2Event{})
 	time.Sleep(time.Second)
 }
