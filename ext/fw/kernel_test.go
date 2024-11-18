@@ -2,8 +2,6 @@ package fw
 
 import (
 	"testing"
-
-	"github.com/sirupsen/logrus"
 )
 
 type Staff struct {
@@ -55,5 +53,4 @@ func TestGet(t *testing.T) {
 	if s2 == nil || s2.Id != id {
 		t.Error("get staff error")
 	}
-	logrus.Debugf
 }
