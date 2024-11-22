@@ -4,9 +4,11 @@ package crypto
 
 import (
 	"crypto"
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 )
@@ -21,6 +23,13 @@ func Sha1(b []byte) string {
 	c := sha1.New()
 	c.Write(b)
 	return hex.EncodeToString(c.Sum(nil))
+}
+
+// HmacSha256
+func HmacSha256(key, data []byte) string {
+	mac := hmac.New(sha256.New, key)
+	mac.Write(data)
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 // 使用私钥Sha1WithRSA签名
