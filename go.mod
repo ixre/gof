@@ -9,7 +9,6 @@ require (
 	github.com/gomodule/redigo v1.9.2
 	github.com/lib/pq v1.10.9
 	github.com/pelletier/go-toml v1.9.5
-	github.com/sirupsen/logrus v1.9.3
 	gorm.io/gorm v1.25.10
 )
 
