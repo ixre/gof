@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 )
@@ -16,6 +17,8 @@ func TestAesCBC(t *testing.T) {
 		return
 	}
 	fmt.Printf("加密后的密文: %x\n", ciphertext)
+
+	fmt.Println(hex.EncodeToString(ciphertext))
 
 	decryptedText, err := AESDecrypt(ciphertext, key, iv)
 	if err != nil {
