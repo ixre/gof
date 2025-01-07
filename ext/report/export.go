@@ -75,19 +75,7 @@ type (
 		// GetExportColumnNames 根据导出的列名获取列的索引及对应键
 		GetExportColumnNames(exportColumnNames []string) (fields []string)
 		// Export 导出数据
-		Export(provider IDbProvider, ep *ExportParams, p IExportProvider, f IExportFormatter) []byte
-	}
-
-	// IExportProvider 导出
-	IExportProvider interface {
-		// Export 导出
-		Export(rows []map[string]interface{}, fields []string, names []string,
-			formatter []IExportFormatter) (binary []byte)
-	}
-	// IExportFormatter 数据格式化器
-	IExportFormatter interface {
-		// Format 格式化字段
-		Format(field, name string, rowNum int, data interface{}) interface{}
+		Export(provider IDbProvider, ep *ExportParams, p ExportProvider, f ExportFormatter) []byte
 	}
 
 	// Params 参数
@@ -322,12 +310,14 @@ func checkSqlIf(dv interface{}) bool {
 	return true
 }
 
+var _ ExportFormatter = new(internalFormatter)
+
 // 内置的格式化器
 type internalFormatter struct{}
 
-func (i *internalFormatter) Format(field, name string, rowNum int, data interface{}) interface{} {
-	if field == "{row_number}" {
-		return strconv.Itoa(rowNum + 1)
+func (i *internalFormatter) Format(field string, data interface{}, rowNumber int) interface{} {
+	if field == "{row_number}" || field == "{rowNumber}" {
+		return strconv.Itoa(rowNumber + 1)
 	}
 	if data == nil {
 		return ""

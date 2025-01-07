@@ -13,12 +13,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/ixre/gof/db"
 	"log"
 	"os"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/ixre/gof/db"
 )
 
 var _ IDataExportPortal = new(ExportItem)
@@ -160,10 +161,10 @@ func (e *ExportItem) GetJsonData(ht map[string]string) string {
 
 // Export 导出数据
 func (e *ExportItem) Export(db IDbProvider, parameters *ExportParams,
-	provider IExportProvider, formatter IExportFormatter) []byte {
+	provider ExportProvider, formatter ExportFormatter) []byte {
 	rows, _, _ := e.GetSchemaAndData(db, parameters.Params)
 	names := e.GetExportColumnNames(parameters.ExportFields)
-	fmtArray := []IExportFormatter{interFmt}
+	fmtArray := []ExportFormatter{interFmt}
 	if formatter != nil {
 		fmtArray = append(fmtArray, formatter)
 	}
