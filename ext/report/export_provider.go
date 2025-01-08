@@ -18,10 +18,7 @@ type (
 			formatter []ExportFormatter) (binary []byte)
 	}
 	// ExportFormatter 数据格式化器
-	ExportFormatter interface {
-		// Format 格式化字段
-		Format(field string, data interface{}, rowIndex int) interface{}
-	}
+	ExportFormatter func(field string, data interface{}, rowIndex int) interface{}
 )
 
 var (
@@ -80,7 +77,7 @@ func (c *csvProvider) Export(rows []map[string]interface{},
 func formatColData(field string, data interface{}, rowIndex int, formatter ...ExportFormatter) interface{} {
 	if formatter != nil {
 		for _, f := range formatter {
-			data = f.Format(field, data, rowIndex)
+			data = f(field, data, rowIndex)
 		}
 	}
 	return data

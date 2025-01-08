@@ -310,12 +310,8 @@ func checkSqlIf(dv interface{}) bool {
 	return true
 }
 
-var _ ExportFormatter = new(internalFormatter)
-
 // 内置的格式化器
-type internalFormatter struct{}
-
-func (i *internalFormatter) Format(field string, data interface{}, rowNumber int) interface{} {
+var internalFormatter = func(field string, data interface{}, rowNumber int) interface{} {
 	if field == "{row_number}" || field == "{rowNumber}" {
 		return strconv.Itoa(rowNumber + 1)
 	}
