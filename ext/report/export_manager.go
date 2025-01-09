@@ -164,7 +164,7 @@ func (e *ExportItem) Export(db IDbProvider, parameters *ExportParams,
 	provider ExportProvider, formatter ExportFormatter) []byte {
 	rows, _, _ := e.GetSchemaAndData(db, parameters.Params)
 	names := e.GetExportColumnNames(parameters.ExportFields)
-	fmtArray := []ExportFormatter{interFmt}
+	fmtArray := []ExportFormatter{internalFormatter}
 	if formatter != nil {
 		fmtArray = append(fmtArray, formatter)
 	}

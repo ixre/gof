@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/ixre/gof/typeconv"
 	"github.com/xuri/excelize/v2"
@@ -17,8 +18,12 @@ type (
 		Export(rows []map[string]interface{}, fields []string, names []string,
 			formatter []ExportFormatter) (binary []byte)
 	}
+	ExportRow struct {
+		Row   map[string]interface{}
+		Index int
+	}
 	// ExportFormatter 数据格式化器
-	ExportFormatter func(field string, data interface{}, rowIndex int) interface{}
+	ExportFormatter func(field string, data interface{}, row *ExportRow) interface{}
 )
 
 var (
@@ -68,16 +73,16 @@ func (c *csvProvider) Export(rows []map[string]interface{},
 			buf.WriteString("\r\n")
 		}
 		for fi, field := range fields {
-			c.appendField(buf, fi, formatColData(field, row[field], i))
+			c.appendField(buf, fi, formatColData(field, row[field], &ExportRow{Row: row, Index: i}))
 		}
 	}
 	return buf.Bytes()
 }
 
-func formatColData(field string, data interface{}, rowIndex int, formatter ...ExportFormatter) interface{} {
+func formatColData(field string, data interface{}, row *ExportRow, formatter ...ExportFormatter) interface{} {
 	if formatter != nil {
 		for _, f := range formatter {
-			data = f(field, data, rowIndex)
+			data = f(field, data, row)
 		}
 	}
 	return data
@@ -130,7 +135,7 @@ func (t *textProvider) Export(rows []map[string]interface{},
 			buf.WriteString("\n")
 		}
 		for fi, field := range fields {
-			t.appendField(buf, fi, formatColData(field, row[field], i))
+			t.appendField(buf, fi, formatColData(field, row[field], &ExportRow{Row: row, Index: i}))
 		}
 	}
 	return buf.Bytes()
@@ -203,7 +208,7 @@ func (e *excelProvider) Export(rows []map[string]interface{},
 				}
 				start := strings.ToUpper(string(rune('A') + int32(i)))
 				//end := strings.ToUpper(string(rune('A') + int32(i+1)))
-				f.SetColWidth("Sheet1", start, start, float64(l))
+				f.SetColWidth("Sheet1", start, start, float64(l+1)*1.5)
 			}
 		}
 	}
@@ -211,11 +216,48 @@ func (e *excelProvider) Export(rows []map[string]interface{},
 		for fi, field := range fields {
 			c := strings.ToUpper(string(rune('A') + int32(fi)))
 			f.SetCellValue("Sheet1", fmt.Sprintf("%s%d", c, i+offset+1),
-				formatColData(field, row[field], i))
+				formatColData(field, row[field], &ExportRow{Row: row, Index: i}))
 		}
 	}
 	buf := bytes.NewBuffer(nil)
 	f.WriteTo(buf)
 	f.Close()
 	return buf.Bytes()
+}
+
+var Formatter = &formatter{}
+
+type formatter struct {
+}
+
+// 格式化日期
+func (f *formatter) DateTime(value interface{}) interface{} {
+	if s, ok := value.(string); ok {
+		return s
+	}
+	if t, ok := value.(time.Time); ok {
+		return t.Format("2006/01/02 15:04")
+	}
+	if unix, ok := value.(int64); ok {
+		return time.Unix(unix, 0).Format("2006/01/02 15:04")
+	}
+	return value
+}
+
+// 格式化金额
+func (f *formatter) IntMoney(value interface{}) interface{} {
+	if v, ok := value.(int64); ok {
+		return fmt.Sprintf("%.2f", float64(v)/100)
+	}
+	return value
+}
+
+// 占位符
+func (f *formatter) Holder(value interface{}, holder string) interface{} {
+	if v, ok := value.(string); ok {
+		if len(v) == 0 {
+			return holder
+		}
+	}
+	return value
 }

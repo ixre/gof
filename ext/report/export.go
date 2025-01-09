@@ -25,7 +25,6 @@ import (
 )
 
 var (
-	interFmt      = &internalFormatter{}
 	errNoSuchItem = errors.New("no such item")
 	injectRegexp  = regexp.MustCompile("\\bEXEC\\\\b|UNION.+?SELECT|UPDATE.+?SET|INSERT\\\\s+INTO.+?VALUES|DELETE.+?FROM|(CREATE|ALTER|DROP|TRUNCATE)\\\\s+(TABLE|DATABASE)")
 )
@@ -311,9 +310,9 @@ func checkSqlIf(dv interface{}) bool {
 }
 
 // 内置的格式化器
-var internalFormatter = func(field string, data interface{}, rowNumber int) interface{} {
+var internalFormatter = func(field string, data interface{}, row *ExportRow) interface{} {
 	if field == "{row_number}" || field == "{rowNumber}" {
-		return strconv.Itoa(rowNumber + 1)
+		return strconv.Itoa(row.Index + 1)
 	}
 	if data == nil {
 		return ""
