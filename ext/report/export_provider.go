@@ -249,6 +249,9 @@ func (f *formatter) IntMoney(value interface{}) interface{} {
 	if v, ok := value.(int64); ok {
 		return fmt.Sprintf("%.2f", float64(v)/100)
 	}
+	if v, ok := value.(float64); ok {
+		return fmt.Sprintf("%.2f", v)
+	}
 	return value
 }
 
