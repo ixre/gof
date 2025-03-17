@@ -114,9 +114,9 @@ func String(d interface{}) (string, bool) {
 	case []byte:
 		return string(d.([]byte)), true
 	case float32:
-		return strconv.FormatFloat(float64(d.(float32)), 'g', 2, 32), true
+		return strconv.FormatFloat(float64(d.(float32)), 'g', 3, 32), true
 	case float64:
-		return strconv.FormatFloat(d.(float64), 'g', 2, 64), true
+		return strconv.FormatFloat(d.(float64), 'g', 3, 64), true
 	case int:
 		return strconv.FormatInt(int64(d.(int)), 10), true
 	case int8:
