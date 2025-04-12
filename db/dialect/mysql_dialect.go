@@ -75,29 +75,30 @@ func (m *MySqlDialect) fetchTableNames(d *sql.DB, dbName string, keyword string)
 func (m *MySqlDialect) Tables(d *sql.DB, dbName string, keyword string, match func(int, string) bool) (int, []*db.Table, error) {
 	tableNames, err := m.fetchTableNames(d, dbName, keyword)
 	l := len(tableNames)
-	if err == nil {
-		tList := make([]*db.Table, 0)
-		i := -1
-		for _, v := range tableNames {
-			i++
-			if match != nil && !match(i, v) {
-				// 筛选掉不匹配的表
-				continue
-			}
-			t, err2 := m.Table(d, v)
-			if err2 != nil {
-				return l, nil, err2
-			}
-			tList = append(tList, t)
-		}
-		return l, tList, nil
+	if err != nil {
+		return l, nil, err
 	}
-	return l, nil, err
+	tList := make([]*db.Table, 0)
+	i := -1
+	for _, v := range tableNames {
+		i++
+		if match != nil && !match(i, v) {
+			// 筛选掉不匹配的表
+			continue
+		}
+		t, err2 := m.Table(d, v)
+		if err2 != nil {
+			return l, nil, err2
+		}
+		tList = append(tList, t)
+	}
+	return l, tList, nil
+
 }
 
 // 获取表结构
 func (m *MySqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
-	stmt, err := db.Prepare("SHOW CREATE TABLE " + table)
+	stmt, err := db.Prepare("SHOW CREATE TABLE `" + table+ "`")
 	if err == nil {
 		row := stmt.QueryRow()
 		tb, desc := "", ""
@@ -107,6 +108,7 @@ func (m *MySqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
 			return m.getStruct(desc)
 		}
 	}
+	
 	return nil, err
 }
 
@@ -143,6 +145,7 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 	//获取列信息
 	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s]+)\\s")
 	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^']+)'")
+
 	colArr := strings.Split(desc[i+3:j], "\n")
 	//获取主键
 	pkField := ""
@@ -204,10 +207,11 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return db.TypeDateTime
 	case dbType == "timestamp":
 		return db.TypeInt64
-	case dbType == "blob":
+	case dbType == "blob",dbType== "longblob":
 		return db.TypeBytes
 	case dbType == "text", dbType == "longtext",
-		dbType == "mediumtext", dbType == "tinytext",
+		dbType == "json",dbType == "mediumtext",
+		 dbType == "tinytext",
 		strings.HasPrefix(dbType, "varchar"),
 		strings.HasPrefix(dbType, "char"):
 		return db.TypeString
