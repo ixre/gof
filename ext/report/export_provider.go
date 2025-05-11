@@ -241,6 +241,9 @@ func (f *formatter) DateTime(value interface{}) interface{} {
 	if unix, ok := value.(int64); ok {
 		return time.Unix(unix, 0).Format("2006/01/02 15:04")
 	}
+	if unix, ok := value.(int); ok {
+		return time.Unix(int64(unix), 0).Format("2006/01/02 15:04")
+	}
 	return value
 }
 
