@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ixre/gof/types"
 	"github.com/ixre/gof/db"
 	"github.com/ixre/gof/typeconv"
-	"github.com/ixre/gof/types"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +48,8 @@ type (
 
 	// Repository 仓储接口
 	Repository[M any] interface {
+		// Raw 获取原始ORM
+		Raw() ORM
 		// Get 获取实体
 		Get(id interface{}) *M
 		// FindBy 根据条件获取实体
@@ -89,9 +91,18 @@ type (
 
 var _ Repository[any] = new(BaseRepository[any])
 
+// NewRepository 创建仓储
+func NewRepository[M any](orm ORM) Repository[M] {
+	return &BaseRepository[M]{ORM: orm}
+}
+
 // 基础仓储
 type BaseRepository[M any] struct {
 	ORM
+}
+
+func (r *BaseRepository[M]) Raw() ORM {
+	return r.ORM
 }
 
 func (r *BaseRepository[M]) Get(id interface{}) *M {
@@ -428,7 +439,7 @@ func UnifinedQueryPaging(o ORM, p *PagingParams, tables string, fields string) (
 	if ret.Total > 0 {
 		skipper := GetSkipperSQL(o, p)
 		sql = strings.Join([]string{"SELECT", fields, from, where, order, skipper}, " ")
-		rows, err := o.Offset(p.Begin).Limit(p.Size).Raw(sql, args...).Rows()
+		rows, err := o.Raw(sql, args...).Rows()
 		if err != nil {
 			log.Println("paging query rows error: %s", err.Error())
 		} else {
@@ -460,15 +471,15 @@ func GetSkipperSQL(o ORM, p *PagingParams) string {
 }
 
 // 分页行
-type pagingRow struct {
+type EffectRow struct {
 	v map[string]interface{}
 }
 
-func ParsePagingRow(v interface{}) *pagingRow {
-	return &pagingRow{v: v.(map[string]interface{})}
+func ParseRow(v interface{}) *EffectRow {
+	return &EffectRow{v: v.(map[string]interface{})}
 }
 
-func (p *pagingRow) AsInt(keys ...string) {
+func (p *EffectRow) AsInt(keys ...string) {
 	for _, key := range keys {
 		v, ok := p.v[key].([]uint8)
 		if ok {
@@ -479,7 +490,7 @@ func (p *pagingRow) AsInt(keys ...string) {
 }
 
 // 转换为float类型
-func (p *pagingRow) AsFloat(keys ...string) {
+func (p *EffectRow) AsFloat(keys ...string) {
 	for _, key := range keys {
 		v, ok := p.v[key].([]uint8)
 		if ok {
@@ -490,20 +501,25 @@ func (p *pagingRow) AsFloat(keys ...string) {
 }
 
 // Excludes 排除字段
-func (p *pagingRow) Excludes(keys ...string) {
+func (p *EffectRow) Excludes(keys ...string) {
 	for _, key := range keys {
 		delete(p.v, key)
 	}
 }
 
 // Put 添加/更新字段
-func (p *pagingRow) Put(key string, v interface{}) {
+func (p *EffectRow) Put(key string, v interface{}) {
 	p.v[key] = v
 }
 
 // Get 获取字段
-func (p *pagingRow) Get(key string) interface{} {
+func (p *EffectRow) Get(key string) interface{} {
 	return p.v[key]
+}
+
+// GetInt 获取int类型字段
+func (p *EffectRow) GetInt(key string) int {
+	return typeconv.Int(p.Get(key))
 }
 
 /** 错误处理 */
