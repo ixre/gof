@@ -39,6 +39,16 @@ type (
 		ExecScalar(s string, result interface{}, arg ...interface{}) error
 		ExecNonQuery(sql string, args ...interface{}) (int, error)
 	}
+	// 数据库连接配置
+	ConnectConfig struct {
+		Driver   string
+		Host     string
+		Port     int
+		Schema   string
+		User     string
+		Password string
+		Charset  string
+	}
 )
 
 var _ Connector = new(defaultConnector)
@@ -64,6 +74,48 @@ func NewConnector(driverName, driverSource string, l log.ILogger, debug bool) (C
 		}, nil
 	}
 	return nil, err
+}
+
+// NewConnectorWithConfig create a new connector with config
+func NewConnectorWithConfig(c *ConnectConfig, debug bool, l log.ILogger) (Connector, error) {
+	var connStr string
+	if c.Driver == "postgresql" {
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable",
+			c.User,
+			c.Password,
+			c.Host,
+			c.Port,
+			c.Schema)
+	}
+	if c.Driver == "mysql"{
+		if c.Charset == "" {
+			c.Charset = "utf8mb4"
+		}
+		connStr = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s",
+			c.User,
+			c.Password,
+			c.Host,
+			c.Port,
+			c.Schema,
+			c.Charset)
+	}
+	//todo: charset for connection string?
+	conn, err := NewConnector(c.Driver, connStr, l, debug)
+	if err == nil {
+		log.Println("[ DB][ INFO]: create database connection..")
+		if err := conn.Ping(); err != nil {
+			conn.Close()
+			//如果异常，则显示并退出
+			log.Println("[ DB][ ERROR]: database connect failed; error:",
+				err.Error(), "; connection string:", connStr)
+		} else {
+			log.Println("[ DB][ INFO]: database connection success")
+			conn.SetMaxIdleConns(10000)
+			conn.SetMaxIdleConns(5000)
+			conn.SetConnMaxLifetime(time.Second * 10)
+		}
+	}
+	return conn, err
 }
 
 // 创建连接

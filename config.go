@@ -106,15 +106,28 @@ func (c *Config) load(file string) (err error) {
 	}
 	defer f.Close()
 	reader := bufio.NewReader(f)
+	prefix := ""
 	for {
 		line, _err := reader.ReadString(confLineDelimer)
 		if _err == io.EOF {
 			break
 		}
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section := line[1 : len(line)-1]
+			if len(section) > 0 {
+				prefix = section + "."
+				continue
+			}
+		}
 		if regex.Match([]byte(line)) {
 			matches := regex.FindStringSubmatch(line)
-			//c.configDict[matches[1]] = matches[2]
-			c.configDict[matches[1]] = strings.TrimSpace(matches[2])
+			k := strings.TrimSpace(matches[1])
+			v := strings.TrimSpace(matches[2])
+			if len(prefix) > 0 {
+				k = prefix + k
+			}
+			c.configDict[k] = v
 		}
 	}
 	return nil
