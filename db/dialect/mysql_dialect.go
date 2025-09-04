@@ -98,7 +98,7 @@ func (m *MySqlDialect) Tables(d *sql.DB, dbName string, keyword string, match fu
 
 // 获取表结构
 func (m *MySqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
-	stmt, err := db.Prepare("SHOW CREATE TABLE `" + table+ "`")
+	stmt, err := db.Prepare("SHOW CREATE TABLE `" + table + "`")
 	if err == nil {
 		row := stmt.QueryRow()
 		tb, desc := "", ""
@@ -108,7 +108,7 @@ func (m *MySqlDialect) Table(db *sql.DB, table string) (*db.Table, error) {
 			return m.getStruct(desc)
 		}
 	}
-	
+
 	return nil, err
 }
 
@@ -127,7 +127,7 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 	name := tmp[strings.Index(tmp, "`")+1 : strings.LastIndex(tmp, "`")]
 	//获取表的扩展性信息
 	mp := map[string]string{}
-	reg := regexp.MustCompile("\\s([^)=]+)=([^\\s]+)")
+	reg := regexp.MustCompile(`\s([^)=]+)=([^\s]+)`)
 	matches := reg.FindAllStringSubmatch(desc[j:], -1)
 	for _, v := range matches {
 		mp[v[1]] = v[2]
@@ -143,8 +143,8 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 		table.Comment = strings.Replace(table.Comment, "'", "", -1)
 	}
 	//获取列信息
-	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s]+)\\s")
-	commReg := regexp.MustCompile("COMMENT\\s\\\\*'([^']+)'")
+	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s,]+)\\s*")
+	commReg := regexp.MustCompile(`COMMENT\s\\'([^']+)'`)
 
 	colArr := strings.Split(desc[i+3:j], "\n")
 	//获取主键
@@ -163,8 +163,8 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 			col := &db.Column{
 				Name:    match[1],
 				DbType:  dbType,
-				IsAuto:  strings.Index(str, "AUTO_") != -1,
-				NotNull: strings.Index(str, "NOT NULL") != -1,
+				IsAuto:  strings.Contains(str, "AUTO_"),
+				NotNull: strings.Contains(str, "NOT NULL"),
 				IsPk:    match[1] == pkField,
 				Length:  getTypeLen(dbType),
 				Type:    m.getTypeId(dbType),
@@ -180,6 +180,7 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 }
 
 func (m *MySqlDialect) getTypeId(dbType string) int {
+	dbType = strings.ToLower(dbType)
 	switch true {
 	case strings.HasPrefix(dbType, "smallint"):
 		return db.TypeInt16
@@ -207,11 +208,11 @@ func (m *MySqlDialect) getTypeId(dbType string) int {
 		return db.TypeDateTime
 	case dbType == "timestamp":
 		return db.TypeInt64
-	case dbType == "blob",dbType== "longblob":
+	case dbType == "blob", dbType == "longblob":
 		return db.TypeBytes
 	case dbType == "text", dbType == "longtext",
-		dbType == "json",dbType == "mediumtext",
-		 dbType == "tinytext",
+		dbType == "json", dbType == "mediumtext",
+		dbType == "tinytext",
 		strings.HasPrefix(dbType, "varchar"),
 		strings.HasPrefix(dbType, "char"):
 		return db.TypeString
