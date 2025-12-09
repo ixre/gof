@@ -143,8 +143,8 @@ func (m *MySqlDialect) getStruct(desc string) (*db.Table, error) {
 		table.Comment = strings.Replace(table.Comment, "'", "", -1)
 	}
 	//获取列信息
-	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s,]+)\\s*")
-	commReg := regexp.MustCompile(`COMMENT\s\\'([^']+)'`)
+	colReg := regexp.MustCompile("`([^`]+)`\\s+([a-z0-9]+[^\\s]+)\\s*")
+	commReg := regexp.MustCompile(`.*COMMENT\s*'([^']+)'`)
 
 	colArr := strings.Split(desc[i+3:j], "\n")
 	//获取主键
